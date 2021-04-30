@@ -1,0 +1,156 @@
+mads 2.0.9
+Source: /Users/holgerjanz/Documents/ATARI-XL/Projects/RAMCART/BW-DOS/DOS/COLD.ASM
+     1 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     2 				; 
+     3 				; Cold Start with jump to The!Cart Menu
+     4 				;
+     5
+     6 				;
+     7 				; OS equ
+     8 				;
+     9 = 0006			TRNSMZ  = $0006
+    10 = 000A			DOSVEC  = $000a
+    11 = 0042			CRITIC  = $0042
+    12
+    13 = 022F			SDMCTL  = $022f
+    14 = 03FA			GINTLK  = $3fa
+    15 = 03EB			CARTCK  = $3eb
+    16 = 02E4			RAMSIZ	= $02e4
+    17 = 02E5			MEMTOP  = $02E5
+    18 = 02E7			MEMLO   = $02E7
+    19
+    20 = D013			TRIG3   = $d013
+    21 = D400			DMACTL  = $d400 
+    22 = D40E			NMIEN   = $d40e
+    23
+    24 = E474			WARMSV  = $e474
+    25 = E477			COLDSV  = $e477
+    26
+    27 = 0008			WARMST  = $08
+    28 = 0009			BOOT?   = $09
+    29 = 0244			COLDST  = $0244
+    30
+    31 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    32 				; 
+    33 				; The!Cart Register (from-to,default)
+    34 				;
+    35
+    36 				; Mode Select
+    37 = D5A6			TCMOSL = $d5a6    ; mode ($00-$3d,$01)
+    38 				; Cartridge mode is selected with bits 0-5 of $D5A6, values
+    39 				; other than the ones listed here are reserved (and result
+    40 				; in "cartridge off"):
+    41 				; $00: off, cartridge disabled
+    42 				; $01: 8k banks at $A000
+    43 				; $02: AtariMax 1MBit / 128k
+    44 				; $03: Atarimax 8MBit / 1MB
+    45 				; $04: OSS M091
+    46 				; $08: SDX 64k cart, $D5Ex banking
+    47 				; $09: Diamond GOS 64k cart, $D5Dx banking
+    48 				; $0A: Express 64k cart, $D57x banking
+    49 				; $0C: Atrax 128k cart
+    50 				; $0D: Williams 64k cart
+    51 				; $20: flexi mode (separate 8k banks at $A000 and $8000)
+    52 				; $21: standard 16k cart at $8000-$BFFF
+    53 				; $22: MegaMax 16k mode (up to 2MB), AtariMax 8Mbit banking
+    54 				; $23: Blizzard 16k
+    55 				; $24: Sic!Cart 512k
+    56 				; $28: 16k Mega cart
+    57 				; $29: 32k Mega cart
+    58 				; $2A: 64k Mega cart
+    59 				; $2B: 128k Mega cart
+    60 				; $2C: 256k Mega cart
+    61 				; $2D: 512k Mega cart
+    62 				; $2E: 1024k Mega cart
+    63 				; $2F: 2048k Mega cart
+    64 				; $30: 32k XEGS cart
+    65 				; $31: 64k XEGS cart
+    66 				; $32: 128k XEGS cart
+    67 				; $33: 256k XEGS cart
+    68 				; $34: 512k XEGS cart
+    69 				; $35: 1024k XEGS cart
+    70 				; $38: 32k SWXEGS cart
+    71 				; $39: 64k SWXEGS cart
+    72 				; $3A: 128k SWXEGS cart
+    73 				; $3B: 256k SWXEGS cart
+    74 				; $3C: 512k SWXEGS cart
+    75 				; $3D: 1024k SWXEGS cart
+    76 = 0000			TCMOSL.OFF   = $00    ; off, cartridge disabled
+    77 = 0001			TCMOSL.8K    = $01    ; 8k banks at $A000
+    78 = 0004			TCMOSL.OSS   = $04
+    79 = 0021			TCMOSL.FLEXI = $21    ; flexi mode,
+    80 				                         ; separate 8k banks at $A000 and $8000
+    81 = 0021			TCMOSL.16K   = $21    ; standard 16k cart at $8000-$BFFF
+    82
+    83 				; how to figure out that The!Cart is not active?
+    84 				; If the address is not used then the XL returns $ff but
+    85 				; the XE (and old 800) return $d5 (high byte of address,
+    86 				; the value of the last bus cycle)
+    87 = 00FF			TCMOSL.XLLOCK  = $ff    ; config lock or not present
+    88 = 00D5			TCMOSL.XELOCK  = $d5    ; config lock or not present
+    89
+    90 				; Mode Flash/RAM Select
+    91 = D5A7			TCMOFR = $d5a7    ;flash/RAM mode (0-15,0)
+    92 				; bit 0: primary bank write enable (0=readOnly, 1=write)
+    93 				; bit 1: primary bank source (0=flash, 1=RAM)
+    94 				; bit 2: secondary bank write enable (0=readOnly, 1=write)
+    95 				; bit 3: secondary bank source (0=flash, 1=RAM)
+    96 = 0003			TCMOFR.PBRAM = $03    ; primary bank RAM
+    97 = 000C			TCMOFR.SBRAM = $0C    ; secondary bank RAM
+    98
+    99 				; Primary Bank
+   100 = D5A0			TCPBRL = $d5a0    ; register low byte (0-255,0)
+   101 = D5A1			TCPBRH = $d5a1    ; register high byte (0-63,0)
+   102 = D5A2			TCPBEN = $d5a2    ; enable (0=dis-1=en,1)
+   103
+   104 				; Secondary Bank 
+   105 = D5A3			TCSBRL = $d5a3    ; register low byte (0-255,0)
+   106 = D5A4			TCSBRH = $d5a4  ; register high byte (0-63,0)
+   107 = D5A5			TCSBEN = $d5a5    ; enable (0=dis-1=en,0)
+   108
+   109 				; SPI interface to EEPROM
+   110 = D5A8			TCINEP = $d5a8
+   111 				; bit 0: SPI CLK
+   112 				; bit 1: SPI CS
+   113 				; bit 7: SPI data in (on reads), SPI data out (on writes)
+   114
+   115 				; configuration lock
+   116 = D5AF			TCCOLO = $d5af
+   117 				; Writing to this register disables "The!Cart" registers
+   118 				; at $d5aX.
+   119
+   120 						org $500
+   121 				start
+   122 				; switch The!Cart
+   123 FFFF> 0500-0534> A9 00	        lda #$00        ; switch off DMA
+   124 0502 8D 2F 02		        sta SDMCTL
+   125 0505 8D 00 D4		        sta DMACTL
+   126
+   127 0508 78			        sei             ; mask all interrupts
+   128 0509 A9 00		        lda #$00
+   129 050B 8D 0E D4		        sta NMIEN
+   130
+   131 				; set TC register
+   132 050E 8D A2 D5		        sta TCPBEN		; diable and set:
+   133 0511 8D A3 D5		        sta TCSBRL      ; disable Secondary Bank 
+   134 0514 8D A4 D5		        sta TCSBRH
+   135 0517 8D A5 D5		        sta TCSBEN
+   136 051A 8D A7 D5		        sta TCMOFR      ; cfg flash r/o
+   137
+   138 051D A5 01		        lda TCMOSL.8K   ; set mode
+   139 051F 8D A6 D5		        sta TCMOSL
+   140 0522 AA			        tax				; in X for cmp laetr
+   141
+   142 0523 A9 00		        lda #$00		; set P bank (Menu = $0000)
+   143 0525 8D A0 D5		        sta TCPBRL
+   144 0528 A9 00		        lda #$00
+   145 052A 8D A1 D5		        sta TCPBRH
+   146 				        
+   147 052D A9 01				lda #$01		; finally enable and do not read/write
+   148 052F 8D A2 D5		        sta TCPBEN		; TC register any further
+   149
+   150 				; jump cold start
+   151 0532 4C 77 E4				jmp COLDSV 
+   152 						
+   153 				;		run start
+   154 						

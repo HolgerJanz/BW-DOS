@@ -1,0 +1,670 @@
+mads 2.0.9
+Source: /Users/holgerjanz/Documents/ATARI-XL/Projects/RAMCART/BW-DOS/SECOPY.ASM
+     1 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     2 				;
+     3 				; Sector Copy
+     4 				;
+     5
+     6 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     7 				;
+     8 				; Equates
+     9 				;
+    10
+    11 				; 
+    12 				; CIO
+    13 				; 
+    14 = E456			CIOV        = $E456
+    15 				; CIOCB addresses
+    16 = 0340			ICHID		= $0340
+    17 = 0341			ICDNO		= $0341
+    18 = 0342			ICCOM       = $0342
+    19 = 0343			ICSTA		= $0343
+    20 = 0344			ICBAL       = $0344
+    21 = 0345			ICBAH       = $0345
+    22 = 0346			ICPTL		= $0346
+    23 = 0347			ICPTH		= $0347
+    24 = 0348			ICBLL       = $0348
+    25 = 0349			ICBLH       = $0349
+    26 = 034A			ICAX1		= $034a
+    27 = 034B			ICAX2		= $034b
+    28
+    29 				; 
+    30 				; SIO
+    31 				; 
+    32 = E459			SIOV        = $E459
+    33 				; SIOCB addresses
+    34 = 0300			DDEVIC		= $0300
+    35 = 0301			DUNIT		= $0301
+    36 = 0302			DCOMND		= $0302
+    37 = 0303			DSTATS		= $0303
+    38 = 0304			DBUFLO		= $0304
+    39 = 0305			DBUFHI		= $0305
+    40 = 0306			DTIMLO		= $0306
+    41 = 0307			DTIMHI		= $0307
+    42 = 0308			DBYTLO		= $0308
+    43 = 0309			DBYTHI		= $0309
+    44 = 030A			DAUX1		= $030a
+    45 = 030B			DAUX2		= $030b
+    46
+    47 				; cursor
+    48 = 02F0			CRSINH		= $02F0
+    49
+    50 				;
+    51 				; SpartaDOS 
+    52 				;
+    53 = 000A			DOSVEC		= $000A
+    54 				;
+    55 = 000A			SD_BUFOFF   = $0A ; offset in line buffer
+    56 = 003F			SD_LBUF     = $3F ; offset to line buffer
+    57 = 0003			SD_ZCRNAME  = $03 ; offset for jmp to crunch name
+    58 = 0021			SD_COMFNAM  = $21 ; offset to buffer for crunch name 
+    59 = 000A			SD_LSIO     = $0A ; negative offset to SIO vector
+    60
+    61 				;
+    62 				; zero page buffers
+    63 				;
+    64 = 0032			BUFRLO      = $0032
+    65 = 0033			BUFRHI      = $0033
+    66
+    67
+    68
+    69 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    70 				;
+    71 				;  start of code
+    72 				;
+    73 							
+    74 							org $3000
+    75 				start
+    76 FFFF> 3000-3649> A9 FF				lda #$ff
+    77 3002 8D F0 02					sta CRSINH	; cursor off
+    78 							
+    79 3005 20 14 36		            jsr PRINT
+    80 3008 53 65 63 74 6F 72 +             .byte 'Sector Copy vers43 by hjx',$9B,$FF
+    81
+    82 				; get parameter
+    83 3023 20 CE 35					jsr pcheck
+    84 3026 90 03					bcc start_manu
+    85 3028 4C D7 30					jmp start_para
+    86 302B 20 14 36		start_manu  jsr PRINT
+    87 302E 20 20 55 73 65 3A +             .byte '  Use: SECOPY Dx: Dy:    disk to disk',$9B
+    88 3054 20 20 20 20 20 20 +             .byte '       SECOPY Dx: Dy:fn  disk to file',$9B
+    89 307A 20 20 20 20 20 20 +             .byte '       SECOPY Dx:fn Dy:  file to disk',$9B
+    90 30A0 20 20 4E 6F 20 66 +             .byte '  No format',$9b
+    91 30AC 20 20 4E 6F 20 64 +             .byte '  No drive check',$9b
+    92 30BD 20 20 53 69 6E 67 +             .byte '  Single density only',$9B
+    93 30D3 FF			            .byte $ff
+    94 30D4 4C 9F 35					jmp the_end
+    95 							
+    96 30D7			start_para
+    97 30D7 20 E0 35					jsr pget
+    98 30DA F0 03					beq start_rdrv
+    99 30DC 4C 85 32		            jmp start_wopen
+   100
+   101 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   102 				;
+   103 				; copy sector of disk to file
+   104 				;
+   105 				; SECOPY Dx: Dy:FILE
+   106 				;
+   107
+   108 30DF			start_rdrv
+   109 30DF A0 22		            ldy #SD_COMFNAM+1	; read drive number
+   110 30E1 B1 0A		            lda (DOSVEC),Y
+   111 30E3 8D 02 31					sta start_rdnm
+   112 30E6 29 0F					and #$0f
+   113 30E8 8D D7 31					sta start_rdn+1
+   114 30EB 8D D0 34					sta start_xdn+1
+   115 30EE 20 14 36					jsr print
+   116 30F1 52 65 61 64 20 66 + 			.byte 'Read from drive D'
+   117 3102 58 3A 9B FF		start_rdnm  .byte 'X:',$9b,$ff
+   118
+   119 3106 20 CE 35					jsr pcheck
+   120 3109 B0 20					bcs start_rpath
+   121 310B 20 14 36					jsr print
+   122 310E 53 65 63 6F 6E 64 + 			.byte 'Second parameter missing',$9b,$ff
+   123 3128 4C 9F 35					jmp the_end
+   124
+   125 312B			start_rpath
+   126 312B 20 E0 35					jsr pget
+   127 312E D0 03					bne start_ropen
+   128 3130 4C 55 34					jmp start_xdrv
+   129
+   130 3133			start_ropen
+   131 3133 20 14 36					jsr print
+   132 3136 53 65 63 74 6F 72 + 			.byte 'Sectors to file',$9b,$ff
+   133
+   134 3147 A2 10					ldx #$10	; channel 1
+   135 3149 A9 03					lda #$03	; open
+   136 314B 9D 42 03					sta ICCOM,X
+   137 314E A9 08					lda #$08	; write mode
+   138 3150 9D 4A 03					sta ICAX1,X
+   139 3153 A5 0A					lda DOSVEC
+   140 3155 18						clc
+   141 3156 69 21					adc #SD_COMFNAM
+   142 3158 9D 44 03					sta ICBAL,X	; adr of file name
+   143 315B A5 0B					lda DOSVEC+1
+   144 315D 69 00					adc #$00
+   145 315F 9D 45 03					sta ICBAH,X
+   146 3162 20 56 E4					jsr CIOV
+   147 3165 10 31					bpl start_rloops
+   148
+   149 				; error open file for write
+   150 3167 AD 43 03					lda ICSTA
+   151 316A 20 FD 35					jsr convh2a
+   152 316D 8E 91 31					stx start_rof
+   153 3170 8C 92 31					sty start_rof+1
+   154 3173 20 14 36					jsr print
+   155 3176 4F 70 65 6E 20 66 + 			.byte 'Open for write file state $'
+   156 3191 66 66 9B FF		start_rof   .byte 'ff',$9b,$ff
+   157 3195 4C 48 34					jmp end_close
+   158
+   159 3198			start_rloops
+   160 3198 20 14 36					jsr print
+   161 319B 9C 53 65 63 74 6F + 			.byte $9c,'Sector $',$ff
+   162 				; loop over sector			
+   163 31A5			start_rloop
+   164 31A5 EE FF 31					inc start_rsl+1
+   165 31A8 D0 03					bne start_rssio 
+   166 31AA EE 04 32					inc start_rsh+1
+   167 				; write info
+   168 31AD AD 04 32		start_rssio	lda start_rsh+1
+   169 31B0 20 FD 35					jsr convh2a
+   170 31B3 8E C8 31					stx start_rsnr
+   171 31B6 8C C9 31					sty start_rsnr+1
+   172 31B9 AD FF 31					lda start_rsl+1
+   173 31BC 20 FD 35					jsr convh2a
+   174 31BF 8E CA 31					stx start_rsnr+2
+   175 31C2 8C CB 31					sty start_rsnr+3
+   176 31C5 20 14 36					jsr print
+   177 31C8 66 66 66 66		start_rsnr	.byte 'ffff'
+   178 31CC 1E 1E 1E 1E FF				.byte $1e,$1e,$1e,$1e,$ff
+   179 							
+   180 				; set SIOCB and read sector
+   181 31D1 A9 31					lda #$31	; disk drive
+   182 31D3 8D 00 03					sta DDEVIC
+   183 31D6 A9 00		start_rdn	lda #$00
+   184 31D8 8D 01 03					sta DUNIT	; drive number
+   185 31DB A9 52					lda #'R'	; command read sector
+   186 31DD 8D 02 03					sta DCOMND
+   187 31E0 A9 40					lda #$40	; state S/R $40, W/P $80
+   188 31E2 8D 03 03					sta DSTATS
+   189 31E5 A9 4A					lda #<buffer_sector
+   190 31E7 8D 04 03					sta DBUFLO
+   191 31EA A9 36					lda #>buffer_sector	; buffer adress
+   192 31EC 8D 05 03					sta DBUFHI
+   193 31EF A9 07					lda #$07	; timeout default 7, format(!) $e0
+   194 31F1 8D 06 03					sta DTIMLO
+   195 31F4 A9 80					lda #$80	; sector length $80
+   196 31F6 8D 08 03					sta DBYTLO
+   197 31F9 A9 00					lda #$00
+   198 31FB 8D 09 03					sta DBYTHI
+   199 31FE A9 00		start_rsl	lda #$00	; sector number $01
+   200 3200 8D 0A 03					sta DAUX1
+   201 3203 A9 00		start_rsh	lda #$00
+   202 3205 8D 0B 03					sta DAUX2
+   203 3208 20 A6 35					jsr lsio ;SIOV
+   204 320B 2C 03 03					bit DSTATS
+   205 320E 30 4B					bmi start_rend
+   206 							
+   207 				; write sector to file			
+   208 3210 A2 10					ldx #$10	; channel 1
+   209 3212 A9 0B					lda #$0b	; put chars
+   210 3214 9D 42 03					sta ICCOM,X
+   211 3217 A9 4A					lda #<buffer_sector
+   212 3219 9D 44 03					sta ICBAL,X	; adr of file name
+   213 321C A9 36					lda #>buffer_sector
+   214 321E 9D 45 03					sta ICBAH,X
+   215 3221 A9 80					lda #$80
+   216 3223 9D 48 03					sta ICBLL,X	; length $80
+   217 3226 A9 00					lda #$00
+   218 3228 9D 49 03					sta ICBLH,X
+   219 322B 20 56 E4					jsr CIOV
+   220 322E 30 03					bmi start_rfend
+   221 							
+   222 3230 4C A5 31					jmp start_rloop
+   223
+   224 3233			start_rfend
+   225 3233 A2 10					ldx #$10
+   226 3235 BD 43 03					lda ICSTA,X
+   227 3238 20 FD 35					jsr convh2a
+   228 323B 8E 57 32					stx start_rwfm
+   229 323E 8C 58 32					sty start_rwfm+1
+   230 3241 20 14 36					jsr print
+   231 3244 9B 57 72 69 74 65 + 			.byte $9b,'Write file state $'
+   232 3257 66 66 9B FF		start_rwfm	.byte 'ff',$9b,$ff
+   233
+   234 325B			start_rend
+   235 325B AD 03 03					lda DSTATS
+   236 325E 20 FD 35					jsr convh2a
+   237 3261 8E 7E 32					stx start_rstam
+   238 3264 8C 7F 32					sty start_rstam+1
+   239 3267 20 14 36					jsr print
+   240 326A 9B 52 65 61 64 20 + 			.byte $9b,'Read sector state $'
+   241 327E 66 66 9B FF		start_rstam	.byte 'ff',$9b,$ff
+   242
+   243 				; close file
+   244 3282 4C 48 34					jmp end_close
+   245
+   246 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   247 				;
+   248 				; copy file to sector of disk
+   249 				;
+   250 				; SECOPY Dx:FILE Dy:
+   251 				;
+   252
+   253 3285			start_wopen
+   254 3285 20 14 36					jsr print
+   255 3288 46 69 6C 65 20 74 + 			.byte 'File to sectors',$9b,$ff
+   256
+   257 3299 A2 10					ldx #$10	; channel 1
+   258 329B A9 03					lda #$03	; open
+   259 329D 9D 42 03					sta ICCOM,X
+   260 32A0 A9 04					lda #$04	; read mode
+   261 32A2 9D 4A 03					sta ICAX1,X
+   262 32A5 A5 0A					lda DOSVEC
+   263 32A7 18						clc
+   264 32A8 69 21					adc #SD_COMFNAM
+   265 32AA 9D 44 03					sta ICBAL,X	; adr of file name
+   266 32AD A5 0B					lda DOSVEC+1
+   267 32AF 69 00					adc #$00
+   268 32B1 9D 45 03					sta ICBAH,X
+   269 32B4 20 56 E4					jsr CIOV
+   270 32B7 10 30					bpl start_wc2p
+   271
+   272 				; error open file for write
+   273 32B9 AD 43 03					lda ICSTA
+   274 32BC 20 FD 35					jsr convh2a
+   275 32BF 8E E2 32					stx start_wof
+   276 32C2 8C E3 32					sty start_wof+1
+   277 32C5 20 14 36					jsr print
+   278 32C8 4F 70 65 6E 20 66 + 			.byte 'Open for read file state $'
+   279 32E2 66 66 9B FF		start_wof   .byte 'ff',$9b,$ff
+   280 				; close file
+   281 32E6 4C 48 34					jmp end_close
+   282
+   283 32E9			start_wc2p
+   284 32E9 20 CE 35					jsr pcheck
+   285 32EC B0 20					bcs start_wc2pd
+   286 32EE 20 14 36					jsr print
+   287 32F1 53 65 63 6F 6E 64 + 			.byte 'Second parameter missing',$9b,$ff
+   288 				; close file
+   289 330B 4C 48 34					jmp end_close
+   290
+   291 330E			start_wc2pd
+   292 330E 20 E0 35					jsr pget
+   293 3311 F0 28					beq start_wdrv
+   294 3313 20 14 36					jsr print
+   295 3316 53 65 63 6F 6E 64 + 			.byte 'Second parameter no drive number',$9b,$ff
+   296 				; close file
+   297 3338 4C 48 34					jmp end_close
+   298
+   299 333B			start_wdrv
+   300 333B A0 22		            ldy #SD_COMFNAM+1	; read drive number
+   301 333D B1 0A		            lda (DOSVEC),Y
+   302 333F 8D 5A 33					sta start_wdnm
+   303 3342 29 0F					and #$0f
+   304 3344 8D BD 33					sta start_wdn+1
+   305 3347 20 14 36					jsr print
+   306 334A 57 72 69 74 65 20 + 			.byte 'Write to drive D'
+   307 335A 58 3A 9B FF		start_wdnm  .byte 'X:',$9b,$ff
+   308
+   309 335E 20 14 36					jsr print
+   310 3361 9C 53 65 63 74 6F + 			.byte $9c,'Sector $',$ff
+   311 				; loop over sector			
+   312 336B			start_wloop
+   313 336B EE E5 33					inc start_wsl+1
+   314 336E D0 03					bne start_wssio 
+   315 3370 EE EA 33					inc start_wsh+1
+   316 				; write info
+   317 3373 AD EA 33		start_wssio	lda start_wsh+1
+   318 3376 20 FD 35					jsr convh2a
+   319 3379 8E 8E 33					stx start_wsnr
+   320 337C 8C 8F 33					sty start_wsnr+1
+   321 337F AD E5 33					lda start_wsl+1
+   322 3382 20 FD 35					jsr convh2a
+   323 3385 8E 90 33					stx start_wsnr+2
+   324 3388 8C 91 33					sty start_wsnr+3
+   325 338B 20 14 36					jsr print
+   326 338E 66 66 66 66		start_wsnr	.byte 'ffff'
+   327 3392 1E 1E 1E 1E FF				.byte $1e,$1e,$1e,$1e,$ff
+   328 							
+   329 				; read sector from file			
+   330 3397 A2 10					ldx #$10	; channel 1
+   331 3399 A9 07					lda #$07	; get chars
+   332 339B 9D 42 03					sta ICCOM,X
+   333 339E A9 4A					lda #<buffer_sector
+   334 33A0 9D 44 03					sta ICBAL,X	; adr of buffer
+   335 33A3 A9 36					lda #>buffer_sector
+   336 33A5 9D 45 03					sta ICBAH,X
+   337 33A8 A9 80					lda #$80
+   338 33AA 9D 48 03					sta ICBLL,X	; length $80
+   339 33AD A9 00					lda #$00
+   340 33AF 9D 49 03					sta ICBLH,X
+   341 33B2 20 56 E4					jsr CIOV
+   342 33B5 30 42					bmi start_wfend
+   343 							
+   344 				; set SIOCB and write sector
+   345 33B7 A9 31					lda #$31	; disk drive
+   346 33B9 8D 00 03					sta DDEVIC
+   347 33BC A9 00		start_wdn	lda #$00
+   348 33BE 8D 01 03					sta DUNIT	; drive number
+   349 33C1 A9 57					lda #'W'	; command write sector
+   350 33C3 8D 02 03					sta DCOMND
+   351 33C6 A9 80					lda #$80	; state S/R $40, W/P $80
+   352 33C8 8D 03 03					sta DSTATS
+   353 33CB A9 4A					lda #<buffer_sector
+   354 33CD 8D 04 03					sta DBUFLO
+   355 33D0 A9 36					lda #>buffer_sector	; buffer adress $4000
+   356 33D2 8D 05 03					sta DBUFHI
+   357 33D5 A9 07					lda #$07	; timeout default 7, format(!) $e0
+   358 33D7 8D 06 03					sta DTIMLO
+   359 33DA A9 80					lda #$80	; sector length $80
+   360 33DC 8D 08 03					sta DBYTLO
+   361 33DF A9 00					lda #$00
+   362 33E1 8D 09 03					sta DBYTHI
+   363 33E4 A9 00		start_wsl	lda #$00	; sector number $01
+   364 33E6 8D 0A 03					sta DAUX1
+   365 33E9 A9 00		start_wsh	lda #$00
+   366 33EB 8D 0B 03					sta DAUX2
+   367 33EE 20 A6 35					jsr lsio ;SIOV
+   368 33F1 2C 03 03					bit DSTATS
+   369 33F4 30 2A					bmi start_wend
+   370 							
+   371 33F6 4C 6B 33					jmp start_wloop
+   372
+   373 33F9			start_wfend
+   374 33F9 A2 10					ldx #$10
+   375 33FB BD 43 03					lda ICSTA,X
+   376 33FE 20 FD 35					jsr convh2a
+   377 3401 8E 1C 34					stx start_wwfm
+   378 3404 8C 1D 34					sty start_wwfm+1
+   379 3407 20 14 36					jsr print
+   380 340A 9B 52 65 61 64 20 + 			.byte $9b,'Read file state $'
+   381 341C 66 66 9B FF		start_wwfm	.byte 'ff',$9b,$ff
+   382
+   383 3420			start_wend
+   384 3420 AD 03 03					lda DSTATS
+   385 3423 20 FD 35					jsr convh2a
+   386 3426 8E 44 34					stx start_wstam
+   387 3429 8C 45 34					sty start_wstam+1
+   388 342C 20 14 36					jsr print
+   389 342F 9B 57 72 69 74 65 + 			.byte $9b,'Write sector state $'
+   390 3444 66 66 9B FF		start_wstam	.byte 'ff',$9b,$ff
+   391
+   392 				; close file
+   393 3448			end_close
+   394 3448 A2 10					ldx #$10	; channel 1
+   395 344A A9 0C					lda #$0C	; close
+   396 344C 9D 42 03					sta ICCOM,X
+   397 344F 20 56 E4					jsr CIOV
+   398
+   399 3452 4C 9F 35					jmp the_end
+   400
+   401 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   402 				;
+   403 				; copy sector to sector of disk
+   404 				;
+   405 				; SECOPY Dx: Dy:
+   406 				;
+   407
+   408 3455			start_xdrv
+   409 3455 A0 22		            ldy #SD_COMFNAM+1	; read drive number
+   410 3457 B1 0A		            lda (DOSVEC),Y
+   411 3459 8D 74 34					sta start_xdnm
+   412 345C 29 0F					and #$0f
+   413 345E 8D 0F 35					sta start_ydn+1
+   414 3461 20 14 36					jsr print
+   415 3464 57 72 69 74 65 20 + 			.byte 'Write to drive D'
+   416 3474 58 3A 9B FF		start_xdnm  .byte 'X:',$9b,$ff
+   417
+   418 3478 20 14 36					jsr print
+   419 347B 53 65 63 74 6F 72 + 			.byte 'Sectors to sectors',$9b
+   420 348E 9C 53 65 63 74 6F + 			.byte $9c,'Sector $',$ff
+   421
+   422 				; loop over sector			
+   423 3498			start_xloop
+   424 3498 EE F8 34					inc start_xsl+1
+   425 349B EE 37 35					inc start_ysl+1
+   426 349E D0 06					bne start_xssio 
+   427 34A0 EE FD 34					inc start_xsh+1
+   428 34A3 EE 3C 35					inc start_ysh+1
+   429 				; write info
+   430 34A6 AD FD 34		start_xssio	lda start_xsh+1
+   431 34A9 20 FD 35					jsr convh2a
+   432 34AC 8E C1 34					stx start_xsnr
+   433 34AF 8C C2 34					sty start_xsnr+1
+   434 34B2 AD F8 34					lda start_xsl+1
+   435 34B5 20 FD 35					jsr convh2a
+   436 34B8 8E C3 34					stx start_xsnr+2
+   437 34BB 8C C4 34					sty start_xsnr+3
+   438 34BE 20 14 36					jsr print
+   439 34C1 66 66 66 66		start_xsnr	.byte 'ffff'
+   440 34C5 1E 1E 1E 1E FF				.byte $1e,$1e,$1e,$1e,$ff
+   441 							
+   442 				; set SIOCB and read sector
+   443 34CA A9 31					lda #$31	; disk drive
+   444 34CC 8D 00 03					sta DDEVIC
+   445 34CF A9 00		start_xdn	lda #$00
+   446 34D1 8D 01 03					sta DUNIT	; drive number
+   447 34D4 A9 52					lda #'R'	; command read sector
+   448 34D6 8D 02 03					sta DCOMND
+   449 34D9 A9 40					lda #$40	; state S/R $40, W/P $80
+   450 34DB 8D 03 03					sta DSTATS
+   451 34DE A9 4A					lda #<buffer_sector
+   452 34E0 8D 04 03					sta DBUFLO
+   453 34E3 A9 36					lda #>buffer_sector	; buffer adress
+   454 34E5 8D 05 03					sta DBUFHI
+   455 34E8 A9 07					lda #$07	; timeout default 7, format(!) $e0
+   456 34EA 8D 06 03					sta DTIMLO
+   457 34ED A9 80					lda #$80	; sector length $80
+   458 34EF 8D 08 03					sta DBYTLO
+   459 34F2 A9 00					lda #$00
+   460 34F4 8D 09 03					sta DBYTHI
+   461 34F7 A9 00		start_xsl	lda #$00	; sector number $01
+   462 34F9 8D 0A 03					sta DAUX1
+   463 34FC A9 00		start_xsh	lda #$00
+   464 34FE 8D 0B 03					sta DAUX2
+   465 3501 20 A6 35					jsr lsio ;SIOV
+   466 3504 2C 03 03					bit DSTATS
+   467 3507 30 6F					bmi start_xend
+   468 							
+   469 				; set SIOCB and write sector
+   470 3509 A9 31					lda #$31	; disk drive
+   471 350B 8D 00 03					sta DDEVIC
+   472 350E A9 00		start_ydn	lda #$00
+   473 3510 8D 01 03					sta DUNIT	; drive number
+   474 3513 A9 57					lda #'W'	; command write sector
+   475 3515 8D 02 03					sta DCOMND
+   476 3518 A9 80					lda #$80	; state S/R $40, W/P $80
+   477 351A 8D 03 03					sta DSTATS
+   478 351D A9 4A					lda #<buffer_sector
+   479 351F 8D 04 03					sta DBUFLO
+   480 3522 A9 36					lda #>buffer_sector	; buffer adress $4000
+   481 3524 8D 05 03					sta DBUFHI
+   482 3527 A9 07					lda #$07	; timeout default 7, format(!) $e0
+   483 3529 8D 06 03					sta DTIMLO
+   484 352C A9 80					lda #$80	; sector length $80
+   485 352E 8D 08 03					sta DBYTLO
+   486 3531 A9 00					lda #$00
+   487 3533 8D 09 03					sta DBYTHI
+   488 3536 A9 00		start_ysl	lda #$00	; sector number $01
+   489 3538 8D 0A 03					sta DAUX1
+   490 353B A9 00		start_ysh	lda #$00
+   491 353D 8D 0B 03					sta DAUX2
+   492 3540 20 A6 35					jsr lsio ;SIOV
+   493 3543 2C 03 03					bit DSTATS
+   494 3546 30 03					bmi start_xfend
+   495 							
+   496 3548 4C 98 34					jmp start_xloop
+   497
+   498 354B			start_xfend
+   499 354B AD 03 03					lda DSTATS
+   500 354E 20 FD 35					jsr convh2a
+   501 3551 8E 6F 35					stx start_xwfm
+   502 3554 8C 70 35					sty start_xwfm+1
+   503 3557 20 14 36					jsr print
+   504 355A 9B 57 72 69 74 65 + 			.byte $9b,'Write sector state $'
+   505 356F 66 66 9B FF		start_xwfm	.byte 'ff',$9b,$ff
+   506 3573 A9 01					lda #$01
+   507 3575 8D 03 03					sta DSTATS
+   508
+   509 3578			start_xend
+   510 3578 AD 03 03					lda DSTATS
+   511 357B 20 FD 35					jsr convh2a
+   512 357E 8E 9B 35					stx start_xstam
+   513 3581 8C 9C 35					sty start_xstam+1
+   514 3584 20 14 36					jsr print
+   515 3587 9B 52 65 61 64 20 + 			.byte $9b,'Read sector state $'
+   516 359B 66 66 9B FF		start_xstam	.byte 'ff',$9b,$ff
+   517
+   518 359F			the_end
+   519 359F A9 00					lda #$00
+   520 35A1 8D F0 02					sta CRSINH
+   521 35A4 60						rts
+   522
+   523
+   524 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   525 				;
+   526 				; local SIO vector to SpartaDOS SIO            
+   527 				;
+   528 35A5 FF			lsio_set	.byte $ff
+   529 35A6			lsio		; set address, if necessary
+   530 35A6 2C A5 35					bit lsio_set
+   531 35A9 10 1F					bpl lsio_call
+   532
+   533 35AB A5 0A					lda DOSVEC
+   534 35AD 38			            sec
+   535 35AE E9 0A		            sbc #SD_LSIO
+   536 35B0 85 32		            sta BUFRLO
+   537 				 
+   538 35B2 A5 0B		            lda DOSVEC+1
+   539 35B4 E9 00		            sbc #$00
+   540 35B6 85 33					sta BUFRHI
+   541 							
+   542 35B8 A0 00					ldy #$00
+   543 35BA B1 32					lda (BUFRLO),Y
+   544 35BC 8D CB 35					sta lsio_call+1
+   545 35BF C8						iny
+   546 35C0 B1 32					lda (BUFRLO),Y
+   547 35C2 8D CC 35					sta lsio_call+2
+   548 							
+   549 35C5 A9 00					lda #$00
+   550 35C7 8D A5 35					sta lsio_set
+   551 							
+   552 35CA 20 FF FF		lsio_call	jsr $ffff
+   553 35CD 60						rts
+   554
+   555 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   556 				;
+   557 				; parameter subroutines            
+   558 				;
+   559
+   560 				;
+   561 				; check for next parameter
+   562 				;   sets carry if next parameter is available
+   563 				;
+   564 35CE A0 0A		pcheck		ldy #SD_BUFOFF
+   565 35D0 B1 0A		            lda (DOSVEC),Y
+   566 35D2 18			            clc
+   567 35D3 69 3F		            adc #SD_LBUF
+   568 35D5 A8			            tay
+   569 35D6 B1 0A		            lda (DOSVEC),Y
+   570 35D8 C9 9B		            cmp #$9b
+   571 35DA 18			            clc
+   572 35DB F0 01		            beq pcheck_end
+   573 35DD 38						sec
+   574 35DE 60			pcheck_end	rts
+   575
+   576 				;
+   577 				; get next parameter
+   578 				;   calls crunch name 
+   579 				;
+   580 				; jump for jsr to crunch name
+   581 35DF FF			pget_set	.byte $ff
+   582 35E0			pget		; set crunch name address, if necessary
+   583 35E0 2C DF 35					bit pget_set
+   584 35E3 10 14					bpl pget_call
+   585 							
+   586 35E5 A5 0A					lda DOSVEC
+   587 35E7 18			            clc
+   588 35E8 69 03		            adc #SD_ZCRNAME
+   589 35EA 8D FA 35		            sta pget_call+1
+   590 				            
+   591 35ED A5 0B		            lda DOSVEC+1
+   592 35EF 69 00		            adc #$00
+   593 35F1 8D FB 35		            sta pget_call+2
+   594 				            
+   595 35F4 A9 00					lda #$00
+   596 35F6 8D DF 35					sta pget_set
+   597 							
+   598 35F9 20 FF FF		pget_call	jsr $ffff
+   599 35FC 60						rts
+   600
+   601 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   602 				;
+   603 				; convert hex to atascii
+   604 				;   hex A -> atascii X,Y            
+   605 				;
+   606 35FD 48			convh2a		pha
+   607 35FE 4A						lsr
+   608 35FF 4A						lsr
+   609 3600 4A						lsr
+   610 3601 4A						lsr
+   611 3602 F8						sed		
+   612 3603 18						clc
+   613 3604 69 90					adc #$90
+   614 3606 69 40					adc #$40
+   615 3608 AA						tax
+   616 3609 68						pla
+   617 360A 29 0F					and #$0f
+   618 360C 18						clc
+   619 360D 69 90					adc #$90
+   620 360F 69 40					adc #$40
+   621 3611 A8						tay
+   622 3612 D8						cld			
+   623 3613 60						rts
+   624
+   625
+   626 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   627 				;
+   628 				; print subroutine            
+   629 				;
+   630 3614			print
+   631 3614 68						pla
+   632 3615 8D 25 36		            sta print_iter+1
+   633 3618 68			            pla
+   634 3619 8D 26 36		            sta print_iter+2
+   635 361C EE 25 36		print_loop  inc print_iter+1
+   636 361F D0 03		            bne print_iter
+   637 3621 EE 26 36		            inc print_iter+2
+   638 3624 AD FF FF		print_iter  lda $ffff
+   639 3627 C9 FF		            cmp #$ff
+   640 3629 F0 06		            beq print_end
+   641 362B 20 3A 36		            jsr cioputchr
+   642 362E 4C 1C 36		            jmp print_loop
+   643 3631 AD 26 36		print_end   lda print_iter+2
+   644 3634 48			            pha
+   645 3635 AD 25 36		            lda print_iter+1
+   646 3638 48			            pha
+   647 3639 60			            rts
+   648 				; call cio put char subroutine
+   649 363A A2 00		cioputchr   ldx #$00
+   650 363C 8E 48 03		            stx ICBLL
+   651 363F 8E 49 03		            stx ICBLH
+   652 3642 A0 0B		            ldy #$0B
+   653 3644 8C 42 03		            sty ICCOM
+   654 3647 4C 56 E4		            jmp CIOV
+   655 						
+   656 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   657 				;
+   658 				; sector buffer            
+   659 				;
+   660 364A			buffer_sector
+   661
+   662 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   663 				;
+   664 				; run address            
+   665 				;
+   666 02E0-02E1> 00 30					run start
+   667 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   668 							

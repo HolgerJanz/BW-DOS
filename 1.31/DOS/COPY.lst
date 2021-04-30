@@ -1,0 +1,673 @@
+mads 2.0.9
+Source: /Users/holgerjanz/Documents/ATARI-XL/Projects/RAMCART/BW-DOS/DOS/COPY.ASM
+     1 				; COPY for BW-DOS
+     2
+     3 				;
+     4 				; System equates
+     5 				;
+     6 = 0000			ICHID       equ $0000
+     7 = 0001			ICDNO       equ $0001
+     8 = 0002			ICCOM       equ $0002
+     9 = 0003			ICSTA       equ $0003
+    10 = 0004			ICBAL       equ $0004
+    11 = 0005			ICBAH       equ $0005
+    12 = 0006			ICPTL       equ $0006
+    13 = 0007			ICPTH       equ $0007
+    14 = 0008			ICBLL       equ $0008
+    15 = 0009			ICBLH       equ $0009
+    16 = 000A			ICAX1       equ $000A
+    17 = 000B			ICAX2       equ $000B
+    18 = 000A			DOSVEC      equ $000A
+    19 = 02E5			MEMTOP      equ $02E5
+    20 = 0340			IOCB0       equ $0340
+    21 = E456			CIOV        equ $E456
+    22 = E474			WARMSV      equ $E474
+    23
+    24 				;
+    25 				; BW-DOS equates
+    26 				;
+    27
+    28 = 0008			BW_ZXDIVIO  equ $08
+    29 = 000A			BW_BUFOFF   equ $0a
+    30 = 0013			BW_ODATER   equ $13
+    31 = 0016			BW_OTIMER   equ $16
+    32 = 0019			BW_TDOVER   equ $19
+    33 = 003F			BW_LBUF     equ $3f
+    34 = 0021			BW_COMFNAM  equ $21
+    35
+    36 				;
+    37 				; Code equates
+    38 				;
+    39 = 0080			path1_fn    equ $0080
+    40 = 0081			path2_fn    equ $0081
+    41 = 0082			L0082       equ $0082
+    42 = 0083			L0083       equ $0083
+    43 = 0084			L0084       equ $0084
+    44 = 0085			L0085       equ $0085
+    45 = 0086			L0086       equ $0086
+    46 = 0087			L0087       equ $0087
+    47 = 0088			L0088       equ $0088
+    48 = 0089			L0089       equ $0089
+    49
+    50 = 0500			path1       equ $0500
+    51 = 0501			L0501       equ $0501
+    52 = 0540			path2       equ $0540
+    53 = 0580			L0580       equ $0580
+    54 = 0581			L0581       equ $0581
+    55 = 0588			L0588       equ $0588
+    56 = 058A			L058A       equ $058A
+    57 = 058C			L058C       equ $058C
+    58 = 0591			L0591       equ $0591
+    59 = 05E0			L05E0       equ $05E0
+    60 = 0700			DOSBEG      equ $0700
+    61
+    62 				;
+    63 				; Opcodes 6502
+    64 				;
+    65 = 002C			opcode_BIT  equ $2c
+    66
+    67 				;
+    68 				; Start of code
+    69 				;
+    70
+    71 = 2D00			start_addr  equ $2d00
+    72 				;start_addr  equ $6000
+    73 				            org start_addr
+    74 				; check DOS version
+    75 FFFF> 2D00-320E> AD 00 + start       lda DOSBEG              ; AD 00 07
+    76 2D03 C9 53		            cmp #'S'               ; C9 53
+    77 2D05 F0 1E		            beq sd_found           ; F0 1E
+    78 2D07 20 BD 30		            jsr print              ; 20 03 60
+    79 2D0A 9B			            .byte $9B
+    80 2D0B 49 6E 63 6F 72 72 +             .byte 'Incorrect DOS version'
+    81 2D20 9B 00		            .byte $9B,$00
+    82 2D22 6C 0A 00		            jmp (DOSVEC)           ; 6C 0A 00
+    83
+    84 				; set CRNAME vector and check for parameter
+    85 2D25 A5 0A		sd_found    lda DOSVEC             ; A5 0A
+    86 2D27 18			            clc                    ; 18
+    87 2D28 69 03		            adc #$03               ; 69 03
+    88 2D2A 8D F5 30		            sta _CRNAME+1          ; 8D 3B 60
+    89 2D2D A5 0B		            lda DOSVEC+1           ; A5 0B
+    90 2D2F 69 00		            adc #$00               ; 69 00
+    91 2D31 8D F6 30		            sta _CRNAME+2          ; 8D 3C 60
+    92 2D34 A0 0A		            ldy #BW_BUFOFF         ; A0 0A
+    93 2D36 B1 0A		            lda (DOSVEC),Y         ; B1 0A
+    94 2D38 18			            clc                    ; 18
+    95 2D39 69 3F		            adc #BW_LBUF               ; 69 3F
+    96 2D3B A8			            tay                    ; A8
+    97 2D3C B1 0A		            lda (DOSVEC),Y         ; B1 0A
+    98 2D3E C9 9B		            cmp #$9B               ; C9 9B
+    99 2D40 D0 44		            bne par_found          ; D0 46
+   100 2D42 20 BD 30		            jsr print              ; 20 03 60
+   101 2D45 9B 43 4F 50 59 20 +             .byte $9b,'COPY 1.2 16k for BW-DOS'
+   102 2D5D 9B			            .byte $9B
+   103 2D5E 53 79 6E 74 61 78 +             .byte 'Syntax: COPY source destination[/A]'
+   104 2D81 9B 00		            .byte $9B,$00
+   105 2D83 6C 0A 00		            jmp (DOSVEC)           ; 6C 0A 00
+   106
+   107 				; get paths
+   108 2D86 20 1B 31		par_found   jsr close_123          ; 20 61 60
+   109 2D89 A9 00		            lda #$00               ; A9 00
+   110 2D8B 20 F7 30		            jsr get_path           ; 20 3D 60
+   111 2D8E 85 80		            sta path1_fn           ; 85 80
+   112 2D90 A9 40		            lda #$40               ; A9 40
+   113 2D92 20 F7 30		            jsr get_path           ; 20 3D 60
+   114 2D95 85 81		            sta path2_fn           ; 85 81
+   115 				; search for wildcards
+   116 2D97 A6 80		            ldx path1_fn           ; A6 80
+   117 2D99 BD 00 05		L61F0       lda path1,X            ; BD 00 05
+   118 2D9C E8			            inx                    ; E8
+   119 2D9D C9 3F		            cmp #'?'               ; C9 3F
+   120 2D9F F0 61		            beq L6259              ; F0 61
+   121 2DA1 C9 2A		            cmp #'*'               ; C9 2A
+   122 2DA3 F0 5D		            beq L6259              ; F0 5D
+   123 2DA5 C9 9B		            cmp #$9B               ; C9 9B
+   124 2DA7 D0 F0		            bne L61F0              ; D0 F0
+   125 2DA9 AD 00 05		            lda path1              ; AD 00 05
+   126 2DAC C9 44		            cmp #'D'               ; C9 44
+   127 2DAE F0 4F		            beq L6256              ; F0 4F
+   128 2DB0 20 E6 2D		            jsr chk_p1_star        ; 20 3D 62
+   129 2DB3 20 E9 2D		            jsr chk_p2_star        ; 20 40 62
+   130 2DB6 A6 80		            ldx path1_fn           ; A6 80
+   131 2DB8 20 D0 2F		            jsr L6427              ; 20 27 64
+   132 2DBB A2 0B		            ldx #$0B               ; A2 0B
+   133 2DBD BD E0 05		L6214       lda L05E0,X            ; BD E0 05
+   134 2DC0 9D 80 05		            sta L0580,X            ; 9D 80 05
+   135 2DC3 CA			            dex                    ; CA
+   136 2DC4 10 F7		            bpl L6214              ; 10 F7
+   137 2DC6 A6 81		            ldx $81                ; A6 81
+   138 2DC8 20 D0 2F		            jsr L6427              ; 20 27 64
+   139 2DCB 20 AD 30		            jsr L6504              ; 20 04 65
+   140 2DCE A6 81		            ldx $81                ; A6 81
+   141 2DD0 20 C9 31		            jsr L610F              ; 20 0F 61
+   142 2DD3 B0 0C		            bcs L6238              ; B0 0C
+   143 2DD5 A0 19		            ldy #BW_TDOVER         ; A0 19
+   144 2DD7 A9 00		            lda #$00               ; A9 00
+   145 2DD9 91 0A		            sta (DOSVEC),Y         ; 91 0A
+   146 2DDB 20 F0 2E		            jsr copy_23              ; 20 47 63
+   147 2DDE 4C BA 31		            jmp close2dos          ; 4C 00 61
+   148 2DE1 A0 A5		L6238       ldy #$A5 ; bad file name ; A0 A5
+   149 2DE3 4C 77 31		            jmp error              ; 4C BD 60
+   150
+   151 2DE6 A6 80		chk_p1_star ldx path1_fn           ; A6 80
+   152 2DE8 2C			            .byte opcode_BIT
+   153 2DE9 A6 81		chk_p2_star ldx path2_fn           ; 2C A6 81
+   154 2DEB BD 00 05		            lda path1,X            ; BD 00 05
+   155 2DEE C9 9B		            cmp #$9B               ; C9 9B
+   156 2DF0 D0 0C		            bne L6255              ; D0 0C
+   157 2DF2 A0 03		            ldy #$03               ; A0 03
+   158 2DF4 B9 32 31		L624B       lda star.star,Y        ; B9 78 60
+   159 2DF7 9D 00 05		            sta path1,X            ; 9D 00 05
+   160 2DFA E8			            inx                    ; E8
+   161 2DFB 88			            dey                    ; 88
+   162 2DFC 10 F6		            bpl L624B              ; 10 F6
+   163 2DFE 60			L6255       rts                    ; 60
+   164
+   165 2DFF 20 E6 2D		L6256       jsr chk_p1_star        ; 20 3D 62
+   166 2E02 20 E9 2D		L6259       jsr chk_p2_star        ; 20 40 62
+   167 2E05 A6 81		            ldx path2_fn           ; A6 81
+   168 2E07 20 D0 2F		            jsr L6427              ; 20 27 64
+   169 2E0A 46 86		            lsr L0086              ; 46 86
+   170 2E0C 46 89		            lsr L0089              ; 46 89
+   171 2E0E 20 2F 30		            jsr L6486              ; 20 86 64
+   172 2E11 4C CD 2E		            jmp chk_err              ; 4C 24 63
+   173
+   174 2E14 20 6F 30		L626B       jsr L64C6              ; 20 C6 64
+   175 2E17 4C CD 2E		            jmp chk_err              ; 4C 24 63
+   176
+   177 2E1A A6 80		nxt_file    ldx $80              ; A6 80
+   178 2E1C 20 C9 31		            jsr L610F              ; 20 0F 61
+   179 2E1F B0 F3		            bcs L626B              ; B0 F3
+   180 2E21 20 AD 30		            jsr L6504              ; 20 04 65
+   181 2E24 A6 81		            ldx $81                ; A6 81
+   182 2E26 20 C9 31		            jsr L610F              ; 20 0F 61
+   183 2E29 B0 E9		            bcs L626B              ; B0 E9
+   184 2E2B A9 00		            lda #$00               ; A9 00
+   185 2E2D 24 83		            bit L0083              ; 24 83
+   186 2E2F 10 29		            bpl L62B1              ; 10 29
+   187 2E31 A0 13		            ldy #BW_ODATER         ; A0 13
+   188 2E33 A2 14		            ldx #$14               ; A2 14
+   189 2E35 8A			L628C       txa                    ; 8A
+   190 2E36 48			            pha                    ; 48
+   191 2E37 BD 81 05		            lda L0581,X            ; BD 81 05
+   192 2E3A 29 0F		            and #$0F               ; 29 0F
+   193 2E3C 48			            pha                    ; 48
+   194 2E3D BD 80 05		            lda L0580,X            ; BD 80 05
+   195 2E40 29 0F		            and #$0F               ; 29 0F
+   196 2E42 AA			            tax                    ; AA
+   197 2E43 68			            pla                    ; 68
+   198 2E44 18			            clc                    ; 18
+   199 2E45 7D E0 2E		            adc L6337,X            ; 7D 37 63
+   200 2E48 91 0A		            sta (DOSVEC),Y         ; 91 0A
+   201 2E4A 68			            pla                    ; 68
+   202 2E4B AA			            tax                    ; AA
+   203 2E4C E8			            inx                    ; E8
+   204 2E4D E8			            inx                    ; E8
+   205 2E4E E8			            inx                    ; E8
+   206 2E4F C8			            iny                    ; C8
+   207 2E50 C0 18		            cpy #$18               ; C0 18
+   208 2E52 D0 E1		            bne L628C              ; D0 E1
+   209 2E54 A9 00		            lda #$00               ; A9 00
+   210 2E56 91 0A		            sta (DOSVEC),Y         ; 91 0A
+   211 2E58 A9 FF		            lda #$FF               ; A9 FF
+   212 2E5A A0 19		L62B1       ldy #BW_TDOVER         ; A0 19
+   213 2E5C 91 0A		            sta (DOSVEC),Y         ; 91 0A
+   214 2E5E 20 6F 30		            jsr L64C6              ; 20 C6 64
+   215 2E61 AD 00 05		            lda path1              ; AD 00 05
+   216 2E64 C9 44		            cmp #$44               ; C9 44
+   217 2E66 D0 35		            bne cpy_file              ; D0 35
+   218 2E68 A2 FF		            ldx #$FF               ; A2 FF
+   219 2E6A E8			L62C1       inx                    ; E8
+   220 2E6B BD 00 05		            lda path1,X            ; BD 00 05
+   221 2E6E DD 40 05		            cmp path2,X            ; DD 40 05
+   222 2E71 D0 2A		            bne cpy_file              ; D0 2A
+   223 2E73 C9 9B		            cmp #$9B               ; C9 9B
+   224 2E75 D0 F3		            bne L62C1              ; D0 F3
+   225 2E77 20 BD 30		            jsr print              ; 20 03 60
+   226 2E7A 9B			            .byte $9B
+   227 2E7B 43 61 6E 27 74 20 +             .byte 'Can''t copy a file to itself !'
+   228 2E98 9B 00		            .byte $9B,$00
+   229 2E9A 4C A8 31		            jmp abort2dos              ; 4C EE 60
+   230
+   231 				; print file name and copy file
+   232 2E9D 20 BD 30		cpy_file    jsr print              ; 20 03 60
+   233 2EA0 43 6F 70 79 69 6E +             .byte 'Copying '
+   234 2EA8 00			            .byte $00
+   235 2EA9 A2 00		            ldx #$00               ; A2 00
+   236 2EAB A9 00		            lda #<path1               ; A9 00
+   237 2EAD 9D 44 03		            sta IOCB0+ICBAL,X      ; 9D 44 03
+   238 2EB0 A9 05		            lda #>path2               ; A9 05
+   239 2EB2 9D 45 03		            sta IOCB0+ICBAH,X      ; 9D 45 03
+   240 2EB5 A9 40		            lda #$40               ; A9 40
+   241 2EB7 9D 48 03		            sta IOCB0+ICBLL,X      ; 9D 48 03
+   242 2EBA A9 00		            lda #$00               ; A9 00
+   243 2EBC 9D 49 03		            sta IOCB0+ICBLH,X      ; 9D 49 03
+   244 2EBF A9 09		            lda #$09 ; put record  ; A9 09
+   245 2EC1 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   246 2EC4 20 56 E4		            jsr CIOV               ; 20 56 E4
+   247 2EC7 38			            sec                    ; 38
+   248 2EC8 66 86		            ror L0086              ; 66 86
+   249 2ECA 20 F0 2E		            jsr copy_23              ; 20 47 63
+   250
+   251 				; check for error and exit
+   252 2ECD A5 89		chk_err     lda L0089              ; A5 89
+   253 2ECF 30 03		            bmi L632B              ; 30 03
+   254 2ED1 4C 1A 2E		            jmp nxt_file              ; 4C 71 62
+   255 2ED4 A5 86		L632B       lda L0086              ; A5 86
+   256 2ED6 10 03		            bpl L6332              ; 10 03
+   257 2ED8 4C BA 31		            jmp close2dos          ; 4C 00 61
+   258 2EDB A0 AA		L6332       ldy #$AA ; File not found ; A0 AA
+   259 2EDD 4C 77 31		            jmp error              ; 4C BD 60
+   260
+   261 2EE0 00 0A 14 1E 28 32 + L6337       .byte 00,10,20,30,40,50,60,70
+   262 2EE8 50 5A 00 00 00 00 +             .byte 80,90,00,00,00,00,00,00
+   263
+   264 				; copy file IOCB 1 to 2
+   265 2EF0 20 1E 31		copy_23     jsr close_23           ; 20 64 60
+   266 2EF3 46 87		            lsr L0087              ; 46 87
+   267 2EF5 46 88		            lsr L0088              ; 46 88
+   268 2EF7 A2 03		L634E       ldx #$03               ; A2 03
+   269 2EF9 A9 00		L6350       lda #$00               ; A9 00
+   270 2EFB 9D 35 2F		            sta _memsiz,X            ; 9D 8C 63
+   271 2EFE BD E5 02		            lda MEMTOP,X           ; BD E5 02
+   272 2F01 9D 2F 2F		            sta _memtop2,X           ; 9D 86 63
+   273 2F04 CA			            dex                    ; CA
+   274 2F05 10 F2		            bpl L6350              ; 10 F2
+   275 2F07 A9 00		            lda #$00               ; A9 00
+   276 2F09 85 85		            sta L0085              ; 85 85
+   277 2F0B 20 39 2F		            jsr get_bytes              ; 20 90 63
+   278 2F0E 30 07		            bmi L636E              ; 30 07
+   279 2F10 A9 02		            lda #$02               ; A9 02
+   280 2F12 20 39 2F		            jsr get_bytes              ; 20 90 63
+   281 2F15 10 05		            bpl L6373              ; 10 05
+   282 2F17 C6 85		L636E       dec L0085              ; C6 85
+   283 2F19 20 23 31		            jsr close_2              ; 20 69 60
+   284 2F1C A9 00		L6373       lda #$00               ; A9 00
+   285 2F1E 20 91 2F		            jsr put_bytes              ; 20 E8 63
+   286 2F21 A9 02		            lda #$02               ; A9 02
+   287 2F23 20 91 2F		            jsr put_bytes              ; 20 E8 63
+   288 2F26 A5 85		            lda L0085              ; A5 85
+   289 2F28 F0 CD		            beq L634E              ; F0 CD
+   290 2F2A 4C 1E 31		            jmp close_23           ; 4C 64 60
+   291
+   292 2F2D 00 2D		_memtop     .word start_addr
+   293 2F2F 00 80		_memtop2    .word $8000
+   294
+   295 2F31 00 50		_memlow     .word $5000
+   296 2F33 0F 32		            .word _memlo2
+   297
+   298 2F35 00 00		_memsiz     .word $0000
+   299 2F37 00 00		            .word $0000
+   300
+   301 2F39 48			get_bytes   pha                    ; 48
+   302 2F3A A5 87		            lda L0087              ; A5 87
+   303 2F3C 30 0C		            bmi L63A1              ; 30 0C
+   304 2F3E 38			            sec                    ; 38
+   305 2F3F 66 87		            ror L0087              ; 66 87
+   306 2F41 A2 20		            ldx #$20               ; A2 20
+   307 2F43 A9 04		            lda #$04               ; A9 04
+   308 2F45 A0 00		            ldy #$00               ; A0 00
+   309 2F47 20 36 31		            jsr open_m             ; 20 7C 60
+   310 2F4A 68			L63A1       pla                    ; 68
+   311 2F4B A8			            tay                    ; A8
+   312 2F4C A2 20		            ldx #$20               ; A2 20
+   313 2F4E B9 31 2F		            lda _memlow,Y          ; B9 88 63
+   314 2F51 9D 44 03		            sta IOCB0+ICBAL,X      ; 9D 44 03
+   315 2F54 B9 32 2F		            lda _memlow+1,Y        ; B9 89 63
+   316 2F57 9D 45 03		            sta IOCB0+ICBAH,X      ; 9D 45 03
+   317 2F5A B9 2D 2F		            lda _memtop,Y          ; B9 84 63
+   318 2F5D 38			            sec                    ; 38
+   319 2F5E F9 31 2F		            sbc _memlow,Y          ; F9 88 63
+   320 2F61 9D 48 03		            sta IOCB0+ICBLL,X      ; 9D 48 03
+   321 2F64 B9 2E 2F		            lda _memtop+1,Y        ; B9 85 63
+   322 2F67 F9 32 2F		            sbc _memlow+1,Y        ; F9 89 63
+   323 2F6A 9D 49 03		            sta IOCB0+ICBLH,X      ; 9D 49 03
+   324 2F6D A9 07		            lda #$07 ; get chars   ; A9 07
+   325 2F6F 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   326 2F72 98			            tya                    ; 98
+   327 2F73 48			            pha                    ; 48
+   328 2F74 20 56 E4		            jsr CIOV               ; 20 56 E4
+   329 2F77 84 82		            sty L0082              ; 84 82
+   330 2F79 68			            pla                    ; 68
+   331 2F7A A8			            tay                    ; A8
+   332 2F7B BD 48 03		            lda IOCB0+ICBLL,X      ; BD 48 03
+   333 2F7E 99 35 2F		            sta _memsiz,Y            ; 99 8C 63
+   334 2F81 BD 49 03		            lda IOCB0+ICBLH,X      ; BD 49 03
+   335 2F84 99 36 2F		            sta _memsiz+1,Y            ; 99 8D 63
+   336 2F87 A4 82		            ldy L0082              ; A4 82
+   337 2F89 10 04		            bpl L63E6              ; 10 04
+   338 2F8B C0 88		            cpy #$88               ; C0 88
+   339 2F8D D0 3E		            bne L6424              ; D0 3E
+   340 2F8F 98			L63E6       tya                    ; 98
+   341 2F90 60			            rts                    ; 60
+   342
+   343 2F91 48			put_bytes   pha                    ; 48
+   344 2F92 A5 88		            lda L0088              ; A5 88
+   345 2F94 30 0C		            bmi L63F9              ; 30 0C
+   346 2F96 38			            sec                    ; 38
+   347 2F97 66 88		            ror L0088              ; 66 88
+   348 2F99 A2 30		            ldx #$30               ; A2 30
+   349 2F9B A5 84		            lda L0084              ; A5 84
+   350 2F9D A0 40		            ldy #$40               ; A0 40
+   351 2F9F 20 36 31		            jsr open_m             ; 20 7C 60
+   352 2FA2 68			L63F9       pla                    ; 68
+   353 2FA3 A8			            tay                    ; A8
+   354 2FA4 A2 30		            ldx #$30               ; A2 30
+   355 2FA6 B9 31 2F		            lda _memlow,Y          ; B9 88 63
+   356 2FA9 9D 44 03		            sta IOCB0+ICBAL,X      ; 9D 44 03
+   357 2FAC B9 32 2F		            lda _memlow+1,Y        ; B9 89 63
+   358 2FAF 9D 45 03		            sta IOCB0+ICBAH,X      ; 9D 45 03
+   359 2FB2 B9 35 2F		            lda _memsiz,Y          ; B9 8C 63
+   360 2FB5 9D 48 03		            sta IOCB0+ICBLL,X      ; 9D 48 03
+   361 2FB8 B9 36 2F		            lda _memsiz+1,Y        ; B9 8D 63
+   362 2FBB 9D 49 03		            sta IOCB0+ICBLH,X      ; 9D 49 03
+   363 2FBE 19 35 2F		            ora _memsiz,Y          ; 19 8C 63
+   364 2FC1 F0 CC		            beq L63E6              ; F0 CC
+   365 2FC3 A9 0B		            lda #$0B ; put chars   ; A9 0B
+   366 2FC5 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   367 2FC8 20 56 E4		            jsr CIOV               ; 20 56 E4
+   368 2FCB 10 C2		            bpl L63E6              ; 10 C2
+   369 2FCD 4C 77 31		L6424       jmp error              ; 4C BD 60
+   370
+   371 2FD0 A0 00		L6427       ldy #$00               ; A0 00
+   372 2FD2 A9 06		            lda #$06               ; A9 06
+   373 2FD4 85 82		            sta L0082              ; 85 82
+   374 2FD6 D0 0B		            bne L643A              ; D0 0B
+   375 2FD8 A9 3F		L642F       lda #$3F               ; A9 3F
+   376 2FDA 20 15 30		            jsr L646C              ; 20 6C 64
+   377 2FDD 90 F9		            bcc L642F              ; 90 F9
+   378 2FDF 20 15 30		L6436       jsr L646C              ; 20 6C 64
+   379 2FE2 E8			L6439       inx                    ; E8
+   380 2FE3 BD 00 05		L643A       lda path1,X            ; BD 00 05
+   381 2FE6 C9 2A		            cmp #$2A               ; C9 2A
+   382 2FE8 F0 EE		            beq L642F              ; F0 EE
+   383 2FEA C9 2E		            cmp #$2E               ; C9 2E
+   384 2FEC F0 07		            beq L644C              ; F0 07
+   385 2FEE 20 F5 31		            jsr char_ok              ; 20 3B 61
+   386 2FF1 90 EC		            bcc L6436              ; 90 EC
+   387 2FF3 66 82		            ror L0082              ; 66 82
+   388 2FF5 A9 20		L644C       lda #$20               ; A9 20
+   389 2FF7 20 15 30		            jsr L646C              ; 20 6C 64
+   390 2FFA 90 F9		            bcc L644C              ; 90 F9
+   391 2FFC 66 82		            ror L0082              ; 66 82
+   392 2FFE 90 E2		            bcc L6439              ; 90 E2
+   393 3000 A9 08		            lda #$08               ; A9 08
+   394 3002 85 84		            sta L0084              ; 85 84
+   395 3004 BD 00 05		            lda path1,X            ; BD 00 05
+   396 3007 C9 2F		            cmp #$2F               ; C9 2F
+   397 3009 D0 09		            bne L646B              ; D0 09
+   398 300B BD 01 05		            lda L0501,X            ; BD 01 05
+   399 300E C9 41		            cmp #$41               ; C9 41
+   400 3010 D0 02		            bne L646B              ; D0 02
+   401 3012 E6 84		            inc L0084              ; E6 84
+   402 3014 60			L646B       rts                    ; 60
+   403
+   404 3015 C0 08		L646C       cpy #$08               ; C0 08
+   405 3017 90 09		            bcc L6479              ; 90 09
+   406 3019 24 82		            bit L0082              ; 24 82
+   407 301B 10 04		            bpl L6478              ; 10 04
+   408 301D C0 0B		            cpy #$0B               ; C0 0B
+   409 301F 90 04		            bcc L647C              ; 90 04
+   410 3021 60			L6478       rts                    ; 60
+   411 3022 99 E0 05		L6479       sta L05E0,Y            ; 99 E0 05
+   412 3025 C8			L647C       iny                    ; C8
+   413 3026 99 E0 05		            sta L05E0,Y            ; 99 E0 05
+   414 3029 60			            rts                    ; 60
+   415
+   416 302A A0 94		L6481       ldy #$94               ; A0 94
+   417 302C 4C 77 31		            jmp error              ; 4C BD 60
+   418
+   419 302F 46 83		L6486       lsr L0083              ; 46 83
+   420 3031 A2 10		            ldx #$10               ; A2 10
+   421 3033 A9 06		            lda #$06               ; A9 06
+   422 3035 9D 4A 03		            sta IOCB0+ICAX1,X      ; 9D 4A 03
+   423 3038 A9 80		            lda #$80               ; A9 80
+   424 303A AC 00 05		            ldy path1              ; AC 00 05
+   425 303D C0 44		            cpy #$44               ; C0 44
+   426 303F F0 01		            beq L6499              ; F0 01
+   427 3041 0A			            asl                    ; 0A
+   428 3042 9D 4B 03		L6499       sta IOCB0+ICAX2,X      ; 9D 4B 03
+   429 3045 A0 00		            ldy #$00               ; A0 00
+   430 3047 20 3E 31		            jsr open              ; 20 84 60
+   431 304A 20 53 31		            jsr get_rec              ; 20 99 60
+   432 304D 30 DB		            bmi L6481              ; 30 DB
+   433 304F AD 80 05		            lda L0580              ; AD 80 05
+   434 3052 C9 9B		            cmp #$9B               ; C9 9B
+   435 3054 D0 1E		            bne L64CB              ; D0 1E
+   436 3056 20 53 31		            jsr get_rec              ; 20 99 60
+   437 3059 30 CF		            bmi L6481              ; 30 CF
+   438 305B AD 81 05		            lda L0581              ; AD 81 05
+   439 305E C9 6F		            cmp #$6F               ; C9 6F
+   440 3060 D0 12		            bne L64CB              ; D0 12
+   441 3062 20 53 31		            jsr get_rec              ; 20 99 60
+   442 3065 30 C3		            bmi L6481              ; 30 C3
+   443 3067 20 53 31		            jsr get_rec              ; 20 99 60
+   444 306A 30 BE		            bmi L6481              ; 30 BE
+   445 306C 38			            sec                    ; 38
+   446 306D 66 83		            ror L0083              ; 66 83
+   447 306F 20 53 31		L64C6       jsr get_rec              ; 20 99 60
+   448 3072 30 31		            bmi L64FC              ; 30 31
+   449 3074 A5 83		L64CB       lda L0083              ; A5 83
+   450 3076 30 22		            bmi L64F1              ; 30 22
+   451 3078 AD 80 05		            lda L0580              ; AD 80 05
+   452 307B C9 30		            cmp #$30               ; C9 30
+   453 307D B0 26		            bcs L64FC              ; B0 26
+   454 307F AD 8A 05		            lda L058A              ; AD 8A 05
+   455 3082 30 EB		            bmi L64C6              ; 30 EB
+   456 3084 A2 02		            ldx #$02               ; A2 02
+   457 3086 A0 00		            ldy #$00               ; A0 00
+   458 3088 BD 80 05		L64DF       lda L0580,X            ; BD 80 05
+   459 308B 99 80 05		            sta L0580,Y            ; 99 80 05
+   460 308E E8			            inx                    ; E8
+   461 308F C8			            iny                    ; C8
+   462 3090 E0 0A		            cpx #$0A               ; E0 0A
+   463 3092 D0 01		            bne L64EC              ; D0 01
+   464 3094 C8			            iny                    ; C8
+   465 3095 E0 0D		L64EC       cpx #$0D               ; E0 0D
+   466 3097 90 EF		            bcc L64DF              ; 90 EF
+   467 3099 60			L64F0       rts                    ; 60
+   468
+   469 309A AD 91 05		L64F1       lda L0591              ; AD 91 05
+   470 309D C9 3A		            cmp #$3A               ; C9 3A
+   471 309F 90 F8		            bcc L64F0              ; 90 F8
+   472 30A1 C9 40		            cmp #$40               ; C9 40
+   473 30A3 90 CA		            bcc L64C6              ; 90 CA
+   474 30A5 38			L64FC       sec                    ; 38
+   475 30A6 66 89		            ror L0089              ; 66 89
+   476 30A8 A2 10		close_1     ldx #$10               ; A2 10
+   477 30AA 4C 25 31		            jmp close              ; 4C 6B 60
+   478
+   479 30AD A2 0B		L6504       ldx #$0B               ; A2 0B
+   480 30AF BD E0 05		L6506       lda L05E0,X            ; BD E0 05
+   481 30B2 C9 3F		            cmp #$3F               ; C9 3F
+   482 30B4 F0 03		            beq L6510              ; F0 03
+   483 30B6 9D 80 05		            sta L0580,X            ; 9D 80 05
+   484 30B9 CA			L6510       dex                    ; CA
+   485 30BA 10 F3		            bpl L6506              ; 10 F3
+   486 30BC 60			            rts                    ; 60
+   487
+   488 				; print string to console
+   489 30BD 68			print       pla                    ; 68
+   490 30BE 8D CE 30		            sta L6013+1            ; 8D 14 60
+   491 30C1 68			            pla                    ; 68
+   492 30C2 8D CF 30		            sta L6013+2            ; 8D 15 60
+   493 30C5 EE CE 30		L600B       inc L6013+1            ; EE 14 60
+   494 30C8 D0 03		            bne L6013              ; D0 03
+   495 30CA EE CF 30		            inc L6013+2            ; EE 15 60
+   496 30CD AD FF FF		L6013       lda $FFFF              ; AD FF FF
+   497 30D0 F0 06		            beq L601E              ; F0 06
+   498 30D2 20 E1 30		            jsr put_char           ; 20 27 60
+   499 30D5 4C C5 30		            jmp L600B              ; 4C 0B 60
+   500 30D8 AD CF 30		L601E       lda L6013+2            ; AD 15 60
+   501 30DB 48			            pha                    ; 48
+   502 30DC AD CE 30		            lda L6013+1            ; AD 14 60
+   503 30DF 48			            pha                    ; 48
+   504 30E0 60			L6026       rts                    ; 60
+   505
+   506 				; put char to console
+   507 30E1 A8			put_char    tay                    ; A8
+   508 30E2 A9 00		            lda #$00               ; A9 00
+   509 30E4 AA			            tax                    ; AA
+   510 30E5 9D 48 03		            sta IOCB0+ICBLL,X      ; 9D 48 03
+   511 30E8 9D 49 03		            sta IOCB0+ICBLH,X      ; 9D 49 03
+   512 30EB A9 0B		            lda #$0B               ; A9 0B
+   513 30ED 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   514 30F0 98			            tya                    ; 98
+   515 30F1 4C 56 E4		            jmp CIOV               ; 4C 56 E4
+   516
+   517 				; CRNAME vector
+   518 30F4 4C E0 30		_CRNAME     jmp L6026              ; 4C 26 60
+   519
+   520 				; get parameter set path
+   521 30F7 48			get_path    pha                    ; 48
+   522 30F8 20 F4 30		            jsr _CRNAME            ; 20 3A 60
+   523 30FB 68			            pla                    ; 68
+   524 30FC AA			            tax                    ; AA
+   525 30FD A0 21		            ldy #BW_COMFNAM        ; A0 21
+   526 30FF 86 82		L6045       stx L0082              ; 86 82
+   527 3101 B1 0A		L6047       lda (DOSVEC),Y         ; B1 0A
+   528 3103 9D 00 05		            sta path1,X            ; 9D 00 05
+   529 3106 E8			            inx                    ; E8
+   530 3107 C8			            iny                    ; C8
+   531 3108 C9 3A		            cmp #':'               ; C9 3A
+   532 310A F0 F3		            beq L6045              ; F0 F3
+   533 310C C9 3E		            cmp #'>'               ; C9 3E
+   534 310E F0 EF		            beq L6045              ; F0 EF
+   535 3110 C9 3C		            cmp #'<'               ; C9 3C
+   536 3112 F0 EB		            beq L6045              ; F0 EB
+   537 3114 C9 9B		            cmp #$9B               ; C9 9B
+   538 3116 D0 E9		            bne L6047              ; D0 E9
+   539 3118 A5 82		            lda L0082              ; A5 82
+   540 311A 60			L6060       rts                    ; 60
+   541
+   542 				; close IOCBs
+   543 311B 20 A8 30		close_123   jsr close_1            ; 20 FF 64
+   544 311E A2 30		close_23    ldx #$30               ; A2 30
+   545 3120 20 25 31		            jsr close              ; 20 6B 60
+   546 3123 A2 20		close_2     ldx #$20               ; A2 20
+   547 3125 A9 0C		close       lda #$0C               ; A9 0C
+   548 3127 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   549 312A 20 56 E4		            jsr CIOV               ; 20 56 E4
+   550 312D 10 EB		            bpl L6060              ; 10 EB
+   551 312F 4C 77 31		            jmp error              ; 4C BD 60
+   552
+   553 3132 9B 2A 2E 2A		star.star   .byte $9B,'*.*'
+   554
+   555 				; open IOCB number X mode A
+   556 3136 9D 4A 03		open_m      sta IOCB0+ICAX1,X      ; 9D 4A 03
+   557 3139 A9 00		            lda #$00               ; A9 00
+   558 313B 9D 4B 03		            sta IOCB0+ICAX2,X      ; 9D 4B 03
+   559 313E 98			open        tya                    ; 98
+   560 313F 9D 44 03		            sta IOCB0+ICBAL,X      ; 9D 44 03
+   561 3142 A9 05		            lda #$05               ; A9 05
+   562 3144 9D 45 03		            sta IOCB0+ICBAH,X      ; 9D 45 03
+   563 3147 A9 03		            lda #$03               ; A9 03
+   564 3149 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   565 314C 20 56 E4		            jsr CIOV               ; 20 56 E4
+   566 314F 30 26		            bmi error              ; 30 26
+   567 3151 98			L6097       tya                    ; 98
+   568 3152 60			            rts                    ; 60
+   569
+   570 3153 A2 10		get_rec     ldx #$10               ; A2 10
+   571 3155 A9 05		            lda #$05               ; A9 05
+   572 3157 9D 42 03		            sta IOCB0+ICCOM,X      ; 9D 42 03
+   573 315A A9 80		            lda #$80               ; A9 80
+   574 315C 9D 44 03		            sta IOCB0+ICBAL,X      ; 9D 44 03
+   575 315F A9 05		            lda #$05               ; A9 05
+   576 3161 9D 45 03		            sta IOCB0+ICBAH,X      ; 9D 45 03
+   577 3164 A9 40		            lda #$40               ; A9 40
+   578 3166 9D 48 03		            sta IOCB0+ICBLL,X      ; 9D 48 03
+   579 3169 A9 00		            lda #$00               ; A9 00
+   580 316B 9D 49 03		            sta IOCB0+ICBLH,X      ; 9D 49 03
+   581 316E 20 56 E4		            jsr CIOV               ; 20 56 E4
+   582 3171 10 DE		            bpl L6097              ; 10 DE
+   583 3173 C0 88		            cpy #$88               ; C0 88
+   584 3175 F0 DA		            beq L6097              ; F0 DA
+   585
+   586 				; error message and handling
+   587 3177 98			error       tya                    ; 98
+   588 3178 48			            pha                    ; 48
+   589 3179 20 BD 30		            jsr print              ; 20 03 60
+   590 317C 9B			            .byte $9B
+   591 317D 45 72 72 6F 72 20	            .byte 'Error '
+   592 3183 00			            .byte $00
+   593 				; conv hex error code to dec ATASCII
+   594 3184 A2 02		            ldx #$02               ; A2 02
+   595 3186 68			            pla                    ; 68
+   596 3187 A0 00		L60CD       ldy #$00               ; A0 00
+   597 3189 DD C6 31		L60CF       cmp dec_dig,X            ; DD 0C 61
+   598 318C 90 06		            bcc L60DA              ; 90 06
+   599 318E FD C6 31		            sbc dec_dig,X            ; FD 0C 61
+   600 3191 C8			            iny                    ; C8
+   601 3192 D0 F5		            bne L60CF              ; D0 F5
+   602 3194 48			L60DA       pha                    ; 48
+   603 3195 8A			            txa                    ; 8A
+   604 3196 48			            pha                    ; 48
+   605 3197 98			            tya                    ; 98
+   606 3198 09 30		            ora #$30               ; 09 30
+   607 319A 20 E1 30		            jsr put_char           ; 20 27 60
+   608 319D 68			            pla                    ; 68
+   609 319E AA			            tax                    ; AA
+   610 319F 68			            pla                    ; 68
+   611 31A0 CA			            dex                    ; CA
+   612 31A1 10 E4		            bpl L60CD              ; 10 E4
+   613 31A3 A9 9B		            lda #$9B               ; A9 9B
+   614 31A5 20 E1 30		            jsr put_char           ; 20 27 60
+   615 				; stop divert input (force end of file)
+   616 31A8 A0 08		abort2dos       ldy #BW_ZXDIVIO        ; A0 08
+   617 31AA B1 0A		            lda (DOSVEC),Y         ; B1 0A
+   618 31AC 8D B8 31		            sta L60FD+1            ; 8D FE 60
+   619 31AF C8			            iny                    ; C8
+   620 31B0 B1 0A		            lda (DOSVEC),Y         ; B1 0A
+   621 31B2 8D B9 31		            sta L60FD+2            ; 8D FF 60
+   622 31B5 A0 01		            ldy #$01 ; stop batch  ; A0 01
+   623 31B7 20 74 E4		L60FD       jsr WARMSV             ; 20 74 E4
+   624 31BA 20 1B 31		close2dos   jsr close_123          ; 20 61 60
+   625 				; reset date time override flag
+   626 31BD A0 19		            ldy #BW_TDOVER         ; A0 19
+   627 31BF A9 00		            lda #$00               ; A9 00
+   628 31C1 91 0A		            sta (DOSVEC),Y         ; 91 0A
+   629 31C3 6C 0A 00		            jmp (DOSVEC)           ; 6C 0A 00
+   630
+   631 31C6 01 0A 64		dec_dig    .byte 1,10,100
+   632
+   633 31C9 A9 20		L610F       lda #$20               ; A9 20
+   634 31CB 8D 8C 05		            sta L058C              ; 8D 8C 05
+   635 31CE 8D 88 05		            sta L0588              ; 8D 88 05
+   636 31D1 A0 FF		            ldy #$FF               ; A0 FF
+   637 31D3 30 09		            bmi L6124              ; 30 09
+   638 31D5 20 F5 31		L611B       jsr char_ok              ; 20 3B 61
+   639 31D8 B0 1A		            bcs L613A              ; B0 1A
+   640 31DA 9D 00 05		L6120       sta path1,X            ; 9D 00 05
+   641 31DD E8			            inx                    ; E8
+   642 31DE C8			L6124       iny                    ; C8
+   643 31DF B9 80 05		            lda L0580,Y            ; B9 80 05
+   644 31E2 C9 20		            cmp #$20               ; C9 20
+   645 31E4 D0 EF		            bne L611B              ; D0 EF
+   646 31E6 A9 2E		            lda #$2E               ; A9 2E
+   647 31E8 C0 09		            cpy #$09               ; C0 09
+   648 31EA A0 08		            ldy #$08               ; A0 08
+   649 31EC 90 EC		            bcc L6120              ; 90 EC
+   650 31EE A9 9B		            lda #$9B               ; A9 9B
+   651 31F0 9D 00 05		            sta path1,X            ; 9D 00 05
+   652 31F3 18			L6139       clc                    ; 18
+   653 31F4 60			L613A       rts                    ; 60
+   654
+   655 				; check for valid character
+   656 31F5 C9 3F		char_ok     cmp #'?'               ; C9 3F
+   657 31F7 F0 FA		            beq L6139              ; F0 FA
+   658 31F9 C9 5F		            cmp #'_'               ; C9 5F
+   659 31FB F0 F6		            beq L6139              ; F0 F6
+   660 31FD C9 30		            cmp #'0'               ; C9 30
+   661 31FF 90 0C		            bcc L6153              ; 90 0C
+   662 3201 C9 3A		            cmp #':'               ; C9 3A
+   663 3203 90 EE		            bcc L6139              ; 90 EE
+   664 3205 C9 41		            cmp #'A'               ; C9 41
+   665 3207 90 04		            bcc L6153              ; 90 04
+   666 3209 C9 5B		            cmp #'['               ; C9 5B
+   667 320B 90 E6		            bcc L6139              ; 90 E6
+   668 320D 38			L6153       sec                    ; 38
+   669 320E 60			            rts                    ; 60
+   670
+   671 = 320F			_memlo2     equ *
