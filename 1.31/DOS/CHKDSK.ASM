@@ -64,20 +64,7 @@ CHKBUF_RN   equ CHKBUF+15  ; random number
 ;
             org $500
 ;
-start       lda L0700              ; AD 00 07
-            cmp #'S'               ; C9 53
-            bne L608C              ; D0 0E
-            lda L0703              ; AD 03 07
-            cmp #'B'               ; C9 42
-            bne L608C              ; D0 07
-            lda L0704              ; AD 04 07
-            cmp #'W'               ; C9 57
-            beq L60A9              ; F0 1D
-L608C       jsr print              ; 20 03 60
-            .byte $9B,$FD
-            .byte 'Error: Not BW-DOS !'
-            .byte $9B,$00
-            jmp (DOSVEC)           ; 6C 0A 00
+start       jsr _chkbwdos
 
 L60A9       lda DOSVEC             ; A5 0A
             clc                    ; 18
@@ -112,7 +99,7 @@ L60A9       lda DOSVEC             ; A5 0A
             jsr CIOV               ; 20 56 E4
             bpl L60F3              ; 10 03
             jmp L603D              ; 4C 3D 60
-L60F3       jsr print              ; 20 03 60
+L60F3       jsr _print              ; 20 03 60
             .byte $9B
             .byte '      Volume: '
             .byte $00
@@ -124,7 +111,7 @@ L60F3       jsr print              ; 20 03 60
             jsr prnDecA            ; 20 93 61
             lda CHKBUF_RN              ; AD 0F 64
             jsr prnDecA            ; 20 93 61
-            jsr print              ; 20 03 60
+            jsr _print              ; 20 03 60
             .byte $9B
             .byte 'Bytes/sector:'
             .byte $00
@@ -133,20 +120,20 @@ L60F3       jsr print              ; 20 03 60
             bne L6135              ; D0 01
             inx                    ; E8
 L6135       jsr prnDecAX              ; 20 95 61
-            jsr print              ; 20 03 60
+            jsr _print              ; 20 03 60
             .byte $9B
             .byte ' Total bytes: '
             .byte $00
             ldy #$02               ; A0 02
             jsr prnDecChk              ; 20 70 61
-            jsr print              ; 20 03 60
+            jsr _print              ; 20 03 60
             .byte $9B
             .byte '  Bytes free: '
             .byte $00
             ldy #$04               ; A0 04
             jsr prnDecChk              ; 20 70 61
             lda #$9B               ; A9 9B
-            jsr put_char              ; 20 27 60
+            jsr _putc              ; 20 27 60
             jmp L6064              ; 4C 64 60
 
 prnDecChk   lda #$08               ; A9 08
@@ -202,53 +189,29 @@ prnChars    sty L0082              ; 84 82
             sta L0084              ; 85 84
 L61BE       ldy #$00               ; A0 00
             lda (L0082),Y          ; B1 82
-            jsr put_char              ; 20 27 60
+            jsr _putc              ; 20 27 60
             inc L0082              ; E6 82
             bne L61CB              ; D0 02
             inc L0083              ; E6 83
 L61CB       dec L0084              ; C6 84
             bne L61BE              ; D0 EF
-            rts                    ; 60
-
-print       pla                    ; 68
-            sta L6013+1            ; 8D 14 60
-            pla                    ; 68
-            sta L6013+2            ; 8D 15 60
-L600B       inc L6013+1            ; EE 14 60
-            bne L6013              ; D0 03
-            inc L6013+2            ; EE 15 60
-L6013       lda $FFFF              ; AD FF FF
-            beq L601E              ; F0 06
-            jsr put_char           ; 20 27 60
-            jmp L600B              ; 4C 0B 60
-L601E       lda L6013+2            ; AD 15 60
-            pha                    ; 48
-            lda L6013+1            ; AD 14 60
-            pha                    ; 48
 L6026       rts                    ; 60
 
-put_char    tay                    ; A8
-            lda #$00               ; A9 00
-            tax                    ; AA
-            sta IOCB0+ICBLL,X      ; 9D 48 03
-            sta IOCB0+ICBLH,X      ; 9D 49 03
-            lda #$0B ; put chars   ; A9 0B
-            sta IOCB0+ICCOM,X      ; 9D 42 03
-            tya                    ; 98
-            jmp CIOV               ; 4C 56 E4
+            icl '_PRINT.ASM'
+            icl '_CHKBWD.ASM'
 
 _CRNAME     jmp L6026              ; 4C 26 60
 
 L603D       tya                    ; 98
             pha                    ; 48
-            jsr print              ; 20 03 60
+            jsr _print              ; 20 03 60
             .byte $9B
             .byte 'Error'
             .byte $00
             pla                    ; 68
             jsr prnDecA            ; 20 93 61
             lda #$9B               ; A9 9B
-            jsr put_char           ; 20 27 60
+            jsr _putc           ; 20 27 60
             ldy #$08               ; A0 08
             lda (DOSVEC),Y         ; B1 0A
             sta L6061+1            ; 8D 62 60

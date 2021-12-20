@@ -74,6 +74,7 @@ DMASK       equ $02A0
 RUNAD       equ $02E0
 RAMSIZ      equ $02E4
 MEMTOP      equ $02E5
+MEMLO       equ $02E7
 DDEVIC      equ $0300
 DUNIT       equ $0301
 DCOMND      equ $0302
@@ -84,16 +85,22 @@ DAUX1       equ $030A
 DAUX2       equ $030B
 HATABS      equ $031A
 IOCB0       equ $0340
+IOCB1       equ $0350
 IOCB5       equ $0390
 BASICF      equ $03F8
 GRACTL      equ $D01D
 PORTB       equ $D301
 CIOV        equ $E456
+SIOV        equ $E459
 SELFSV      equ $E471
 ;
 ; Code equates
 ;
+
 L0000       equ $0000
+L0043       equ $0043
+L0044       equ $0044
+L0047       equ $0047
 L0086       equ $0086
 L008A       equ $008A
 L008C       equ $008C
@@ -124,15 +131,6 @@ L01A0       equ $01A0
 L01A9       equ $01A9
 L04A9       equ $04A9
 L05A0       equ $05A0
-L0EC9       equ $0EC9
-L0ED7       equ $0ED7
-L0ED8       equ $0ED8
-L0F15       equ $0F15
-L0F38       equ $0F38
-L0F40       equ $0F40
-L0F43       equ $0F43
-L0F46       equ $0F46
-L0F49       equ $0F49
 L2008       equ $2008
 L2020       equ $2020
 L2060       equ $2060

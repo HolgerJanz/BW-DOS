@@ -1,937 +1,967 @@
-; 
+* BW-DOS 1.31
             icl 'XBW131.inc'
 
+* 6502 opcodes
+op_BIT_abs  equ $2C
+op_SBC_imd  equ $E9
+op_JMP_abs  equ $4C
 
-op_BIT      equ $2C
+* MOVE commands
+MV_4        equ $4000
+MV_8        equ $8000
+MV_C        equ $C000
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Start of code
-;
-            org $0700
-;
-            .byte $53     ;$700 the character "S" for SpartaDOS
-L0701       .byte $32     ;$701 $32 for compatibility with SpartaDOS 3.2
-            .byte $00
-            .byte 'BW'    ;$703 "BW" when BW-DOS is installed
-            .byte $13     ;$705 BW-DOS version 1.3x etc.
-GETTDV      .word GETTD   ;$706 Adress of the "GETTD" routine
-SETTDV      .word SETTD   ;$708 Adress of the "SETTD" routine
-            .word CONVDC  ;$70A Adress CONVDC
-            jmp SIOV      ;$70C jmp LSIO 4C EE 0C
+* begin address of BW-DOS
+BW_BEGIN    equ $0700
 
-            .byte $0F
-            sta BITMSK,X           ; 95 6E
-            .byte $97,$7F
-            sta (COUNTR,X)         ; 81 7E
-            asl                    ; 0A
-            php                    ; 08
-            .byte $0B,$0C,$0C,$0C
-            asl                    ; 0A
+            blk dos BW_BEGIN
 
-L071D       sta DECIN              ; 8D F3 0C
-            lda #$00               ; A9 00
-            sta DECIN+1              ; 8D F4 0C
-            lda #$00               ; A9 00
-            sta DECIN+2              ; 8D F5 0C
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; convert digit to char
-CONVDC      ldx #$07               ; A2 07
-L072C       stx L074B+1            ; 8E 4C 07
-            ldx #$18               ; A2 18
-            lda #$00               ; A9 00
-L0733       asl DECIN              ; 0E F3 0C
-            rol DECIN+1              ; 2E F4 0C
-            rol DECIN+2              ; 2E F5 0C
-            rol                    ; 2A
-            cmp #$0A               ; C9 0A
-            bcc L0746              ; 90 05
-            sbc #$0A               ; E9 0A
-            inc DECIN              ; EE F3 0C
-L0746       dex                    ; CA
-L0747       bne L0733              ; D0 EA
-            ora #$30               ; 09 30
-L074B       ldx #$00               ; A2 00
-L074D       sta DECOUT,X            ; 9D E6 0C
-            dex                    ; CA
-            bmi L07A0              ; 30 4D
-            lda DECIN              ; AD F3 0C
-            ora DECIN+1              ; 0D F4 0C
-            ora DECIN+2              ; 0D F5 0C
-            bne L072C              ; D0 CE
-            lda #$20               ; A9 20
-            bne L074D              ; D0 EB
-L0762       inc BUFOFF            ; EE 03 0D
-            .byte op_BIT
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; crunch name
-CRNAME      lda #$20
-L0768       ldy BUFOFF            ; AC 03 0D
-            ldx LBUF,Y          ; BE 38 0D
-            cpx #$20               ; E0 20
-            beq L0762              ; F0 F0
-            sta L07C7+1            ; 8D C8 07
-            lda #$00               ; A9 00
-            sta L07BD+2            ; 8D BF 07
-            cpx #$9B               ; E0 9B
-            beq L0790              ; F0 12
-            lda LBUF+1,Y           ; B9 39 0D
-            cmp #$9B               ; C9 9B
-            beq L0790              ; F0 0B
-            cmp #$3A               ; C9 3A
-            beq L07A1              ; F0 18
-L0789       lda LBUF+2,Y           ; B9 3A 0D
-            cmp #':'               ; C9 3A
-L078E       beq L0795              ; F0 05
-L0790       ldy #$41               ; A0 41
-            jsr L07BD+1            ; 20 BE 07
-L0795       ldy BUFOFF            ; AC 03 0D
-            jsr L07BD+1            ; 20 BE 07
-            sty BUFOFF            ; 8C 03 0D
-L079E       cpx #$03               ; E0 03
-L07A0       rts                    ; 60
-L07A1       inc L07BD+2            ; EE BF 07
-            jsr L0795              ; 20 95 07
-            lda COMFNAM+1              ; AD 1B 0D
-            sta COMFNAM              ; 8D 1A 0D
-            lda #$31               ; A9 31
-            sta COMFNAM+1              ; 8D 1B 0D
-            bne L079E              ; D0 EA
-L07B4       sta COMFNAM,X            ; 9D 1A 0D
-            cpx #$1B               ; E0 1B
-            bcs L07BC              ; B0 01
-            inx                    ; E8
-L07BC       iny                    ; C8
-L07BD       bit.w L00A2            ; 2C A2 00
-            lda LBUF,Y          ; B9 38 0D
-            cmp #$9B               ; C9 9B
-            beq L07CB              ; F0 04
-L07C7       cmp #$20               ; C9 20
-            bne L07B4              ; D0 E9
-L07CB       lda #$9B               ; A9 9B
-            sta COMFNAM,X            ; 9D 1A 0D
-            stx L07BD+2            ; 8E BF 07
-            rts                    ; 60
-            sta LA00F,X            ; 9D 0F A0
-            .byte $0F,$A3,$0F
-            ldx APPMHI+1           ; A6 0F
-            lda #$0F               ; A9 0F
-            .byte $89,$0F
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-BW_DOS_ini  cld                    ; D8
-            lda FMSZPG+4           ; A5 47
-            bne L07F2              ; D0 0D
-            dec FMSZPG+4           ; C6 47
-            bit INCMND             ; 2C 19 0D
-            bpl L07F2              ; 10 06
-            jsr L0847              ; 20 47 08
-            jmp COMTAB             ; 4C F9 0C
-L07F2       jsr L0919              ; 20 19 09
-            eor L4217              ; 4D 17 42
-            .byte $E7,$47
-            beq L083C              ; F0 40
-            asl                    ; 0A
-            cmp L4CF2              ; CD F2 4C
-            sbc (L008A),Y          ; F1 8A
-L0802       sta L0E4B+1,X          ; 9D 4C 0E
-            cpx #$97               ; E0 97
-            bcc L080C              ; 90 03
-            dec L0E3F+1,X          ; DE 40 0E
-L080C       inx                    ; E8
-            bne L0802              ; D0 F3
-            tay                    ; A8
-L0810       bit L07A0              ; 2C A0 07
-L0813       iny                    ; C8
-            tya                    ; 98
-            sta L0E55,X            ; 9D 55 0E
-            txa                    ; 8A
-            clc                    ; 18
-L081A       adc #$1A               ; 69 1A
-            tax                    ; AA
-            cpy #$04               ; C0 04
-            bcc L0813              ; 90 F2
-            beq L0810+1            ; F0 EE
-            ldy #$1E               ; A0 1E
-L0825       ldx HATABS,Y           ; BE 1A 03
-            bne L082B              ; D0 01
-            tya                    ; 98
-L082B       cpx #$44               ; E0 44
-            beq L0837              ; F0 08
-            dey                    ; 88
-            dey                    ; 88
-            dey                    ; 88
-            bpl L0825              ; 10 F1
-            tay                    ; A8
-            bmi L0843              ; 30 0C
-L0837       ldx #$FD               ; A2 FD
-L0839       lda L0747,X            ; BD 47 07
-L083C       sta HATABS,Y           ; 99 1A 03
-            iny                    ; C8
-            inx                    ; E8
-            bne L0839              ; D0 F6
-L0843       rts                    ; 60
-            .byte $44,$D4,$07
-L0847       jmp (DOSINI)           ; 6C 0C 00
-            .byte $1C,$0B,$5F
-            asl APPMHI,X           ; 16 0E
-            .byte $06
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $850 set time date
-SETTD       jsr L0919              ; 20 19 09
-            .byte $CD,$06,$C8,$4A
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $857 get time data
-GETTD       jsr L0919              ; 20 19 09
-            iny                    ; C8
-            lsr                    ; 4A
-            cmp L6006              ; CD 06 60
-L085F       lda L1488+1            ; AD 89 14
-L0862       bit L01A9              ; 2C A9 01
-            ldx #$69               ; A2 69
-            bne L086D              ; D0 04
-L0869       lda #$01               ; A9 01
-L086B       ldx #$E9               ; A2 E9
-L086D       sta L088A+1            ; 8D 8B 08
-            stx L088A              ; 8E 8A 08
-            ldx #$FE               ; A2 FE
-L0875       jsr L08C5              ; 20 C5 08
-            sta L0789+1,X          ; 9D 8A 07
-            sta L078E+1,X          ; 9D 8F 07
-            inx                    ; E8
-            bne L0875              ; D0 F4
-            lda L088A              ; AD 8A 08
-            asl                    ; 0A
-            dex                    ; CA
-L0886       inx                    ; E8
-            lda LFFFF,X            ; BD FF FF
-L088A       adc #$00               ; 69 00
-            sta LFFFF,X            ; 9D FF FF
-            stx L088A+1            ; 8E 8B 08
-            txa                    ; 8A
-            beq L0886              ; F0 F1
-            rts                    ; 60
-            bne L089B              ; D0 03
-L0898       jmp (RUNLOC)            ; 6C 36 0D
-L089B       jsr L0919              ; 20 19 09
-            dec L4D00              ; CE 00 4D
-L08A1       rol L00BD,X            ; 36 BD
-            ora LE80D,X            ; 1D 0D E8
-            sec                    ; 38
-            sbc #$30               ; E9 30
-            cmp #$0A               ; C9 0A
-            bcc L08B3              ; 90 06
-            sbc #$07               ; E9 07
-            cmp #$10               ; C9 10
-            bcs L0898              ; B0 E5
-L08B3       asl                    ; 0A
-            asl                    ; 0A
-            asl                    ; 0A
-            asl                    ; 0A
-            ldy #$04               ; A0 04
-L08B9       asl                    ; 0A
-            rol RUNLOC              ; 2E 36 0D
-            rol RUNLOC+1            ; 2E 37 0D
-            dey                    ; 88
-            bne L08B9              ; D0 F6
-            beq L08A1+1            ; F0 DD
-L08C5       stx L08E5+1            ; 8E E6 08
-            sty L08E7+1            ; 8C E8 08
-            tsx                    ; BA
-            inx                    ; E8
-            inx                    ; E8
-            inx                    ; E8
-            inc L0100,X            ; FE 00 01
-            lda L0100,X            ; BD 00 01
-            inx                    ; E8
-            tay                    ; A8
-            bne L08DC              ; D0 03
-            inc L0100,X            ; FE 00 01
-L08DC       lda L0100,X            ; BD 00 01
-            sta L08E2+2            ; 8D E4 08
-L08E2       lda LFF00,Y            ; B9 00 FF
-L08E5       ldx #$00               ; A2 00
-L08E7       ldy #$00               ; A0 00
-            rts                    ; 60
+            dta c'S'       ;$700 the character "S" for SpartaDOS
+            dta b($32)     ;$701 compatibility with SpartaDOS 3.2
+            dta b($00)     ;$702 ??? 
+            dta c'BW'      ;$703 "BW" when BW-DOS is installed
+            dta b($13)     ;$705 BW-DOS version 1.3x etc.
+GETTDV      dta a(GETTD)   ;$706 Adress of the "GETTD" routine
+SETTDV      dta a(SETTD)   ;$708 Adress of the "SETTD" routine
+            dta a(CONVDC)  ;$70A Adress CONVDC
+            jmp SSIOV       ;$70C jmp LSIO 4C EE 0C
 
-L08EA       jsr L08C5              ; 20 C5 08
-            ldx #$03               ; A2 03
-L08EF       bit.w L00A2            ; 2C A2 00
-            pha                    ; 48
-            and #$1F               ; 29 1F
-            sta L090D+2,X          ; 9D 0F 09
-            pla                    ; 68
-            lsr                    ; 4A
-            lsr                    ; 4A
-            lsr                    ; 4A
-            lsr                    ; 4A
-            lsr                    ; 4A
-            sta L090A+1            ; 8D 0B 09
-            jsr L08C5              ; 20 C5 08
-            sta L090D+1,X          ; 9D 0E 09
-            txa                    ; 8A
-            beq L08EA              ; F0 E0
-L090A       ldx #$00               ; A2 00
-L090C       dex                    ; CA
-L090D       lda LFFFF,X            ; BD FF FF
-            sta LFFFF,X            ; 9D FF FF
-            txa                    ; 8A
-            bne L090C              ; D0 F6
-            tya                    ; 98
-            bmi L0968              ; 30 4F
-L0919       jsr L0A76              ; 20 76 0A
-L091C       jsr L08C5              ; 20 C5 08
-            tay                    ; A8
-            asl                    ; 0A
-            asl                    ; 0A
-            php                    ; 08
-            tya                    ; 98
-            and #$1F               ; 29 1F
-            plp                    ; 28
-            bcs L08EF+1            ; B0 C7
-            bmi L0949              ; 30 1E
-            sta L0939+2            ; 8D 3B 09
-            jsr L08C5              ; 20 C5 08
-            sta L0939+1            ; 8D 3A 09
-            tya                    ; 98
-            pha                    ; 48
-            jsr L0942              ; 20 42 09
-L0939       jsr L0948              ; 20 48 09
-            jsr L0A76              ; 20 76 0A
-            pla                    ; 68
-            bpl L091C              ; 10 DA
-L0942       lda #$00               ; A9 00
-            pha                    ; 48
-L0945       lda #$00               ; A9 00
-            plp                    ; 28
-L0948       rts                    ; 60
-L0949       sta L0945+1            ; 8D 46 09
-            sty L0964+1            ; 8C 65 09
-            jsr L08C5              ; 20 C5 08
-            tax                    ; AA
-            jsr L08C5              ; 20 C5 08
-            tay                    ; A8
-L0957       lda L0D8A,X            ; BD 8A 0D
-            sta L0D8A,Y            ; 99 8A 0D
-            inx                    ; E8
-            iny                    ; C8
-            dec L0945+1            ; CE 46 09
-            bne L0957              ; D0 F3
-L0964       lda #$00               ; A9 00
-            bpl L0919              ; 10 B1
-L0968       ldx #$00               ; A2 00
-            rts                    ; 60
-L096B       jsr L08C5              ; 20 C5 08
-L096E       bit LC0A9              ; 2C A9 C0
-L0971       bit L04A9              ; 2C A9 04
-L0974       sta FMSZPG+1           ; 85 44
-            asl                    ; 0A
-            asl                    ; 0A
-            tax                    ; AA
-            tay                    ; A8
-            bcs L0989              ; B0 0D
-            jsr L08C5              ; 20 C5 08
-            lsr                    ; 4A
-            sta IOCB0+ICAX1,X      ; 9D 4A 03
-            lda #$00               ; A9 00
-            ror                    ; 6A
-            sta IOCB0+ICAX2,X      ; 9D 4B 03
-L0989       lda #$67               ; A9 67
-            sta FMSZPG             ; 85 43
-L098D       jsr L08C5              ; 20 C5 08
-            sta IOCB0+ICCOM,Y      ; 99 42 03
-L0993       iny                    ; C8
-            asl FMSZPG             ; 06 43
-            bcc L0993              ; 90 FB
-            bne L098D              ; D0 F3
-            lda FMSZPG+1           ; A5 44
-            pha                    ; 48
-            lda #$20               ; A9 20
-            jsr CIOV               ; 20 56 E4
-            pla                    ; 68
-            tax                    ; AA
-            tya                    ; 98
-            bpl L09C0              ; 10 19
-            cmp #$88               ; C9 88
-            beq L09C0              ; F0 15
-            pha                    ; 48
-            txa                    ; 8A
-            pha                    ; 48
-            and #$1C               ; 29 1C
-            beq L09BC              ; F0 0A
-            ora #$C0               ; 09 C0
-            jsr L0974              ; 20 74 09
-            .byte $0C
-L09B8       .byte $00,$00
-L09BA       .byte $00,$00
-L09BC       pla                    ; 68
-            bpl L09C2              ; 10 03
-            pla                    ; 68
-L09C0       tay                    ; A8
-            rts                    ; 60
+CMD_TAB_L   dta l(CMD_CAR-1,CMD_RUN-1,CMD_PRINT-1,CMD_TYPE-1)
+            dta l(CMD_DIR-1,CMD_DIRS-1,CMD_BASIC-1)
 
-L09C2       jsr L096E+1            ; 20 6F 09
-            .byte $0B
-            sbc (DOSVEC+1,X)       ; E1 0B
-            asl L0000              ; 06 00
-            pla                    ; 68
-            jsr L071D              ; 20 1D 07
-            jsr L096E+1            ; 20 6F 09
-            .byte $0B
-            nop                    ; EA
-            .byte $0C,$04,$00
-            jsr L096E+1            ; 20 6F 09
-            .byte $0B
-            sbc (DOSVEC+1,X)       ; E1 0B
-            ora (L0000,X)          ; 01 00
-            jsr L0B7B+1            ; 20 7C 0B
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; DOS entry
-DOS_entry   cld                    ; D8
-            jsr L0B28              ; 20 28 0B
-            stx TDOVER            ; 8E 12 0D
-            stx BUFOFF            ; 8E 03 0D
-            dex                    ; CA
-L09EC       stx INCMND             ; 8E 19 0D
-            txs                    ; 9A
-            jsr L096B              ; 20 6B 09
-            cpy DOSINI             ; C4 0C
-            ldy LC90A              ; AC 0A C9
-            asl                    ; 0A
-            jsr L096E+1            ; 20 6F 09
-            .byte $0B
-            sei                    ; 78
-            ora.w RAMLO            ; 0D 04 00
-            jsr L096B              ; 20 6B 09
-            rti                    ; 40
-            ora BUFRFL             ; 05 38
-            ora.w FREQ             ; 0D 40 00
-            jsr L0BAA              ; 20 AA 0B
-            jmp DOS_entry          ; 4C E1 09
+CMD_TAB_H   dta h(CMD_CAR-1,CMD_RUN-1,CMD_PRINT-1,CMD_TYPE-1)
+            dta h(CMD_DIR-1,CMD_DIRS-1,CMD_BASIC-1)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Command CAR
-            lda LBFFD              ; AD FD BF
-            inc LBFFD              ; EE FD BF
-            cmp LBFFD              ; CD FD BF
-            sta LBFFD              ; 8D FD BF
-            bne L0A92              ; D0 74
-            ldx LBFFC              ; AE FC BF
-            bne L0A92              ; D0 6F
-            lda DWARM              ; AD E4 0C
-            sta WARMST             ; 85 08
-            stx INCMND              ; 8E 19 0D
-            dex                    ; CA
-            stx DWARM              ; 8E E4 0C
-            jmp (LBFFA)            ; 6C FA BF
+CONV_A      sta DECIN
+            lda #$00
+            sta DECIN+1
+            lda #$00
+            sta DECIN+2
+* convert digit to char
+CONVDC      ldx #$07
+L072C       stx L074B+1
+            ldx #$18
+            lda #$00
+L0733       asl DECIN
+            rol DECIN+1
+            rol DECIN+2
+            rol @
+            cmp #$0A
+            bcc L0746
+            sbc #$0A
+            inc DECIN
+L0746       dex
+L0747       bne L0733
+            ora #$30
+L074B       ldx #$00
+L074D       sta DECOUT,X
+            dex
+            bmi L07A0
+            lda DECIN
+            ora DECIN+1
+            ora DECIN+2
+            bne L072C
+            lda #$20
+            bne L074D
+L0762       inc BUFOFF
+            dta b(op_BIT_abs)
+* crunch name
+_CRNAME     lda #$20
+L0768       ldy BUFOFF
+            ldx LBUF,Y
+            cpx #$20
+            beq L0762
+            sta L07C7+1
+            lda #$00
+            sta L07BE+1
+            cpx #$9B
+            beq L0790
+            lda LBUF+1,Y
+            cmp #$9B
+            beq L0790
+            cmp #$3A
+            beq L07A1
+L0789       lda LBUF+2,Y
+            cmp #':'
+L078E       beq L0795
+L0790       ldy #$41
+            jsr L07BE
+L0795       ldy BUFOFF
+            jsr L07BE
+            sty BUFOFF
+L079E       cpx #$03
+L07A0       rts
 
-L0A32       sta BASICF             ; 8D F8 03
-            php                    ; 08
-            jsr L096E+1            ; 20 6F 09
-            .byte $0C
-L0A3A       bpl L0A44              ; 10 08
-L0A3C       rti                    ; 40
-            bvc L09EC              ; 50 AD
-            ora (L00D3,X)          ; 01 D3
-            ror                    ; 6A
-            ror                    ; 6A
-            plp                    ; 28
-L0A44       rol                    ; 2A
-            rol                    ; 2A
-            sta PORTB              ; 8D 01 D3
-            ldx #$CE               ; A2 CE
-L0A4B       txa                    ; 8A
-            sec                    ; 38
-            sbc #$10               ; E9 10
-            tax                    ; AA
-            stx FMSZPG+1           ; 86 44
-            eor (FMSZPG),Y         ; 51 43
-            sta (FMSZPG),Y         ; 91 43
-            eor (FMSZPG),Y         ; 51 43
-            bne L0A4B              ; D0 F1
-            sta MEMTOP             ; 8D E5 02
-            inx                    ; E8
-            inx                    ; E8
-            stx RAMSIZ             ; 8E E4 02
-            stx MEMTOP+1           ; 8E E6 02
-            stx RAMTOP             ; 86 6A
-            jsr L096B              ; 20 6B 09
-            .byte $80
-            clc                    ; 18
-            .byte $03,$E2,$0B,$00,$00
-L0A71       ldx #$00               ; A2 00
-            stx DWARM              ; 8E E4 0C
-L0A76       sta L0945+1            ; 8D 46 09
-            php                    ; 08
-            pla                    ; 68
-            sta L0942+1            ; 8D 43 09
-            rts                    ; 60
+L07A1       inc L07BE+1
+            jsr L0795
+            lda COMFNAM+1
+            sta COMFNAM
+            lda #$31
+            sta COMFNAM+1
+            bne L079E
+L07B4       sta COMFNAM,X
+            cpx #$1B
+            bcs L07BC
+            inx
+L07BC       iny
+            dta b(op_BIT_abs)
+L07BE       ldx #$00
+            lda LBUF,Y
+            cmp #$9B
+            beq L07CB 
+L07C7       cmp #$20
+            bne L07B4
+L07CB       lda #$9B
+            sta COMFNAM,X
+            stx L07BE+1
+            rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Command BASIC
-            lda COMFNAM+3              ; AD 1D 0D
-            cmp #'O'               ; C9 4F
-            bne L0A92              ; D0 0C
-            lda COMFNAM+4              ; AD 1E 0D
-            cmp #'F'               ; C9 46
-            beq L0A32              ; F0 A5
-            clc                    ; 18
-            eor #'N'               ; 49 4E
-            beq L0A32              ; F0 A0
-L0A92       lda #$9C               ; error 156 no cart ; A9 9C
-L0A94       pha                    ; 48
-            jmp L09C2              ; 4C C2 09
+            dta a(L0F9D,L0FA0)
+            dta a(L0FA3,L0FA6)
+            dta a(L0FA9,L0F89)
 
-L0A98       .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+DOS_INI     cld
+            lda L0047
+            bne L07F2
+            dec L0047
+            bit INCMND
+            bpl L07F2
+            jsr L0847
+L07EF       jmp COMTAB
+L07F2       jsr MOVE
 
-L0AA4       jmp (L09B8)            ; 6C B8 09
-L0AA7       jmp (L09BA)            ; 6C BA 09
-L0AAA       jsr L0B7B+1            ; 20 7C 0B
-            txa                    ; 8A
-            bne L0AA4              ; D0 F4
-            bit BATFLG              ; 2C F2 0C
-            bpl L0ABD              ; 10 08
-            jsr L0AA4              ; 20 A4 0A
-            cpy #$00               ; C0 00
-            bpl L0AD3              ; 10 17
-            rts                    ; 60
-L0ABD       ldy #$01               ; A0 01
-            ldx #$05               ; A2 05
-            jsr L0CC4              ; 20 C4 0C
-            cpy #$00               ; C0 00
-            bmi L0AAA              ; 30 E2
-            ldx #$00               ; A2 00
-            cpx #$00               ; E0 00
-            bne L0AA7              ; D0 D9
-            pha                    ; 48
-            jsr L0AA7              ; 20 A7 0A
-            pla                    ; 68
-L0AD3       bit ECHOFLG            ; 2C F1 0C
-            bmi L0AEA              ; 30 12
-            pha                    ; 48
-            ldy #$00               ; A0 00
-            ldx #$07               ; A2 07
-            jsr L0CC4              ; 20 C4 0C
-            cpy #$00               ; C0 00
-            bpl L0AE7              ; 10 03
-            jsr L0B79              ; 20 79 0B
-L0AE7       pla                    ; 68
-            ldy #$01               ; A0 01
-L0AEA       ldx #$00               ; A2 00
-            cpy #$00               ; C0 00
-L0AEE       rts                    ; 60
-L0AEF       jsr L0919              ; 20 19 09
-            .byte $4B
-L0AF3       and L1C42+1,Y          ; 39 43 1C
-            dex                    ; CA
-            .byte $6F,$43
-            lsr L00F0              ; 46 F0
-L0AFB       cpx L7E20              ; EC 20 7E
-            .byte $0B
-L0AFF       ldy #$00               ; A0 00
-            lda L0A3A,Y            ; B9 3A 0A
-            sta L0B0D              ; 8D 0D 0B
-            lda L0BE9,Y            ; B9 E9 0B
-            jsr L0974              ; 20 74 09
-L0B0D       php                    ; 08
-            .byte $03,$1A
-            ora.w ABUFPT           ; 0D 1C 00
-            bmi L0AEE              ; 30 D9
-            lda #$00               ; A9 00
-L0B17       ldy L0AFF+1            ; AC 00 0B
-            ldx L0A3C,Y            ; BE 3C 0A
-            ora IOCB0,X            ; 1D 40 03
-            sta ECHOFLG,Y          ; 99 F1 0C
-            lda #$FF               ; A9 FF
-            sta IOCB0,X            ; 9D 40 03
-L0B28       lda HATABS+2           ; AD 1C 03
-            cmp #$0A               ; C9 0A
-            beq L0B59+1            ; F0 2B
-            jsr L0919              ; 20 19 09
-            .byte $C3
-L0B33       .byte $1B,$4B
-            and L0BA2,Y            ; 39 A2 0B
-L0B38       lda LFFFF,X            ; BD FF FF
-            sta L0A98,X            ; 9D 98 0A
-            dex                    ; CA
-            bpl L0B38              ; 10 F7
-            jsr L0919              ; 20 19 09
-            lsr                    ; 4A
-            .byte $9C,$89
-            clv                    ; B8
-            lsr                    ; 4A
-            .byte $9E
-            lsr                    ; 4A
-            .byte $6F
-            cmp #$F5               ; C9 F5
-            txa                    ; 8A
-            .byte $9C
-            jsr L0862+1            ; 20 63 08
-            clv                    ; B8
-            ora #$20               ; 09 20
-            .byte $63
-            php                    ; 08
-            tsx                    ; BA
-L0B59       ora #$AD               ; 09 AD
-            sbc (DOSINI),Y         ; F1 0C
-            and BATFLG              ; 2D F2 0C
-            bmi L0AEF              ; 30 8D
-            jsr L0919              ; 20 19 09
-            .byte $4B,$3C,$43
-L0B68       .byte $1C
-            dex                    ; CA
-            .byte $9E,$43
-            lsr L00F0              ; 46 F0
-            .byte $8B
-            bne L0B9F+1            ; D0 2F
-            lda COMFNAM              ; AD 1A 0D
-            cmp L0D79              ; CD 79 0D
-            bne L0B9F+1            ; D0 27
-L0B79       ldy #$00               ; A0 00
-L0B7B       bit L01A0              ; 2C A0 01
-            tya                    ; 98
-            and #$01               ; 29 01
-            tay                    ; A8
-            sty L0AFF+1            ; 8C 00 0B
-            lda ECHOFLG,Y          ; B9 F1 0C
-            bmi L0B28              ; 30 9E
-            ldx #$03               ; A2 03
-            jsr L0CC4              ; 20 C4 0C
-            lda #$FF               ; A9 FF
-            bmi L0B17              ; 30 84
-L0B93       lda #$20               ; A9 20
-            jsr L0762              ; 20 62 07
-            ldy #$45               ; A0 45
-            jsr L07BD+1            ; 20 BE 07
-            ldy #$01               ; A0 01
-L0B9F       bit.w L00A0            ; 2C A0 00
-L0BA2       jsr L0AFB+1            ; 20 FC 0A
-            bpl L0BC0+1            ; 10 1A
-            jmp L0A94              ; 4C 94 0A
-L0BAA       lda LBUF            ; AD 38 0D
-            cmp #$2D               ; C9 2D
-            beq L0B93              ; F0 E2
-            cmp #$3B               ; C9 3B
-            beq L0BC0+1            ; F0 0C
-            jsr CRNAME            ; 20 66 07
-            bne L0BC0+2            ; D0 08
-            jsr L0919              ; 20 19 09
-            cmp L4D1A              ; CD 1A 4D
-L0BC0       adc L2060,Y            ; 79 60 20
+            dta h(MV_4+SMEMLO),l(SMEMLO)
+            dta h(MV_4+MEMLO),l(MEMLO)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; begin statement table
-            .byte $33,$0C
-            .byte 'RENAM'
-            .byte $C5
-            .byte 'ERAS'
-            .byte $C5,$9B
-            .byte 'PROTEC'
-            .byte $D4
-            .byte 'UNPROTEC'
-            .byte $D4,$9B
-            .byte 'Error'
-            .byte $9B,$9B
-L0BE9       .byte $90,$94
-            .byte 'M'
-            .byte $C4
-            .byte 'R'
-L0BEE       .byte $C4
-            .byte 'C'
-            .byte $C4
-            .byte 'LOA'
-            .byte $C4
-            .byte 'CA'
-            .byte $D2
-            .byte 'RU'
-            .byte $CE
-            .byte 'PRIN'
-            .byte $D4
-            .byte 'TYP'
-            .byte $C5
-            .byte 'DI'
-            .byte $D2
-            .byte 'DIR'
-            .byte $D3
-            .byte 'BASI'
-            .byte $C3
-            .byte $00
-; CHANGE: add fill bytes
-            .byte $00,$00,$00,$00
-L0C15       .byte $00,$00,$00,$00,$00
-; end statement table
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            dta h(MV_4+L07EF+1),l(L07EF+1)
+            dta h(MV_4+DOSVEC),l(DOSVEC)
 
-            jsr L0A71              ; 20 71 0A
-            ldy #$4A               ; A0 4A
-            jsr L07BD+1            ; 20 BE 07
-            clc                    ; 18
-L0C23       lda #$04               ; A9 04
-            rol                    ; 2A
-            sta L0C2C              ; 8D 2C 0C
-            jsr L0971+1            ; 20 72 09
-L0C2C       php                    ; 08
-            plp                    ; 28
-            .byte $1A
-            ora.w ABUFPT           ; 0D 1C 00
-L0C32       rts                    ; 60
-            ldx #$FF               ; A2 FF
-            stx FMSZPG             ; 86 43
-L0C37       ldx #$00               ; A2 00
-            ldy #$00               ; A0 00
-            inc FMSZPG             ; E6 43
-L0C3D       jsr L08C5              ; 20 C5 08
-            pha                    ; 48
-            eor COMFNAM+3,Y            ; 59 1D 0D
-            asl                    ; 0A
-            beq L0C48              ; F0 01
-            dex                    ; CA
-L0C48       iny                    ; C8
-            pla                    ; 68
-            beq L0C32              ; F0 E6
-            bpl L0C3D              ; 10 EF
-            txa                    ; 8A
-            bmi L0C37              ; 30 E6
-            lda COMFNAM+3,Y            ; B9 1D 0D
-            cmp #$9B               ; C9 9B
-            bne L0C37              ; D0 DF
-            jsr L0768              ; 20 68 07
-            pla                    ; 68
-            pla                    ; 68
-            lda FMSZPG             ; A5 43
-            cmp #$0D               ; C9 0D
-            beq L0C23              ; F0 C0
-            bcs L0C74              ; B0 0F
-            adc #$20               ; 69 20
-            sta L0C6E              ; 8D 6E 0C
-            jsr L0971+1            ; 20 72 09
-            .byte $00
-L0C6E       .byte $00,$1A
-            ora.w ABUFPT           ; 0D 1C 00
-            rts                    ; 60
-L0C74       tay                    ; A8
-            lda SETTDV,Y           ; B9 08 07
-            pha                    ; 48
-            lda L0701,Y            ; B9 01 07
-            pha                    ; 48
-            cpx #$03               ; E0 03
-            rts                    ; 60
-            lda #$80               ; A9 80
-            eor #$12               ; 49 12
-            pha                    ; 48
-            lda COMFNAM-1,X        ; BD 19 0D
-            cmp #$38               ; C9 38
-            beq L0C97              ; F0 0B
-            and #$F9               ; 29 F9
-            cmp #$38               ; C9 38
-            bne L0C97              ; D0 05
-            ldy #$4F               ; A0 4F
-L0C94       jsr L07BD+1            ; 20 BE 07
-L0C97       pla                    ; 68
-            eor #$9F               ; 49 9F
-            sta L0CA0              ; 8D A0 0C
-            jsr L0971+1            ; 20 72 09
-L0CA0       php                    ; 08
-            .byte $03,$1A
-            ora.w ABUFPT           ; 0D 1C 00
-L0CA6       jsr L096B              ; 20 6B 09
-L0CA9       .byte $44,$07
-            sec                    ; 38
-            ora.w FREQ             ; 0D 40 00
-            php                    ; 08
-            jsr L0919              ; 20 19 09
-            .byte $C3
-            cli                    ; 58
-            jmp L20BE              ; 4C BE 20
-            .byte $6B
-            ora #$40               ; 09 40
-            .byte $0B
-            sec                    ; 38
-            ora.w FREQ             ; 0D 40 00
-            plp                    ; 28
-            bpl L0CA6              ; 10 E3
-            rts                    ; 60
-L0CC4       sta FMSZPG+2           ; 85 45
-            txa                    ; 8A
-            pha                    ; 48
-            ldx ECHOFLG,Y          ; BE F1 0C
-            lda HATABS+1,X         ; BD 1B 03
-            sta FMSZPG             ; 85 43
-            lda HATABS+2,X         ; BD 1C 03
-            sta FMSZPG+1           ; 85 44
-            ldx L0A3C,Y            ; BE 3C 0A
-            pla                    ; 68
-            tay                    ; A8
-            lda (FMSZPG),Y         ; B1 43
-            pha                    ; 48
-            dey                    ; 88
-            lda (FMSZPG),Y         ; B1 43
-            pha                    ; 48
-            lda FMSZPG+2           ; A5 45
-            rts                    ; 60
+            dta h(MV_C+L0DF2),l(L0DF2)
+            dta h(MV_4+ECHOFLG),l(ECHOFLG)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Start of COMTAB
+            txa
+L0802       sta L0E4C,X
+            cpx #$97
+            bcc L080C
+            dec L0E3F+1,X
+L080C       inx
+            bne L0802
+            tay
+L0810       dta b(op_BIT_abs)
+L0811       ldy #$07
+L0813       iny
+            tya
+            sta L0E55,X
+            txa
+            clc
+L081A       adc #$1A
+            tax
+            cpy #$04
+            bcc L0813
+            beq L0811
+            ldy #$1E
+L0825       ldx HATABS,Y
+            bne L082B
+            tya
+L082B       cpx #$44
+            beq L0837
+            dey
+            dey
+            dey
+            bpl L0825
+            tay
+            bmi L0843
+L0837       ldx #$FD
+L0839       lda L0747,X
+L083C       sta HATABS,Y
+            iny
+            inx
+            bne L0839
+L0843       rts
 
-DWARM       .byte $FF              ; COMTAB-21: DWARM $0CE4
-            .byte $80
-DECOUT      .byte $20,$20,$20      ;  COMTAB-19: DECOUT
-            .byte $20,$20,$20      ;
-            .byte $20,$20          ;
-SIOV        .byte $4c              ; jmp SIO
-LSIO        .word $e459            ; COMTAB-10: LSIO
-ECHOFLG     .byte $ff              ; COMTAB-8: ECHOFLG
-BATFLG      .byte $FF              ; COMTAB-7: BATFLG
-DECIN       .byte $00,$00,$00      ; COMTAB-6: DECIN
-            .byte $00
-WRTCMD      .byte 'P'              ; COMTAB-2: WRTCMD W=verify P=no verify
-            .byte $FF              ; COMTAB-1: WARMST 00 in CP, $FF trap errors
-; DOSVEC => $0cf9
-COMTAB      jmp DOS_entry          ; COMTAB: Jump to DOS CP
-            jmp CRNAME             ; COMTAB+3: CRNAME
-            .word $0AFC            ; COMTAB+6: DIVIO
-            .word $0B7E            ; COMTAB+8: XDIVIO
-BUFOFF      .byte $00              ; COMTAB+10: BUFOFF
-            .byte $00,$07
-            .byte $1C,$0B,$5F      ; COMTAB+13: DATER 28.11.95
-            .byte $16,$0E,$06      ; COMTAB+16 TIMER 22:14:06
-            .byte $1C,$0B,$5F      ; COMTAB+19 ODATER
-            .byte $16,$0E,$06      ; COMTAB+22 OTIMER
-TDOVER      .byte $00              ; COMTAB+25 TDOVER
-            .word $085E            ; COMTAB+26 TRUN
-            .word $1711            ; ??? buffer adr ???
-SMEMLO      .word BW_DOS_end_addr  ; COMTAB+30 SMEMLO start up MEMLO
-INCMND      .byte $00              ; COMTAB+32 INCMND Reset $00-CP $FF-Cart
-COMFNAM     .byte 'D1:STARTUP.BAT' ; COMTAB+33 COMFNAM 28 Bytes
-            .byte $9B
-            .byte $20,$20,$20
-            .byte $20,$20,$20
-            .byte $20,$20,$20
-            .byte $20,$20,$20,$20
-RUNLOC      .word $085E             ; COMTAB+61 RUNLOC address for RUN
-                                    ; COMTAB+63  LBUF comman line buffer 64 Bytes
-; start code to check for STARTUP.BAT
-; LBUF = $0d38-$0d78
-LBUF        jsr L07F2              ; 20 F2 07
-            lda #$FF               ; A9 FF
-            sta FMSZPG+4           ; 85 47
-            ldy #$01               ; A0 01
-L0D41       jsr L0AFB+1            ; 20 FC 0A
-            jsr L0A71              ; 20 71 0A
-L0D47       stx COLDST             ; 8E 44 02
-            lda BOOT               ; A5 09
-L0D4C       ora #$01               ; 09 01
-            sta BOOT               ; 85 09
-            jmp DOS_entry              ; 4C E1 09
-L0D53       clc                    ; 18
-            rts                    ; 60
-            .byte '                          '
-L0D6F       .byte '         '
-            .byte $9B
-; end of LBUF and COMTAB
-L0D79       .byte 'D1:'
-            .byte $9B
-            .byte '.BAT'
-            .byte $9B
-            .byte '.COM'
-            .byte $9B
-            .byte '*.*'
-L0D8A       .byte $9B
-            .byte 'Volume:          '
-L0D9C       .byte ' '
-L0D9D       .byte '                    '
-L0DB1       .byte ' '
-L0DB2       .byte '                   '
-L0DC5       .byte ' '
-            .byte $9B
-            .byte 'Directory:'
-            .byte $C4,$C9,$D2
-            .byte '<DIR>FREE SECTORS'
-L0DE5       .byte $00
-L0DE6       .byte $00,$00,$00
-L0DE9       .byte $80
-            .byte '    '
-L0DEE       .byte ' '
-L0DEF       .byte ' '
-L0DF0       .byte '  '
-            .byte $FF,$FF
-            .byte 'DOS       '
-L0DFE       .byte ' !'
-            .byte $00,$00,$00,$02,$00,$1C,$17,$00
-            .byte $01,$00          ; 01 00
-L0E0A       .byte $2d
+            dta b($44,$D4,$07)
+L0847       jmp (DOSINI)
 
+* date time buffer
+L084A       dta b(28,11,95)
+            dta b(22,14,06)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; start of initialization after loading
-;
-start       ldx #$1A               ; 2D A2 1A
-; search for E:
-_srch_e     lda DDEVIC,X           ; BD 00 03
-            cmp #'E'               ; C9 45
-            beq L0E1E              ; F0 0A
-            inx                    ; E8
-            inx                    ; E8
-L0E16       inx                    ; E8
-            cpx #$3B               ; E0 3B
-            bcc _srch_e              ; 90 F2
-; E: not found => Self Test
-            jmp SELFSV             ; 4C 71 E4
+* $850 set time date
+SETTD       jsr MOVE
 
-L0E1E       inx                    ; E8
-L0E1F       stx L0B33              ; 8E 33 0B
-            stx L0B68              ; 8E 68 0B
-L0E25       stx L0AF3+2            ; 8E F5 0A
-            inx                    ; E8
-            stx L0B28+1            ; 8E 29 0B
-; move BW_DOS_iniv to DOSINI
-            jsr L0919              ; 20 19 09
-            .byte $CE,$62,$40,$0C
-; clear memory form end of BW-DOS($1EE4) to MEMTOP
-; NEW INSERT BEGIN
-            ldy #$00  ; skip clear mem
-            jmp L0E47 ; jump to print BW-DOS text
-;            txa                    ; 8A
-;            ldy #<BW_DOS_end_addr  ; A0 E4
-;            ldx #>BW_DOS_end_addr  ; A2 1E
-; NEW INSERT END
-L0E38       stx L0E3B+2            ; 8E 3D 0E
-L0E3B       sta LFF00,Y            ; 99 00 FF
-L0E3E       iny                    ; C8
-L0E3F       bne L0E3B              ; D0 FA
-L0E41       inx                    ; E8
-L0E42       cpx MEMTOP+1           ; EC E6 02
-L0E45       bcc L0E38              ; 90 F1
-; print BW-DOS text
-L0E47       tya                    ; 98
-L0E48       lda BW_DOS_text,Y      ; B9 64 0E
-L0E4B       beq L0E5F              ; F0 12
-L0E4D       sta L0EC9              ; 8D C9 0E
-            tya                    ; 98
-L0E51       pha                    ; 48
+            dta h(MV_C+DATER),l(DATER)
+            dta h(MV_C+L084A),l(L084A)
 
-L0E52       jsr L096E+1            ; 20 6F 09
-L0E55       .byte $0B,$C9,$0E
-L0E58       .byte $01,$00
+* $857 get time data
+GETTD       jsr MOVE
 
-            pla                    ; 68
-            tay                    ; A8
-            iny                    ; C8
-L0E5D       bne L0E47              ; D0 E8
-L0E5F       jmp ext_init            ; 4C 38 0D
+            dta h(MV_C+L084A),l(L084A)
+            dta h(MV_C+DATER),l(DATER)
 
-BW_DOS_iniv .word BW_DOS_ini       ; E0 07
-BW_DOS_text .byte $9B
-            .byte 'BW-DOS'
-L0E6B       .byte ' 1.31 BEWESOFT, HJX 24-04-2021'
-            .byte $9B,$00
+L085E       rts
+
+L085F       lda L1488+1
+            dta b(op_BIT_abs)
+L0863       lda #$01
+            ldx #$69
+            bne L086D
+L0869       lda #$01
+L086B       ldx #op_SBC_imd
+L086D       sta L088A+1
+            stx L088A
+            ldx #$FE
+L0875       jsr INC_PC
+            sta L0789+1,X
+            sta L078E+1,X
+            inx
+            bne L0875
+            lda L088A
+            asl @
+            dex
+L0886       inx
+            lda $FFFF,X
+L088A       adc #$00
+            sta $FFFF,X
+            stx L088A+1
+            txa
+            beq L0886
+            rts
+
+* command RUN
+CMD_RUN     bne L089B
+L0898       jmp (RUNLOC)
+L089B       jsr MOVE
+
+            dta h(MV_C+L0E00),l(L0E00)
+            dta h(MV_4+RUNLOC),l(RUNLOC)
+
+L08A2       lda COMFNAM+3,X
+            inx
+            sec
+            sbc #$30
+            cmp #$0A
+            bcc L08B3
+            sbc #$07
+            cmp #$10
+            bcs L0898
+L08B3       asl @
+            asl @
+            asl @
+            asl @
+            ldy #$04
+L08B9       asl @
+            rol RUNLOC
+            rol RUNLOC+1
+            dey
+            bne L08B9
+            beq L08A2
+
+INC_PC      stx L08E5+1
+            sty L08E7+1
+            tsx
+            inx
+            inx
+            inx
+            inc $100,X
+            lda $100,X
+            inx
+            tay
+            bne L08DC
+            inc $100,X
+L08DC       lda $100,X
+            sta L08E2+2
+L08E2       lda $FF00,Y
+L08E5       ldx #$00
+L08E7       ldy #$00
+            rts
+
+L08EA       jsr INC_PC
+            ldx #$03
+            dta b(op_BIT_abs)
+L08F0       ldx #$00
+            pha
+            and #$1F
+            sta L090D+2,X
+            pla
+            lsr @
+            lsr @
+            lsr @
+            lsr @
+            lsr @
+            sta L090A+1
+            jsr INC_PC
+            sta L090D+1,X
+            txa
+            beq L08EA
+L090A       ldx #$00
+L090C       dex
+L090D       lda $FFFF,X
+            sta $FFFF,X
+            txa
+            bne L090C
+            tya
+            bmi L0968
+MOVE        jsr L0A76
+L091C       jsr INC_PC
+            tay
+            asl @
+            asl @
+            php
+            tya
+            and #$1F
+            plp
+            bcs L08F0
+            bmi L0949
+            sta L0939+2
+            jsr INC_PC
+            sta L0939+1
+            tya
+            pha
+            jsr L0942
+L0939       jsr L0948
+            jsr L0A76
+            pla
+            bpl L091C
+L0942       lda #$00
+            pha
+L0945       lda #$00
+            plp
+L0948       rts
+
+L0949       sta L0945+1
+            sty L0964+1
+            jsr INC_PC
+            tax
+            jsr INC_PC
+            tay
+L0957       lda L0D8A,X
+            sta L0D8A,Y
+            inx
+            iny
+            dec L0945+1
+            bne L0957
+L0964       lda #$00
+            bpl MOVE
+L0968       ldx #$00
+            rts
+
+* prepare and call CIO
+DO_CIO      jsr INC_PC
+            dta b(op_BIT_abs)
+DO_CIO_0    lda #$C0
+            dta b(op_BIT_abs)
+DO_CIO_1    lda #$04
+DO_CIO_A    sta L0044
+            asl @
+            asl @
+            tax
+            tay
+            bcs L0989
+            jsr INC_PC
+            lsr @
+            sta IOCB0+ICAX1,X
+            lda #$00
+            ror @
+            sta IOCB0+ICAX2,X
+L0989       lda #$67
+            sta L0043
+L098D       jsr INC_PC
+            sta IOCB0+ICCOM,Y
+L0993       iny
+            asl L0043
+            bcc L0993
+            bne L098D
+            lda L0044
+            pha
+            lda #$20
+            jsr CIOV
+            pla
+            tax
+            tya
+            bpl L09C0
+            cmp #$88
+            beq L09C0
+            pha
+            txa
+            pha
+            and #$1C
+            beq L09BC
+            ora #$C0
+            jsr DO_CIO_A
+            dta b($0C)
+L09B8       dta a($0000)
+L09BA       dta a($0000)
+L09BC       pla
+            bpl PRN_ERR
+            pla
+L09C0       tay
+            rts
+
+* print error message
+PRN_ERR     jsr DO_CIO_0
+            dta b($0B)
+            dta a(L0BE1,6)
+            pla
+            jsr CONV_A
+            jsr DO_CIO_0
+            dta b($0B)
+            dta a(DECOUT+4,4)
+            jsr DO_CIO_0
+            dta b($0B)
+            dta a(L0BE1,1)
+            jsr L0B7C
+
+* DOS entry
+_COMTAB     cld
+            jsr ext_init
+            stx TDOVER
+            stx BUFOFF
+            dex
+L09EC       stx INCMND
+            txs
+* close IOCB1
+            jsr DO_CIO
+            dta b($C4,$0C)
+* ???
+L09F5       dta a($0AAC,$0AC9)
+* print prompt
+            jsr DO_CIO_0
+            dta b($0B)
+            dta a(L0D78,4)
+* get command line
+            jsr DO_CIO
+            dta b($40,$05)
+            dta a(LBUF,$40)
+            jsr PARSE_LINE
+            jmp _COMTAB
+
+* Command CAR
+CMD_CAR     lda LBFFD
+            inc LBFFD
+            cmp LBFFD
+            sta LBFFD
+            bne L0A92
+            ldx LBFFC
+            bne L0A92
+            lda DWARM
+            sta WARMST
+            stx INCMND
+            dex
+            stx DWARM
+            jmp (LBFFA)
+
+* toggle BASIC
+L0A32       sta BASICF
+            php
+            jsr DO_CIO_0
+            dta b($0C)
+* ???
+L0A3A       dta a(L0810)
+L0A3C       dta a($5040)
+            lda PORTB
+            ror @
+            ror @
+            plp
+L0A44       rol @
+            rol @
+            sta PORTB
+            ldx #$CE
+L0A4B       txa
+            sec
+            sbc #$10
+            tax
+            stx L0044
+            eor (L0043),Y
+            sta (L0043),Y
+            eor (L0043),Y
+            bne L0A4B
+            sta MEMTOP
+            inx
+            inx
+            stx RAMSIZ
+            stx MEMTOP+1
+            stx RAMTOP
+            jsr DO_CIO
+            dta b($80,$18,$03)
+L0A6D       dta a(L0BE2)
+L0A6F       dta a(0)
+L0A71       ldx #$00
+            stx DWARM
+L0A76       sta L0945+1
+            php
+            pla
+            sta L0942+1
+            rts
+
+* Command BASIC
+CMD_BASIC   lda COMFNAM+3
+            cmp #'O'
+            bne L0A92
+            lda COMFNAM+4
+            cmp #'F'
+            beq L0A32
+            clc
+            eor #'N'
+            beq L0A32
+* cartridge error
+L0A92       lda #$9C
+L0A94       pha
+            jmp PRN_ERR
+
+L0A98       dta b($00,$00,$00,$00)
+L0A9C       dta b($00,$00)
+L0A9E       dta b($00,$00)
+            dta b($00,$00,$00,$00)
+
+L0AA4       jmp (L09B8)
+L0AA7       jmp (L09BA)
+L0AAA       jsr L0B7C
+            txa
+            bne L0AA4
+            bit BATFLG
+            bpl L0ABD
+            jsr L0AA4
+            cpy #$00
+            bpl L0AD3
+            rts
+
+L0ABD       ldy #$01
+            ldx #$05
+            jsr L0CC4
+            cpy #$00
+            bmi L0AAA
+            ldx #$00
+            cpx #$00
+            bne L0AA7
+            pha
+            jsr L0AA7
+            pla
+L0AD3       bit ECHOFLG
+            bmi L0AEA
+            pha
+            ldy #$00
+            ldx #$07
+            jsr L0CC4
+            cpy #$00 
+            bpl L0AE7
+            jsr L0B79
+L0AE7       pla
+L0AE8       ldy #$01
+L0AEA       ldx #$00
+            cpy #$00
+L0AEE       rts
+
+L0AEF       jsr MOVE
+
+L0AF2       dta h(MV_4+L0B38+1),l(L0B38+1)
+            dta h(MV_4+HATABS+2),l(HATABS+2)
+
+            dta h(MV_C+L0A6D+2),l(L0A6D+2)
+            dta h(MV_4+IOCB0+ICPTL),l(IOCB0+ICPTL)
+
+L0AFA       beq L0AE8
+R_DIVIO     jsr R_XDIVIO
+L0AFF       ldy #$00
+            lda L0A3A,Y
+            sta L0B0D
+            lda L0BE9,Y
+            jsr DO_CIO_A
+L0B0D       dta b($08,$03)
+            dta a(COMFNAM,$1C)
+            bmi L0AEE
+            lda #$00
+L0B17       ldy L0AFF+1
+            ldx L0A3C,Y
+            ora IOCB0,X
+            sta ECHOFLG,Y
+            lda #$FF
+            sta IOCB0,X
+L0B28       lda HATABS+2
+            cmp #$0A
+            beq L0B5A
+            jsr MOVE
+
+L0B32       dta h(MV_C+HATABS+1),l(HATABS+1)
+            dta h(MV_4+L0B38+1),l(L0B38+1)
+
+            ldx #$0B
+L0B38       lda LFFFF,X
+L0B3B       sta L0A98,X
+            dex
+            bpl L0B38
+            jsr MOVE
+
+            dta h(MV_4+L0A9C),l(L0A9C)
+            dta h(MV_8+L09B8),l(L09B8)
+
+            dta h(MV_4+L0A9E),l(L0A9E)
+            dta h(MV_4+L0A6F),l(L0A6F)
+
+            dta h(MV_C+L09F5),l(L09F5)
+            dta h(MV_8+L0A9C),l(L0A9C)
+
+            jsr L0863
+            dta a(L09B8)
+
+            jsr L0863
+            dta a(L09BA)
+
+L0B5A       lda ECHOFLG
+            and BATFLG
+            bmi L0AEF
+            jsr MOVE
+
+L0B65       dta h(MV_4+L0B3B+1),l(L0B3B+1)
+            dta h(MV_4+HATABS+2),l(HATABS+2)
+
+            dta h(MV_C+L0A9E),l(L0A9E)
+            dta h(MV_4+IOCB0+ICPTL),l(IOCB0+ICPTL)
+
+            beq L0AFA
+CMD_PRINT   bne L0BA0
+            lda COMFNAM
+            cmp L0D79
+            bne L0BA0
+L0B79       ldy #$00
+            dta b(op_BIT_abs)
+L0B7C       ldy #$01
+R_XDIVIO    tya
+            and #$01
+            tay
+            sty L0AFF+1
+            lda ECHOFLG,Y
+            bmi L0B28
+            ldx #$03
+            jsr L0CC4
+            lda #$FF
+            bmi L0B17
+L0B93       lda #$20
+            jsr L0762
+            ldy #$45
+            jsr L07BE
+            ldy #$01
+            dta b(op_BIT_abs)
+L0BA0       ldy #$00
+L0BA2       jsr R_DIVIO
+            bpl L0BC1
+            jmp L0A94
+
+PARSE_LINE  lda LBUF
+            cmp #'-'
+            beq L0B93
+            cmp #';'
+            beq L0BC1
+            jsr _CRNAME
+            bne PARSE_CMD
+            jsr MOVE
+
+            dta h(MV_C+COMFNAM),l(COMFNAM)
+            dta h(MV_4+L0D79),l(L0D79)
+
+L0BC1       rts
+
+PARSE_CMD   jsr INT_CMD
+* begin statement table
+* called via CIO
+            dta c'RENAM',b($C5)
+            dta c'ERAS',b($C5)
+            dta b($9B)
+            dta c'PROTEC',b($D4)
+            dta c'UNPROTEC',b($D4)
+L0BE1       dta b($9B)
+L0BE2       dta c'Error',b($9B,$9B)
+L0BE9       dta b($90,$94)
+            dta c'M',b($C4)
+            dta c'R',b($C4)
+            dta c'C',b($C4)
+            dta c'LOA',b($C4)
+* called via CMD_TAB_H/L
+            dta c'CA',b($D2)
+            dta c'RU',b($CE)
+            dta c'PRIN',b($D4)
+            dta c'TYP',b($C5)
+            dta c'DI',b($D2)
+            dta c'DIR',b($D3)
+            dta c'BASI',b($C3)
+            dta b($00)
+* CHANGE: 9 free bytes, e.g. CREDIR is now MD etc.
+* we use them to set left margin to 0 at DOS entry
+            beq *+9    ; jump over init code
 ext_init    lda #$00
             sta $52    ; left margin 0
+            jmp L0B28  ; continue DOS entry
+* end statement table
+
+            jsr L0A71
+            ldy #$4A
+            jsr L07BE
+            clc
+L0C23       lda #$04 
+            rol @
+            sta L0C2C
+            jsr DO_CIO_1
+L0C2C       dta b($08,$28)
+            dta a(COMFNAM,28)
+L0C32       rts
+
+INT_CMD     ldx #$FF
+            stx FMSZPG
+L0C37       ldx #$00
+            ldy #$00
+            inc FMSZPG
+L0C3D       jsr INC_PC
+            pha
+            eor COMFNAM+3,Y
+            asl @
+            beq L0C48
+            dex
+L0C48       iny
+            pla
+            beq L0C32
+            bpl L0C3D
+            txa
+            bmi L0C37
+            lda COMFNAM+3,Y
+            cmp #$9B
+            bne L0C37
+            jsr L0768
+            pla
+            pla
+            lda FMSZPG
+            cmp #$0D
+            beq L0C23
+            bcs L0C74
+            adc #$20
+            sta L0C6E
+            jsr DO_CIO_1
+            dta b($00)
+L0C6E       dta b($00)
+            dta a(COMFNAM,28)
+            rts
+
+L0C74       tay
+            lda CMD_TAB_H-14,Y
+            pha
+            lda CMD_TAB_L-14,Y
+            pha
+            cpx #$03
+            rts
+
+* commannd DIR/S
+CMD_DIR     lda #$80
+CMD_DIRS    eor #$12
+            pha
+            lda COMFNAM-1,X
+            cmp #$38
+            beq L0C97
+            and #$F9
+            cmp #$38
+            bne L0C97
+            ldy #$4F
+L0C94       jsr L07BE
+L0C97       pla
+
+* command TYPE
+CMD_TYPE    eor #$9F
+            sta L0CA0
+            jsr DO_CIO_1
+L0CA0       dta b($08,$03)
+            dta a(COMFNAM,28)
+L0CA6       jsr DO_CIO
+L0CA9       dta b($44,$07)
+            dta a(LBUF)
+            dta a(64)
+            php
+            jsr MOVE
+
+            dta h(MV_C+IOCB1+ICBLL),l(MV_C+IOCB1+ICBLL)
+            dta h(MV_4+L0CBE),l(MV_4+L0CBE)
+
+            jsr DO_CIO
+            dta b($40,$0B)
+            dta a(LBUF)
+L0CBE       dta a($40)
+            plp
+            bpl L0CA6
+            rts
+
+L0CC4       sta FMSZPG+2
+            txa
+            pha
+            ldx ECHOFLG,Y
+            lda HATABS+1,X
+            sta FMSZPG
+            lda HATABS+2,X
+            sta FMSZPG+1
+            ldx L0A3C,Y
+            pla
+            tay
+            lda (FMSZPG),Y
+            pha
+            dey
+            lda (FMSZPG),Y
+            pha
+            lda FMSZPG+2
+            rts
+
+* Start of COMTAB
+DWARM       dta b($FF)             ; -21
+            dta b($80)             ; -20 ???
+DECOUT      dta b($20,$20,$20,$20) ; -19
+            dta b($20,$20,$20,$20)
+SSIOV       dta b(op_JMP_abs)      ; -13 jmp SIO
+LSIO        dta a(SIOV)            ; -10
+ECHOFLG     dta b($ff)             ; -8
+BATFLG      dta b($FF)             ; -7
+DECIN       dta b($00,$00,$00,$00) ; -6
+WRTCMD      dta c'P'               ; -2 W=verify P=no verify
+SWARMST     dta b($FF)             ; -1 00 in CP, $FF trap errors
+; DOSVEC => $0cf9
+COMTAB      jmp _COMTAB            ; COMTAB Jump to DOS CP
+CRNAME      jmp _CRNAME            ; +3
+DIVIO       dta a(R_DIVIO)         ; +6
+XDIVIO      dta a(R_XDIVIO)        ; +8
+BUFOFF      dta b($00)             ; +10
+ZORIG       dta a(BW_BEGIN)        ; +11
+DATER       dta b($1C,$0B,$5F)     ; +13 28.11.95
+TIMER       dta b($16,$0E,$06)     ; +16 22:14:06
+ODATER      dta b($1C,$0B,$5F)     ; +19
+OTIMER      dta b($16,$0E,$06)     ; +22
+TDOVER      dta b($00)             ; +25
+TRUN        dta a(L085E)           ; +26
+            dta a(L1711)           ; +28 ??? buffer address ???
+SMEMLO      dta a(END_ADDR)        ; +30 start up MEMLO
+INCMND      dta b($00)             ; +32 Reset $00-CP $FF-Cart
+COMFNAM     dta c'D1:STARTUP.BAT'  ; +33 28 Bytes
+            dta b($9B)
+            dta c'             '
+RUNLOC      dta a(L085E)           ; COMTAB+61 address for RUN
+* start code to check for STARTUP.BAT
+LBUF        jsr L07F2              ; COMTAB+63 comman line buffer 64 Bytes
+            lda #$FF
+            sta FMSZPG+4
+            ldy #$01
+L0D41       jsr R_DIVIO
+            jsr L0A71
+L0D47       stx COLDST
+            lda BOOT
+L0D4C       ora #$01
+            sta BOOT
+            jmp _COMTAB
+L0D53       clc
+            rts
+            dta c'                          '
+L0D6F       dta c'         '
+* end of LBUF and COMTAB
+
+L0D78       dta b($9B)
+L0D79       dta c'D1:'
+            dta b($9B)
+            dta c'.BAT'
+            dta b($9B)
+            dta c'.COM'
+            dta b($9B)
+            dta c'*.*'
+L0D8A       dta b($9B)
+            dta c'Volume:          '
+L0D9C       dta c' '
+L0D9D       dta c'                    '
+L0DB1       dta c' '
+L0DB2       dta c'                   '
+L0DC5       dta c' '
+            dta b($9B)
+            dta c'Directory:'
+            dta b($C4,$C9,$D2) ; DIR inverse
+            dta c'<DIR>FREE SECTORS'
+L0DE5       dta b($00)
+L0DE6       dta b($00,$00,$00)
+L0DE9       dta b($80)
+            dta c'    '
+L0DEE       dta c' '
+L0DEF       dta c' '
+L0DF0       dta c'  '
+L0DF2       dta b($FF,$FF)
+            dta c'DOS       '
+L0DFE       dta c' !'
+L0E00       dta b($00,$00,$00,$02,$00)
+            dta b($1C,$17,$00,$01,$00)
+L0E0A       dta b($2d)
+
+* start of initialization after loading
+* after start it is used for buffers $141 bytes
+start       ldx #$1A
+* search for E:
+_srch_e     lda DDEVIC,X
+            cmp #'E'
+            beq _e_found
+            inx
+            inx
+            inx
+            cpx #$3B
+            bcc _srch_e
+; E: not found => Self Test
+            jmp SELFSV
+
+; update HATABS
+_e_found    inx
+            stx L0B32+1
+            stx L0B65+3
+            stx L0AF2+3
+            inx
+            stx L0B28+1
+* move dos_iniv to DOSINI
+            jsr MOVE
+            
+            dta h(MV_C+dos_iniv),l(MV_C+dos_iniv)
+            dta h(MV_4+DOSINI),l(MV_4+DOSINI)
+
+* print BW-DOS version
+            jsr DO_CIO_0
+            dta b($0B)
+            dta a(dos_text,dos_text_e-dos_text)
             jmp LBUF
+
+dos_iniv    dta a(DOS_INI)
+dos_text    dta b($9B)
+            dta c'BW-DOS 1.31 BEWESOFT 2021-12-18'
+            dta b($9B)
+dos_text_e  equ *
+
+* buffer addresses $0E0B-$0F4B ($141 Bytes)
+L0E16       equ start+$0B
+L0E21       equ start+$16
+L0E26       equ start+$1B
+L0E27       equ start+$1C
+L0E38       equ start+$2D
+L0E3B       equ start+$30
+L0E3E       equ start+$33
+L0E3F       equ start+$34
+L0E41       equ start+$36
+L0E42       equ start+$37
+L0E45       equ start+$3A
+L0E48       equ start+$3D
+L0E4C       equ start+$41
+L0E4D       equ start+$42
+L0E51       equ start+$46
+L0E52       equ start+$47
+L0E55       equ start+$4A
+L0E58       equ start+$4D
+L0E5D       equ start+$52
+L0E5F       equ start+$54
+L0E6B       equ start+$60
+L0ED7       equ start+$CC
+L0ED8       equ start+$CD
+L0F15       equ start+$10A
+L0F38       equ start+$12D
+L0F40       equ start+$135
+L0F43       equ start+$138
+L0F46       equ start+$13B
+L0F49       equ start+$13E
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-            org $0F4C
+            blk dos start+$141 ;$0F4C
 ;
 L0F4C       ldx L0E3B+2            ; AE 3D 0E
             lda L0E3E              ; AD 3E 0E
@@ -964,7 +994,7 @@ L0F59       lda L0F58,Y            ; B9 58 0F
             sbc L53FA,X            ; FD FA 53
             .byte $12
             sbc (RTCLOK),Y         ; F1 12
-            .byte $12
+L0F89       .byte $12
             ldy ICCOMZ             ; A4 22
             sta L10DB+1            ; 8D DC 10
             tya                    ; 98
@@ -976,10 +1006,10 @@ L0F59       lda L0F58,Y            ; B9 58 0F
 L0F9B       ldy #$A8               ; A0 A8
 L0F9D       rts                    ; 60
             ldy #$22               ; A0 22
-            bit L2DA0              ; 2C A0 2D
-            bit L30A0              ; 2C A0 30
-            bit L31A0              ; 2C A0 31
-            bit L29A0              ; 2C A0 29
+L0FA0       bit L2DA0              ; 2C A0 2D
+L0FA3       bit L30A0              ; 2C A0 30
+L0FA6       bit L31A0              ; 2C A0 31
+L0FA9       bit L29A0              ; 2C A0 29
 L0FAC       sta L10DB+1            ; 8D DC 10
 L0FAF       cld                    ; D8
             stx FMSZPG+3           ; 86 46
@@ -1083,7 +1113,7 @@ L107D       lda #$99               ; A9 99
             lda (FMSZPG),Y         ; B1 43
             ldy L0E38+1            ; AC 39 0E
 L1088       sta L0DE9,Y            ; 99 E9 0D
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22,$CC,$E3,$91,$14
 L1093       ldy L0E38+1            ; AC 39 0E
             lda L0DE9,Y            ; B9 E9 0D
@@ -1103,7 +1133,7 @@ L10B0       lda L0D4C+1,X          ; BD 4D 0D
             bne L10B0              ; D0 F6
 L10BA       ldy #$01               ; A0 01
             bne L10DB              ; D0 1D
-L10BE       jsr L08C5              ; 20 C5 08
+L10BE       jsr INC_PC              ; 20 C5 08
             tay                    ; A8
 L10C2       ldx #$00               ; A2 00
             txs                    ; 9A
@@ -1123,9 +1153,9 @@ L10DB       lda #$00               ; A9 00
             cpy #$00               ; C0 00
             rts                    ; 60
 L10E2       ldx L0E38+1            ; AE 39 0E
-            lda L0E4B+1,X          ; BD 4C 0E
+            lda L0E4C,X          ; BD 4C 0E
             bpl L10FB              ; 10 11
-            lsr L0E4B+1,X          ; 5E 4C 0E
+            lsr L0E4C,X          ; 5E 4C 0E
             jsr L1BE5              ; 20 E5 1B
             jsr L1C2B              ; 20 2B 1C
             inc L0E6B              ; EE 6B 0E
@@ -1176,7 +1206,7 @@ L1149       lda L0E4D,Y            ; B9 4D 0E
             cpy #$1E               ; C0 1E
             bcc L1147              ; 90 F4
             rts                    ; 60
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             cpy #$28               ; C0 28
             eor (L0086),Y          ; 51 86
             ldy #$20               ; A0 20
@@ -1200,14 +1230,15 @@ L1181       bit L43B1              ; 2C B1 43
 L1185       sta LFFFF,X            ; 9D FF FF
             inx                    ; E8
             rts                    ; 60
+
 L118A       ldx #$FD               ; A2 FD
 L118C       lda DECOUT+4            ; AD EA 0C
             cmp #$20               ; C9 20
             bne L1196+1            ; D0 04
-            lda L0BEE,X            ; BD EE 0B
+            lda DECOUT+5-$FD,X            ; BD EE 0B
 L1196       bit L39A9              ; 2C A9 39
             ora #$30               ; 09 30
-            sta L0BEE,X            ; 9D EE 0B
+            sta DECOUT+5-$FD,X            ; 9D EE 0B
             inx                    ; E8
             bne L118C              ; D0 EB
             rts                    ; 60
@@ -1219,7 +1250,7 @@ L11A2       jsr L14DA              ; 20 DA 14
             sta L4FAC,X            ; 9D AC 4F
             .byte $17
             beq L1215              ; F0 61
-L11B4       jsr L0919              ; 20 19 09
+L11B4       jsr MOVE              ; 20 19 09
             .byte $4E,$5A,$4C,$F3
             .byte $87,$25,$A2
 L11BE       .byte $00
@@ -1233,7 +1264,7 @@ L11BE       .byte $00
             beq L1215              ; F0 44
 L11D1       jsr L14DA              ; 20 DA 14
             .byte $12
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $AB
             sta LAD15,X            ; 9D 15 AD
             and (APPMHI,X)         ; 21 0E
@@ -1243,7 +1274,7 @@ L11D1       jsr L14DA              ; 20 DA 14
             stx L0D9D              ; 8E 9D 0D
 L11E6       and #$10               ; 29 10
             beq L11EF+1            ; F0 06
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $A3,$47
 L11EF       ora L24AD,X            ; 1D AD 24
             asl L25AE              ; 0E AE 25
@@ -1257,14 +1288,14 @@ L11EF       ora L24AD,X            ; 1D AD 24
             iny                    ; C8
 L1204       stx DECIN              ; 8E F3 0C
             sty DECIN+1              ; 8C F4 0C
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $07
             and BRKKEY             ; 25 11
             txa                    ; 8A
             cpy L6DEB              ; CC EB 6D
             .byte $AB
 L1215       beq L1274              ; F0 5D
-L1217       jsr L0919              ; 20 19 09
+L1217       jsr MOVE              ; 20 19 09
             .byte $2B
             php                    ; 08
             sta (L009D,X)          ; 81 9D
@@ -1283,10 +1314,10 @@ L1217       jsr L0919              ; 20 19 09
             .byte $80
             bit L07A1              ; 2C A1 07
             .byte $32
-            lda L0E1F+2            ; AD 21 0E
+            lda L0E21            ; AD 21 0E
             and #$20               ; 29 20
             bne L1252+1            ; D0 0D
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             lsr L6C24              ; 4E 24 6C
             .byte $F3,$07
             rol                    ; 2A
@@ -1296,7 +1327,7 @@ L1252       lda #$A0               ; A9 A0
 L1255       txa                    ; 8A
             pha                    ; 48
             lda RUNLOC+1,Y          ; B9 37 0D
-            jsr L071D              ; 20 1D 07
+            jsr CONV_A              ; 20 1D 07
             jsr L118A              ; 20 8A 11
             pla                    ; 68
             tax                    ; AA
@@ -1338,7 +1369,7 @@ L12A2       lda #$00               ; A9 00
             iny                    ; C8
             cpy ICBLLZ             ; C4 28
             bcs L12DF              ; B0 2E
-L12B1       jsr L0919              ; 20 19 09
+L12B1       jsr MOVE              ; 20 19 09
             rti                    ; 40
             bit ROWCRS             ; 24 54
             .byte $27
@@ -1347,7 +1378,7 @@ L12B1       jsr L0919              ; 20 19 09
             lsr L9351              ; 4E 51 93
             ror                    ; 6A
             php                    ; 08
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $54,$27
             rti                    ; 40
             bit L00CE              ; 24 CE
@@ -1363,7 +1394,7 @@ L12B1       jsr L0919              ; 20 19 09
 L12D9       jsr L14BF              ; 20 BF 14
             beq L12F0              ; F0 12
             rts                    ; 60
-L12DF       jsr L0919              ; 20 19 09
+L12DF       jsr MOVE              ; 20 19 09
             .byte $52,$D7,$54,$27
             ldx #$7E               ; A2 7E
             .byte $C7
@@ -1399,7 +1430,7 @@ L1323       lda L0DE5,Y            ; B9 E5 0D
             sta (FMSZPG),Y         ; 91 43
             dey                    ; 88
             bpl L1323              ; 10 F8
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $1C,$2B
             ldx #$5B               ; A2 5B
             .byte $B3
@@ -1424,7 +1455,7 @@ L1357       lda L0D47+1,X          ; BD 48 0D
             inx                    ; E8
             bne L1357              ; D0 F7
             bcs L1369              ; B0 07
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $A3
             ldx L00BB,Y            ; B6 BB
             clc                    ; 18
@@ -1444,17 +1475,17 @@ L1376       and #$04               ; 29 04
             lsr L0E52+1            ; 4E 53 0E
 L1387       and #$08               ; 29 08
             beq L1369              ; F0 DE
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
 L138E       .byte $23,$BB
             sty LBF22              ; 8C 22 BF
-            lda L0C15,Y            ; B9 15 0C
+            .byte $B9,$15,$0C ; lda L0C15,Y ; B9 15 0C
             .byte $13,$9E
 L1398       .byte $A3
 L1399       sty LA99A              ; 8C 9A A9
             .byte $FF
 L139D       bit.w L00A9            ; 2C A9 00
             pha                    ; 48
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22
             cmp (ADRESS,X)         ; C1 64
             and (DELTAR,X)         ; 21 76
@@ -1463,7 +1494,7 @@ L139D       bit.w L00A9            ; 2C A9 00
 L13AE       lda #$00               ; A9 00
             bit LFFA9              ; 2C A9 FF
             sta FMSZPG+5           ; 85 48
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             eor (L00DC),Y          ; 51 DC
             .byte $54,$27
             ldx #$7C               ; A2 7C
@@ -1491,7 +1522,7 @@ L13D9       jsr L14BF              ; 20 BF 14
 L13F0       jsr L10BE              ; 20 BE 10
 L13F3       ldx L00CA              ; A6 CA
 L13F5       rts                    ; 60
-L13F6       jsr L0919              ; 20 19 09
+L13F6       jsr MOVE              ; 20 19 09
             .byte $1B
             jmp (L5B22)            ; 6C 22 5B
             bcs L138E              ; B0 8F
@@ -1503,7 +1534,7 @@ L13F6       jsr L0919              ; 20 19 09
             jsr L1C2B              ; 20 2B 1C
 L140E       ldx L0E38+2            ; AE 3A 0E
             lda L0E3B              ; AD 3B 0E
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $1B
             sbc #$D4               ; E9 D4
             .byte $27,$54,$82
@@ -1525,7 +1556,7 @@ L1434       lda IOCB0+ICAX3,X      ; BD 4C 03
             bne L1434              ; D0 F6
 L143E       lda L0DF0              ; AD F0 0D
             bmi L13F0              ; 30 AD
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             and (KEYDEF,X)         ; 21 79
             lda ICCOMZ,X           ; B5 22
             lda L23B3,Y            ; B9 B3 23
@@ -1589,7 +1620,7 @@ L14C2       lda L0D47+1,X          ; BD 48 0D
             beq L14F1              ; F0 1A
 L14D7       lda #$FF               ; A9 FF
 L14D9       rts                    ; 60
-L14DA       jsr L08C5              ; 20 C5 08
+L14DA       jsr INC_PC              ; 20 C5 08
             sta L1283+1            ; 8D 84 12
             asl                    ; 0A
             lsr                    ; 4A
@@ -1619,24 +1650,27 @@ L14FD       bit FMSZPG+2           ; 24 45
             pla                    ; 68
             lsr                    ; 4A
 L150B       rts                    ; 60
+
 L150C       lda #$14               ; A9 14
-            bit L0CA9              ; 2C A9 0C
+            dta b(op_BIT_abs)
+            lda #$0C
+;            bit L0CA9              ; 2C A9 0C
 L1511       sta L0E48              ; 8D 48 0E
             pha                    ; 48
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $23
             ror ADRESS,X           ; 76 64
             sty FTYPE,X            ; 94 3E
             pla                    ; 68
             cmp #$10               ; C9 10
             bcc L152D              ; 90 0B
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             and (HOLDCH,X)         ; 21 7C
             .byte $BB,$13
             ldx L9AA3              ; AE A3 9A
             .byte $BB
 L152D       rts                    ; 60
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $2B
             sta (L009D,X)          ; 81 9D
             .byte $23
@@ -1645,20 +1679,20 @@ L152D       rts                    ; 60
             .byte $32
             bit TDOVER            ; 2C 12 0D
             bpl L1547              ; 10 07
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             cmp LCE0C              ; CD 0C CE
             .byte $32
 L1547       lda FMSZPG+6           ; A5 49
             sta L0E48              ; 8D 48 0E
             and #$20               ; 29 20
             ora #$08               ; 09 08
-            sta L0E1F+2            ; 8D 21 0E
+            sta L0E21            ; 8D 21 0E
             rts                    ; 60
 L1554       bit L0E52+1            ; 2C 53 0E
             bmi L15C3+1            ; 30 6B
             lda #$16               ; A9 16
             sta FMSZPG+6           ; 85 49
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             asl L0000,X            ; 16 00
             .byte $AB
             sta (WARMST,X)         ; 81 08
@@ -1669,7 +1703,7 @@ L1554       bit L0E52+1            ; 2C 53 0E
             jsr L14DA              ; 20 DA 14
             rol                    ; 2A
             sty L0DC5              ; 8C C5 0D
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             plp                    ; 28
             .byte $00,$13
             plp                    ; 28
@@ -1717,7 +1751,7 @@ L15CB       lda L0E0A+1,X          ; BD 0B 0E
             jmp (GETTDV)            ; 6C 06 07
 L15D8       lda #$00               ; A9 00
             bpl L1622              ; 10 46
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $2B
             sta (L008C,X)          ; 81 8C
             .byte $2B
@@ -1727,11 +1761,11 @@ L15D8       lda #$00               ; A9 00
             .byte $0C
             sta LD0C5,X            ; 9D C5 D0
             .byte $34
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $2B
             sty L2281              ; 8C 81 22
             tya                    ; 98
-            lda L0C15,Y            ; B9 15 0C
+            .byte $B9,$15,$0C     ; lda L0C15,Y ; B9 15 0C
             sta LD0C2,X            ; 9D C2 D0
             and DSTAT              ; 25 4C
             .byte $B2
@@ -1756,9 +1790,9 @@ L1622       jsr L10BE              ; 20 BE 10
             tax                    ; AA
 L1626       jsr L15C9              ; 20 C9 15
             jsr L1D4D              ; 20 4D 1D
-L162C       bit L0E4B+1            ; 2C 4C 0E
+L162C       bit L0E4C            ; 2C 4C 0E
             bmi L15C0+1            ; 30 90
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             ora L00C9,X            ; 15 C9
             ora ICAX5Z,X           ; 15 2E
             .byte $1B
@@ -1779,7 +1813,7 @@ L162C       bit L0E4B+1            ; 2C 4C 0E
             and #$20               ; 29 20
             beq L1678              ; F0 1E
 L165A       beq L1618              ; F0 BC
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22
             lda L225D,Y            ; B9 5D 22
             tya                    ; 98
@@ -1791,13 +1825,13 @@ L165A       beq L1618              ; F0 BC
             eor L1398,X            ; 5D 98 13
             lda (ICCOMZ),Y         ; B1 22
             tya                    ; 98
-            lda L0C15,Y            ; B9 15 0C
+            .byte $B9,$15,$0C      ; lda L0C15,Y ; B9 15 0C
             .byte $93,$9E
 L1678       jmp L16B2              ; 4C B2 16
 L167B       bpl L1626              ; 10 A9
 L167D       bne L16BA+1            ; D0 3C
 L167F       lda FMSZPG+6           ; A5 49
-            eor L0E1F+2            ; 4D 21 0E
+            eor L0E21            ; 4D 21 0E
 L1684       and #$20               ; 29 20
             beq L1696              ; F0 0E
             lda FMSZPG+6           ; A5 49
@@ -1809,7 +1843,7 @@ L1690       bit LA4A0              ; 2C A0 A4
 L1696       lda FMSZPG+6           ; A5 49
             and #$08               ; 29 08
             beq L16B2              ; F0 16
-            lda L0E1F+2            ; AD 21 0E
+            lda L0E21            ; AD 21 0E
             and #$21               ; 29 21
             lsr                    ; 4A
             bne L16B2              ; D0 0E
@@ -1820,7 +1854,7 @@ L1696       lda FMSZPG+6           ; A5 49
 L16AC       lda #$00               ; A9 00
             bpl L167B              ; 10 CB
             inc FMSZPG+6           ; E6 49
-L16B2       jsr L0919              ; 20 19 09
+L16B2       jsr MOVE              ; 20 19 09
             .byte $22
             lda LA5BF,Y            ; B9 BF A5
             tya                    ; 98
@@ -1829,20 +1863,20 @@ L16BA       lda L49A5,Y            ; B9 A5 49
             lda FMSZPG+6           ; A5 49
             cmp #$10               ; C9 10
             bcc L16DB              ; 90 15
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22
             lda LA2BF,Y            ; B9 BF A2
             ror L00C1,X            ; 76 C1
             lda FMSZPG+6           ; A5 49
             and #$07               ; 29 07
             bne L16DB              ; D0 06
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $A3
             ldx L00BB,Y            ; B6 BB
 L16DB       lda FMSZPG+6           ; A5 49
             lsr                    ; 4A
             bcc L16FD              ; 90 1D
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $A3,$BB,$64
             jmp L143E              ; 4C 3E 14
             ldy #$00               ; A0 00
@@ -1866,7 +1900,8 @@ L16FE       stx L1C2B+1            ; 8E 2C 1C
             lda #$11               ; A9 11
             sta FMSZPG             ; 85 43
             rts                    ; 60
-;
+L1711       equ *
+
             org $1A11
 ;
 L1A11       cpx #$08               ; E0 08
@@ -1934,7 +1969,7 @@ L1A8E       ror L1AFD+1            ; 6E FE 1A
             lda (ICBALZ),Y         ; B1 24
             plp                    ; 28
             rts                    ; 60
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $1A,$9F,$1A,$FA
             ldx #$B9               ; A2 B9
             .byte $E3
@@ -1949,13 +1984,13 @@ L1AAA       jsr L10BE              ; 20 BE 10
             .byte $9F,$1A
             sty L1AE7+1            ; 8C E8 1A
 L1AB4       lsr L16AC+1            ; 4E AD 16
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22,$E3
             lda L239A,Y            ; B9 9A 23
             bne L1AF4              ; D0 33
             cmp #$3E               ; C9 3E
             bne L1AE0              ; D0 1B
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             ldx #$CC               ; A2 CC
             lda L22F0,Y            ; B9 F0 22
 L1ACD       jsr L150C              ; 20 0C 15
@@ -1984,7 +2019,7 @@ L1B01       lsr L16AC+1            ; 4E AD 16
             jsr L150C              ; 20 0C 15
             jsr L1DC4+1            ; 20 C5 1D
             bmi L1AAA              ; 30 9E
-L1B0C       jsr L0919              ; 20 19 09
+L1B0C       jsr MOVE              ; 20 19 09
             ldx #$98               ; A2 98
 L1B11       lda LBD60,Y            ; B9 60 BD
             rti                    ; 40
@@ -2021,7 +2056,7 @@ L1B45       stx DCOMND             ; 8E 02 03
             rol                    ; 2A
             eor #$01               ; 49 01
             sta DBYTHI             ; 8D 09 03
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $5B
             bvs L1B7F+2            ; 70 23
             asl FMSZPG+4           ; 06 47
@@ -2062,7 +2097,7 @@ L1B9E       txa                    ; 8A
             .byte $5A
             asl L9018              ; 0E 18 90
             .byte $1B
-L1BAE       jsr L0862+1            ; 20 63 08
+L1BAE       jsr L0863            ; 20 63 08
             sbc DOSINI+1           ; E5 0D
             lda L0DE5              ; AD E5 0D
             cmp L0E58              ; CD 58 0E
@@ -2159,13 +2194,13 @@ L1C6D       lda #$00               ; A9 00
             ldx L1C68+1            ; AE 69 1C
             clc                    ; 18
             jmp L1B2B              ; 4C 2B 1B
-L1C7C       jsr L0919              ; 20 19 09
+L1C7C       jsr MOVE              ; 20 19 09
             .byte $22
             bcs L1CDC+1            ; B0 5B
             sta L118A,X            ; 9D 8A 11
             .byte $43
             sta (FMSZPG),Y         ; 91 43
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $1C,$2B,$22
             adc LA2D7,Y            ; 79 D7 A2
             dec LA0D5              ; CE D5 A0
@@ -2174,7 +2209,7 @@ L1C95       lsr L0E5F+1            ; 4E 60 0E
             ror L0E5F              ; 6E 5F 0E
             dey                    ; 88
             bne L1C95              ; D0 F7
-            jsr L0862+1            ; 20 63 08
+            jsr L0863            ; 20 63 08
             .byte $5A
 L1CA2       asl L39AE              ; 0E AE 39
             asl L7E38              ; 0E 38 7E
@@ -2183,16 +2218,16 @@ L1CA8       jmp L600E              ; 4C 0E 60
 L1CAD       lda L0E16,X            ; BD 16 0E
             cmp #$3F               ; C9 3F
             beq L1CB7              ; F0 03
-            sta L0E25+2,X          ; 9D 27 0E
+            sta L0E27,X          ; 9D 27 0E
 L1CB7       dex                    ; CA
             bpl L1CAD              ; 10 F3
             rts                    ; 60
             sec                    ; 38
             bit DSKFMS             ; 24 18
             php                    ; 08
-            lsr L0E1F+2            ; 4E 21 0E
+            lsr L0E21            ; 4E 21 0E
             plp                    ; 28
-            rol L0E1F+2            ; 2E 21 0E
+            rol L0E21            ; 2E 21 0E
             rts                    ; 60
 L1CC7       .byte $AB,$34
             dec L00BB              ; C6 BB
@@ -2211,7 +2246,7 @@ L1CDC       lda L1CCB+1,Y          ; B9 CC 1C
             jsr L159B+1            ; 20 9C 15
             pla                    ; 68
             bne L1CFB+1            ; D0 0E
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $2B
             sta (L0097,X)          ; 81 97
             .byte $1A,$23,$2B
@@ -2228,7 +2263,7 @@ L1D01       jsr L1CA8+2            ; 20 AA 1C
 L1D0D       jsr L1DBF              ; 20 BF 1D
             bne L1D19              ; D0 07
 L1D12       lda #$00               ; A9 00
-            and L0E1F+2            ; 2D 21 0E
+            and L0E21            ; 2D 21 0E
             bne L1D0D              ; D0 F4
 L1D19       rts                    ; 60
             lda #$24               ; A9 24
@@ -2242,7 +2277,7 @@ L1D23       sta L0E0A+1,X          ; 9D 0B 0E
             beq L1D3F+1            ; F0 12
             jsr L159B+1            ; 20 9C 15
             jsr L1DC4+1            ; 20 C5 1D
-            lda L0E1F+2            ; AD 21 0E
+            lda L0E21            ; AD 21 0E
             lsr                    ; 4A
             bcc L1D45              ; 90 0B
             ldy #$A4               ; A0 A4
@@ -2250,9 +2285,9 @@ L1D23       sta L0E0A+1,X          ; 9D 0B 0E
 L1D3F       bit LA7A0              ; 2C A0 A7
             jmp L10C2              ; 4C C2 10
 L1D45       lda #$10               ; A9 10
-            sta L0E1F+2            ; 8D 21 0E
+            sta L0E21            ; 8D 21 0E
             jsr L1399+2            ; 20 9B 13
-L1D4D       jsr L0919              ; 20 19 09
+L1D4D       jsr MOVE              ; 20 19 09
             .byte $22
             lda L22BF,Y            ; B9 BF 22
             tya                    ; 98
@@ -2267,7 +2302,7 @@ L1D63       ldy FMSZPG+2           ; A4 45
             dey                    ; 88
             cpy L0E3F              ; CC 3F 0E
             bne L1D5A+1            ; D0 EF
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22,$B3
             bcs L1D8D+2            ; B0 1C
             .byte $7C,$8F
@@ -2276,7 +2311,7 @@ L1D63       ldy FMSZPG+2           ; A4 45
             iny                    ; C8
             ora (FMSZPG),Y         ; 11 43
             bne L1D5A+1            ; D0 DC
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $22,$BF
             lda L0C94+1,Y          ; B9 95 0C
             jmp L139D+1            ; 4C 9E 13
@@ -2314,7 +2349,7 @@ L1DBF       lda #$80               ; A9 80
             bit L49A5              ; 2C A5 49
 L1DC4       bit L20A9              ; 2C A9 20
             sta L1DF3+1            ; 8D F4 1D
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             ldx #$68               ; A2 68
 L1DCF       cmp (ICHIDZ,X)         ; C1 20
             ora LA209,Y            ; 19 09 A2
@@ -2323,35 +2358,35 @@ L1DCF       cmp (ICHIDZ,X)         ; C1 20
             bmi L1E19              ; 30 3E
             jsr L13AE              ; 20 AE 13
             bmi L1E19              ; 30 39
-            lda L0E1F+2            ; AD 21 0E
+            lda L0E21            ; AD 21 0E
             beq L1E19              ; F0 34
             and #$08               ; 29 08
             bne L1DF3              ; D0 0A
-            bit L0E4B+1            ; 2C 4C 0E
+            bit L0E4C            ; 2C 4C 0E
             bpl L1DCF+1            ; 10 E2
             jsr L1E10              ; 20 10 1E
             beq L1DCF+1            ; F0 DD
 L1DF3       lda #$00               ; A9 00
             bmi L1DFE              ; 30 07
-            eor L0E1F+2            ; 4D 21 0E
+            eor L0E21            ; 4D 21 0E
             and #$20               ; 29 20
             bne L1DCF+1            ; D0 D2
 L1DFE       ldx #$0B               ; A2 0B
 L1E00       lda L0E0A,X            ; BD 0A 0E
             cmp #$3F               ; C9 3F
             beq L1E0C              ; F0 05
-            cmp L0E25+1,X          ; DD 26 0E
+            cmp L0E26,X          ; DD 26 0E
             bne L1DCF+1            ; D0 C4
 L1E0C       dex                    ; CA
             bne L1E00              ; D0 F1
             txa                    ; 8A
 L1E10       pha                    ; 48
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             ldx #$5D               ; A2 5D
             cmp (SAVADR,X)         ; C1 68
             rts                    ; 60
 L1E19       lda #$FF               ; A9 FF
-            bit L0E4B+1            ; 2C 4C 0E
+            bit L0E4C            ; 2C 4C 0E
             bmi L1E10              ; 30 F0
             tax                    ; AA
             rts                    ; 60
@@ -2374,7 +2409,7 @@ L1E42       jsr L1E7C+1            ; 20 7D 1E
 L1E49       lda #$00               ; A9 00
             bpl L1E56+1            ; 10 0A
             lsr L1E49+1            ; 4E 4A 1E
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             cmp (L0086),Y          ; D1 86
             .byte $42
 L1E56       cpx #$20               ; E0 20
@@ -2390,7 +2425,7 @@ L1E61       tya                    ; 98
             tay                    ; A8
             cpy #$88               ; C0 88
             bne L1E91              ; D0 23
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             .byte $42
             cpx #$4D               ; E0 4D
             .byte $13
@@ -2407,7 +2442,7 @@ L1E7C       eor ICHIDZ             ; 45 20
             cmp #$FF               ; C9 FF
             tya                    ; 98
 L1E91       rts                    ; 60
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             eor L429C,X            ; 5D 9C 42
             .byte $E2,$5C
             ldx L2754              ; AE 54 27
@@ -2420,9 +2455,9 @@ L1EA4       lda SMEMLO+1,X         ; BD 18 0D
             sta L0D53,X            ; 9D 53 0D
             inx                    ; E8
             bne L1EA4              ; D0 F4
-            jsr L0862+1            ; 20 63 08
+            jsr L0863            ; 20 63 08
             eor (APPMHI),Y         ; 51 0E
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             eor (L0086),Y          ; 51 86
             .byte $54,$27,$9E,$CF
             bmi L1E91              ; 30 D1
@@ -2431,7 +2466,7 @@ L1EA4       lda SMEMLO+1,X         ; BD 18 0D
             cld                    ; D8
             ldy #$01               ; A0 01
             rts                    ; 60
-            jsr L0919              ; 20 19 09
+            jsr MOVE              ; 20 19 09
             ldx #$79               ; A2 79
             .byte $C7
             ldy #$2E               ; A0 2E
@@ -2443,10 +2478,7 @@ L1EDA       ldx #$00               ; A2 00
             bmi L1E91              ; 30 B3
             sta L1EE1+1            ; 8D E2 1E
 L1EE1       jmp (RUNAD)            ; 6C E0 02
-BW_DOS_end_addr
-;
-            org $02E0
-;
-            .word start
-;
-         
+END_ADDR    equ *
+
+            blk dos RUNAD
+            dta a(start)
