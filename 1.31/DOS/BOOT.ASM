@@ -34,11 +34,10 @@ L0528       equ $0528
 L0540       equ $0540
 L05C0       equ $05C0
 
-L0700       equ $0700
 ;
 ; Start of code
 ;
-            org $6000
+            org $3000
 ;
             jmp start              ; 4C 22 61
 
