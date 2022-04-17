@@ -6,39 +6,39 @@
 ;
 ; Equates
 ;
-RAMTOP      = $6a
-RAMSIZ      = $2e4
-MEMTOP      = $2e5
-MEMLO       = $2e7
+RAMTOP      equ $6a
+RAMSIZ      equ $2e4
+MEMTOP      equ $2e5
+MEMLO       equ $2e7
 
-REVDAT      = $ffee
-XLXEOP      = $fff1
-PATNUM      = $fff2
-REVNUM      = $fff7
-CHKSUM      = $fff8
+REVDAT      equ $ffee
+XLXEOP      equ $fff1
+PATNUM      equ $fff2
+REVNUM      equ $fff7
+CHKSUM      equ $fff8
 ; 
 ; CIO
 ; 
-CIOV        = $E456
+CIOV        equ $E456
 ; CIOCB addresses
-ICHID       = $0340
-ICDNO       = $0341
-ICCOM       = $0342
-ICSTA       = $0343
-ICBAL       = $0344
-ICBAH       = $0345
-ICPTL       = $0346
-ICPTH       = $0347
-ICBLL       = $0348
-ICBLH       = $0349
-ICAX1       = $034a
-ICAX2       = $034b
+ICHID       equ $0340
+ICDNO       equ $0341
+ICCOM       equ $0342
+ICSTA       equ $0343
+ICBAL       equ $0344
+ICBAH       equ $0345
+ICPTL       equ $0346
+ICPTH       equ $0347
+ICBLL       equ $0348
+ICBLH       equ $0349
+ICAX1       equ $034a
+ICAX2       equ $034b
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Start of code
 ;
-            org $0500
+            org $2800
 start
 
 ; print RAM data
@@ -120,7 +120,7 @@ start
             jsr movh2a
 
             jsr print
-            .byte $9b,'RAM Info:',$9b
+            .byte 'RAM Info:',$9b
             .byte '  RAMSIZ='
 _ramsiz     .byte 'xx00 RAMTOP='
 _ramtop     .byte 'xx00',$9b
@@ -224,18 +224,19 @@ print_end   lda print_iter+2
 ;
 ; extended memory check
 
-RTCLOK      = $0012
-SDMCTL      = $022F
-PORTB       = $D301
-NMIEN       = $D40E
+RTCLOK      equ $12
+CRITIC      equ $42
+SDMCTL      equ $022F
+PORTB       equ $D301
+DMACTL      equ $D400
+NMIEN       equ $D40E
 
-ZBNKSWTMSK  = $00D0
+ZBNKSWTMSK  equ $00D0
 
-            org $3000
-            
 ; memory addresses to check for alias of main memory
-RB256TEST1  .byte $00 
-RB256TEST2  .byte $00
+; see RAMBO 256k
+            org $3000
+RB256TEST   .byte $00 
 
 ; bit mask kind Rambo1 ($00), Rambo2 ($01), or Compy ($FF)
 USEDMASK    .byte $FF
@@ -384,86 +385,82 @@ CHKBNKS
 ; save PIA PORT B
             lda PORTB
             pha
-; switch off interrupts
-;            lda SDMCTL
-;            sta SSDMCTL
-;            lda #$00
-;            sta SDMCTL
+; set carry if BASIC is active
+            and #$02
+            lsr
+            lsr
+            php
+; wait for vertical blank interrupt
+            inc CRITIC
             jsr WAITSYNC
 ; switch off interrupts
-            sei
+            plp
             lda #$00
+; if BASIC is active then do not switch off screen,
+; if BASIC is not active then switch off screen to
+; prevent bad screen if BASIC is switch in at test
+            bcc *+5
+            sta DMACTL
             sta NMIEN
+            sei
+
 ; try to save and write banks            
             ldy #$3F
 BNKSAVWRT   lda (ZBNKSWTMSK),Y
-            sta PORTB
+            tax
+            stx PORTB
             lda $7000
             sta BNKSAVBUF,Y
-            lda (ZBNKSWTMSK),Y
-            sta $7000
-            lda $7001
-            sta BNKSAVBUF2,Y
-            lda (ZBNKSWTMSK),Y
-            asl
-            sta $7001
+;            lda (ZBNKSWTMSK),Y
+            stx $7000
             dey
             bpl BNKSAVWRT
+
 ; write to check memory aliases (RAMBO 256k)
             lda #$FF
-            sta RB256TEST1
-            lda #$FF
-            sta RB256TEST2
+            sta RB256TEST
 ; check banks
 BNKCHK      iny
             lda (ZBNKSWTMSK),Y
             sta PORTB
-            lda (ZBNKSWTMSK),Y
+;            lda (ZBNKSWTMSK),Y
             cmp $7000
-            bne BNKSTOP
-            lda (ZBNKSWTMSK),Y
-            asl
-            cmp $7001
             bne BNKSTOP
             cpy #$3F
             bne BNKCHK
             iny
 BNKSTOP     tya                 ; save bank count in X
             tax
+
 ; restore banks
             ldy #$00
 BNKRESTR    lda (ZBNKSWTMSK),Y
             sta PORTB
             lda BNKSAVBUF,Y
             sta $7000
-            lda BNKSAVBUF2,Y
-            sta $7001
             iny
             cpy #$40
             bne BNKRESTR
+
 ; reset check memory aliases (RAMBO 256k)
             lda #$00
-            sta RB256TEST1
-            lda #$00
-            sta RB256TEST2
+            sta RB256TEST
 ; restore PIA PORT B
             pla
             sta PORTB
 ; enable interrupts
             lda #$E0
             sta NMIEN
+            dec CRITIC
             cli
-; enable interrupts
-;            lda SSDMCTL
-;            sta SDMCTL
             jsr WAITSYNC
             rts
+
 ; wait for sync            
 WAITSYNC    lda RTCLOK+2
 WAITLOOP    cmp RTCLOK+2
             beq WAITLOOP
             rts            
-;SSDMCTL     .byte $00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Compy Shop
@@ -529,14 +526,5 @@ BNKSWTMSKR2
             .byte $00,$04,$08,$0C ; 0000:0000 0000:0100 0000:1000 0000:1100
 
 ; $20 Bytes extension $40
-BNKSAVBUF   = *
+BNKSAVBUF   equ *
 
-; $20 bytes extension $40
-;            org $3806
-BNKSAVBUF2  = BNKSAVBUF + $40
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; run address            
-;
-;            run start

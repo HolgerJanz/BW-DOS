@@ -1,38 +1,33 @@
-; clears memory from MEMLO to MEMTOP
+; Clears Memory from MEMLO to MEMTOP
 
-MEMTOP      = $02E5
-MEMLO       = $02E7
-CH          = $02FC
+MEMTOP      equ $02E5
+MEMLO       equ $02E7
+CH          equ $02FC
 
-; 
+
 ; CIO
-; 
-CIOV        = $E456
+CIOV        equ $E456
 ; CIOCB addresses
-ICHID       = $0340
-ICDNO       = $0341
-ICCOM       = $0342
-ICSTA       = $0343
-ICBAL       = $0344
-ICBAH       = $0345
-ICPTL       = $0346
-ICPTH       = $0347
-ICBLL       = $0348
-ICBLH       = $0349
-ICAX1       = $034a
-ICAX2       = $034b
+ICHID       equ $0340
+ICDNO       equ $0341
+ICCOM       equ $0342
+ICSTA       equ $0343
+ICBAL       equ $0344
+ICBAH       equ $0345
+ICPTL       equ $0346
+ICPTH       equ $0347
+ICBLL       equ $0348
+ICBLH       equ $0349
+ICAX1       equ $034a
+ICAX2       equ $034b
 
-
-;
 ; SpartaDOS 
-;
-DOSVEC      = $000A
-;
-SD_BUFOFF   = $0A ; offset in line buffer
-SD_LBUF     = $3F ; offset to line buffer
-SD_ZCRNAME  = $03 ; offset for jmp to crunch name
-SD_COMFNAM  = $21 ; offset to buffer for crunch name 
-SD_LSIO     = $0A ; negative offset to SIO vector
+DOSVEC      equ $000A
+SD_BUFOFF   equ $0A ; offset in line buffer
+SD_LBUF     equ $3F ; offset to line buffer
+SD_ZCRNAME  equ $03 ; offset for jmp to crunch name
+SD_COMFNAM  equ $21 ; offset to buffer for crunch name 
+SD_LSIO     equ $0A ; negative offset to SIO vector
 
             org $500
 
@@ -50,7 +45,7 @@ loop_r2     lda (DOSVEC),Y
             sta clr_char,x
             iny
             inx
-vchar_cnt    cpx #$02
+vchar_cnt   cpx #$02
             bne loop_r2
             
             lda (DOSVEC),Y      ; check for end after second char
@@ -67,12 +62,11 @@ vchar_cnt    cpx #$02
 
 parameterError
             jsr print
-            .byte $9b,'MEMCLEAR 1.0',$9b
+            .byte 'MEMCLEAR 2022-02-20',$9b
             .byte 'Parameter Error use: MEMCLEAR [hh]',$9b,$ff
             rts
 
-startClear
-            lda MEMLO+1
+startClear  lda MEMLO+1
             jsr convh2a
             stx adr_low
             sty adr_low+1
@@ -91,7 +85,7 @@ startClear
             sty adr_high+3
 
             jsr PRINT
-            .byte $9b,'Clear $' 
+            .byte 'Clear $' 
 adr_low     .byte 'xxxx-$'
 adr_high    .byte 'yyyy with $'
 clr_char    .byte '00? (Y)',$ff
@@ -103,8 +97,7 @@ clr_char    .byte '00? (Y)',$ff
             .byte $9b,'Abort',$9b,$ff 
             rts
 
-clear_start
-            lda MEMLO
+clear_start lda MEMLO
             sta clear_loop+1
             lda MEMLO+1
             sta clear_loop+2
@@ -212,15 +205,14 @@ conva2h_hl  and #$0F
 ;
 ; get key
 ;
-getKey
-            lda #$FF        ; check for key
+getKey      lda #$FF ; check for key
             tax
             cmp CH
             beq getKey
             lda CH
             stx CH
             rts
-            
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; check for next parameter

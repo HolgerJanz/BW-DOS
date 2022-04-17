@@ -62,7 +62,7 @@ CHKBUF_RN   equ CHKBUF+15  ; random number
 ;
 ; Start of code
 ;
-            org $500
+            org $2800
 ;
 start       jsr _chkbwdos
 
@@ -100,7 +100,7 @@ L60A9       lda DOSVEC             ; A5 0A
             bpl L60F3              ; 10 03
             jmp L603D              ; 4C 3D 60
 L60F3       jsr _print              ; 20 03 60
-            .byte $9B
+;            .byte $9B
             .byte '      Volume: '
             .byte $00
             ldy #<CHKBUF_NAM       ; A0 06

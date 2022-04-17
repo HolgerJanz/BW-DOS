@@ -37,7 +37,7 @@ L05C0       equ $05C0
 ;
 ; Start of code
 ;
-            org $3000
+            org $2800
 ;
             jmp start              ; 4C 22 61
 
@@ -110,7 +110,7 @@ L60A8       lda #$20               ; A9 20
 error       tya                    ; 98
             pha                    ; 48
             jsr _print              ; 20 03 60
-            .byte $9B
+;            .byte $9B
             .byte 'Error '
             .byte $00
             ldx #$02               ; A2 02
@@ -172,8 +172,7 @@ start       lda $700              ; AD 00 07
             cmp #$53               ; C9 53
             beq L6148              ; F0 1F
             jsr _print             ; 20 03 60
-            .byte $9B,$FD
-            .byte 'Incorrect DOS version'
+            .byte 'Error: Incorrect DOS version'
             .byte $9B,$00
             jmp (DOSVEC)           ; 6C 0A 00
 ; set crname
@@ -231,8 +230,7 @@ L6199       ldx #$10               ; A2 10
             cpy #$88               ; C0 88
             bne L6196              ; D0 D9
             jsr _print             ; 20 03 60
-            .byte $9B
-            .byte 'File not found!'
+            .byte 'Error: File not found!'
             .byte $9B,$00
             jmp L60E5              ; 4C E5 60
 L61D5       ldx #$0A               ; A2 0A
@@ -257,8 +255,7 @@ L61E3       dex                    ; CA
             sta L0528+1            ; 8D 29 05
             jsr write              ; 20 27 62
             jsr _print             ; 20 03 60
-            .byte $9B
-            .byte 'BOOT-file installed.'
+            .byte 'Boot file installed.'
             .byte $9B,$00
             jmp (DOSVEC)           ; 6C 0A 00
 

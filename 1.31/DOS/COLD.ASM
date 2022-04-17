@@ -6,27 +6,27 @@
 ;
 ; OS equ
 ;
-TRNSMZ  = $0006
-DOSVEC  = $000a
-CRITIC  = $0042
+TRNSMZ  equ $0006
+DOSVEC  equ $000a
+CRITIC  equ $0042
 
-SDMCTL  = $022f
-GINTLK  = $3fa
-CARTCK  = $3eb
-RAMSIZ	= $02e4
-MEMTOP  = $02E5
-MEMLO   = $02E7
+SDMCTL  equ $022f
+GINTLK  equ $3fa
+CARTCK  equ $3eb
+RAMSIZ	equ $02e4
+MEMTOP  equ $02E5
+MEMLO   equ $02E7
 
-TRIG3   = $d013
-DMACTL  = $d400 
-NMIEN   = $d40e
+TRIG3   equ $d013
+DMACTL  equ $d400 
+NMIEN   equ $d40e
 
-WARMSV  = $e474
-COLDSV  = $e477
+WARMSV  equ $e474
+COLDSV  equ $e477
 
-WARMST  = $08
-BOOT?   = $09
-COLDST  = $0244
+WARMST  equ $08
+BOOT?   equ $09
+COLDST  equ $0244
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 
@@ -34,7 +34,7 @@ COLDST  = $0244
 ;
 
 ; Mode Select
-TCMOSL = $d5a6    ; mode ($00-$3d,$01)
+TCMOSL equ $d5a6    ; mode ($00-$3d,$01)
 ; Cartridge mode is selected with bits 0-5 of $D5A6, values
 ; other than the ones listed here are reserved (and result
 ; in "cartridge off"):
@@ -73,51 +73,51 @@ TCMOSL = $d5a6    ; mode ($00-$3d,$01)
 ; $3B: 256k SWXEGS cart
 ; $3C: 512k SWXEGS cart
 ; $3D: 1024k SWXEGS cart
-TCMOSL.OFF   = $00    ; off, cartridge disabled
-TCMOSL.8K    = $01    ; 8k banks at $A000
-TCMOSL.OSS   = $04
-TCMOSL.FLEXI = $21    ; flexi mode,
+TCMOSL.OFF   equ $00    ; off, cartridge disabled
+TCMOSL.8K    equ $01    ; 8k banks at $A000
+TCMOSL.OSS   equ $04
+TCMOSL.FLEXI equ $21    ; flexi mode,
                          ; separate 8k banks at $A000 and $8000
-TCMOSL.16K   = $21    ; standard 16k cart at $8000-$BFFF
+TCMOSL.16K   equ $21    ; standard 16k cart at $8000-$BFFF
 
 ; how to figure out that The!Cart is not active?
 ; If the address is not used then the XL returns $ff but
 ; the XE (and old 800) return $d5 (high byte of address,
 ; the value of the last bus cycle)
-TCMOSL.XLLOCK  = $ff    ; config lock or not present
-TCMOSL.XELOCK  = $d5    ; config lock or not present
+TCMOSL.XLLOCK  equ $ff    ; config lock or not present
+TCMOSL.XELOCK  equ $d5    ; config lock or not present
 
 ; Mode Flash/RAM Select
-TCMOFR = $d5a7    ;flash/RAM mode (0-15,0)
-; bit 0: primary bank write enable (0=readOnly, 1=write)
-; bit 1: primary bank source (0=flash, 1=RAM)
-; bit 2: secondary bank write enable (0=readOnly, 1=write)
-; bit 3: secondary bank source (0=flash, 1=RAM)
-TCMOFR.PBRAM = $03    ; primary bank RAM
-TCMOFR.SBRAM = $0C    ; secondary bank RAM
+TCMOFR equ $d5a7    ;flash/RAM mode (0-15,0)
+; bit 0: primary bank write enable (0equreadOnly, 1equwrite)
+; bit 1: primary bank source (0equflash, 1equRAM)
+; bit 2: secondary bank write enable (0equreadOnly, 1equwrite)
+; bit 3: secondary bank source (0equflash, 1equRAM)
+TCMOFR.PBRAM equ $03    ; primary bank RAM
+TCMOFR.SBRAM equ $0C    ; secondary bank RAM
 
 ; Primary Bank
-TCPBRL = $d5a0    ; register low byte (0-255,0)
-TCPBRH = $d5a1    ; register high byte (0-63,0)
-TCPBEN = $d5a2    ; enable (0=dis-1=en,1)
+TCPBRL equ $d5a0    ; register low byte (0-255,0)
+TCPBRH equ $d5a1    ; register high byte (0-63,0)
+TCPBEN equ $d5a2    ; enable (0equdis-1equen,1)
 
 ; Secondary Bank 
-TCSBRL = $d5a3    ; register low byte (0-255,0)
-TCSBRH = $d5a4  ; register high byte (0-63,0)
-TCSBEN = $d5a5    ; enable (0=dis-1=en,0)
+TCSBRL equ $d5a3    ; register low byte (0-255,0)
+TCSBRH equ $d5a4  ; register high byte (0-63,0)
+TCSBEN equ $d5a5    ; enable (0equdis-1equen,0)
 
 ; SPI interface to EEPROM
-TCINEP = $d5a8
+TCINEP equ $d5a8
 ; bit 0: SPI CLK
 ; bit 1: SPI CS
 ; bit 7: SPI data in (on reads), SPI data out (on writes)
 
 ; configuration lock
-TCCOLO = $d5af
+TCCOLO equ $d5af
 ; Writing to this register disables "The!Cart" registers
 ; at $d5aX.
 
-		org $500
+		org $2800
 start
 ; switch The!Cart
         lda #$00        ; switch off DMA
@@ -139,7 +139,7 @@ start
         sta TCMOSL
         tax				; in X for cmp laetr
 
-        lda #$00		; set P bank (Menu = $0000)
+        lda #$00		; set P bank (Menu equ $0000)
         sta TCPBRL
         lda #$00
         sta TCPBRH

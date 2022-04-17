@@ -12,4 +12,4 @@ BW-DOS 1.31 is extended:
 
 The version 1.31 is the version that will be maintained in the future.
 
-holgerjanz@msn.com
+holgerjanz@abbuc.social

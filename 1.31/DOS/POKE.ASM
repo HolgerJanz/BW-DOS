@@ -10,63 +10,63 @@
 ; 
 ; CIO
 ; 
-CIOV        = $E456
+CIOV        equ $E456
 ; CIOCB addresses
-ICHID       = $0340
-ICDNO       = $0341
-ICCOM       = $0342
-ICSTA       = $0343
-ICBAL       = $0344
-ICBAH       = $0345
-ICPTL       = $0346
-ICPTH       = $0347
-ICBLL       = $0348
-ICBLH       = $0349
-ICAX1       = $034a
-ICAX2       = $034b
+ICHID       equ $0340
+ICDNO       equ $0341
+ICCOM       equ $0342
+ICSTA       equ $0343
+ICBAL       equ $0344
+ICBAH       equ $0345
+ICPTL       equ $0346
+ICPTH       equ $0347
+ICBLL       equ $0348
+ICBLH       equ $0349
+ICAX1       equ $034a
+ICAX2       equ $034b
 
 ; 
 ; SIO
 ; 
-SIOV        = $E459
+SIOV        equ $E459
 ; SIOCB addresses
-DDEVIC      = $0300
-DUNIT       = $0301
-DCOMND      = $0302
-DSTATS      = $0303
-DBUFLO      = $0304
-DBUFHI      = $0305
-DTIMLO      = $0306
-DTIMHI      = $0307
-DBYTLO      = $0308
-DBYTHI      = $0309
-DAUX1       = $030a
-DAUX2       = $030b
+DDEVIC      equ $0300
+DUNIT       equ $0301
+DCOMND      equ $0302
+DSTATS      equ $0303
+DBUFLO      equ $0304
+DBUFHI      equ $0305
+DTIMLO      equ $0306
+DTIMHI      equ $0307
+DBYTLO      equ $0308
+DBYTHI      equ $0309
+DAUX1       equ $030a
+DAUX2       equ $030b
 
 ; cursor
-CRSINH        = $02F0
+CRSINH        equ $02F0
 
 ;
 ; SpartaDOS 
 ;
-DOSVEC        = $000A
+DOSVEC        equ $000A
 ;
-SD_BUFOFF   = $0A ; offset in line buffer
-SD_LBUF     = $3F ; offset to line buffer
-SD_ZCRNAME  = $03 ; offset for jmp to crunch name
-SD_COMFNAM  = $21 ; offset to buffer for crunch name 
-SD_LSIO     = $0A ; negative offset to SIO vector
+SD_BUFOFF   equ $0A ; offset in line buffer
+SD_LBUF     equ $3F ; offset to line buffer
+SD_ZCRNAME  equ $03 ; offset for jmp to crunch name
+SD_COMFNAM  equ $21 ; offset to buffer for crunch name 
+SD_LSIO     equ $0A ; negative offset to SIO vector
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Start of code
 ;
-            org $500
+            org $2800
 start
             jsr pcheck            ; check for parameter 1
             bcs start_poke
 error_msg   jsr PRINT
-            .byte $9b,'POKE 1.0',$9b
+            .byte 'POKE 1.0',$9b
             .byte 'Parameter Error use: POKE aaaa vv[vv]',$9B
             .byte $ff
             rts
@@ -165,14 +165,14 @@ char2        .byte $00
 char3        .byte $00
 char4        .byte $00
 
-adr1_l        = c_adr1+1
-adr1_h        = adr1_l+1
+adr1_l        equ c_adr1+1
+adr1_h        equ adr1_l+1
 
-adr2_l        = c_adr2+1
-adr2_h        = adr2_l+1
+adr2_l        equ c_adr2+1
+adr2_h        equ adr2_l+1
 
-val1          = c_val1+1
-val2          = c_val2+1
+val1          equ c_val1+1
+val2          equ c_val2+1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -271,9 +271,3 @@ print_end   lda print_iter+2
             lda print_iter+1
             pha
             rts
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; run address            
-;
-;            run start

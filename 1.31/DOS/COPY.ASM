@@ -69,14 +69,13 @@ opcode_BIT  equ $2c
 ;
 
 start_addr  equ $2d00
-;start_addr  equ $6000
             org start_addr
 ; check DOS version
 start       lda DOSBEG              ; AD 00 07
             cmp #'S'               ; C9 53
             beq sd_found           ; F0 1E
             jsr print              ; 20 03 60
-            .byte $9B
+;            .byte $9B
             .byte 'Incorrect DOS version'
             .byte $9B,$00
             jmp (DOSVEC)           ; 6C 0A 00
@@ -98,7 +97,7 @@ sd_found    lda DOSVEC             ; A5 0A
             cmp #$9B               ; C9 9B
             bne par_found          ; D0 46
             jsr print              ; 20 03 60
-            .byte $9b,'COPY 1.2 16k for BW-DOS'
+            .byte 'COPY 1.2 16k for BW-DOS'
             .byte $9B
             .byte 'Syntax: COPY source destination[/A]'
             .byte $9B,$00
@@ -223,7 +222,7 @@ L62C1       inx                    ; E8
             cmp #$9B               ; C9 9B
             bne L62C1              ; D0 F3
             jsr print              ; 20 03 60
-            .byte $9B
+;            .byte $9B
             .byte 'Can''t copy a file to itself !'
             .byte $9B,$00
             jmp abort2dos              ; 4C EE 60
@@ -587,7 +586,7 @@ get_rec     ldx #$10               ; A2 10
 error       tya                    ; 98
             pha                    ; 48
             jsr print              ; 20 03 60
-            .byte $9B
+;            .byte $9B
             .byte 'Error '
             .byte $00
 ; conv hex error code to dec ATASCII
