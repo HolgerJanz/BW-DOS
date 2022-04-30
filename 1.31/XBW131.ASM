@@ -1,64 +1,69 @@
-* BW-DOS 1.31
+* BW-DOS 1.31 22-04-30
 * use Fast Assembler
 * https://github.com/HolgerJanz/FastAssembler
 
 * System equates
-ICHID       equ $0000
-ICDNO       equ $0001
-ICCOM       equ $0002
-ICSTA       equ $0003
-ICBAL       equ $0004
-ICBAH       equ $0005
-ICPTL       equ $0006
-ICPTH       equ $0007
-ICBLL       equ $0008
-ICBLH       equ $0009
-ICAX1       equ $000A
-ICAX2       equ $000B
-ICAX3       equ $000C
-ICAX4       equ $000D
-ICAX5       equ $000E
-ICAX6       equ $000F
+ICHID       equ $00
+ICDNO       equ $01
+ICCOM       equ $02
+ICSTA       equ $03
+ICBAL       equ $04
+ICBAH       equ $05
+ICPTL       equ $06
+ICPTH       equ $07
+ICBLL       equ $08
+ICBLH       equ $09
+ICAX1       equ $0A
+ICAX2       equ $0B
+ICAX3       equ $0C
+ICAX4       equ $0D
+ICAX5       equ $0E
+ICAX6       equ $0F
 
-WARMST      equ $0008
-BOOT        equ $0009
-DOSVEC      equ $000A
-DOSINI      equ $000C
+WARMST      equ $08
+BOOT        equ $09
+DOSVEC      equ $0A
+DOSINI      equ $0C
 
-ICHIDZ      equ $0020
-ICDNOZ      equ $0021
-ICCOMZ      equ $0022
-ICSTAZ      equ $0023
-ICBALZ      equ $0024
-ICBLLZ      equ $0028
-ICBLHZ      equ $0029
-ICAX1Z      equ $002A
-ICAX2Z      equ $002B
-ICAX5Z      equ $002E
+ICHIDZ      equ $20
+ICDNOZ      equ $21
+ICCOMZ      equ $22
+ICSTAZ      equ $23
+ICBALZ      equ $24
+ICBLLZ      equ $28
+ICBLHZ      equ $29
+ICAX1Z      equ $2A
+ICAX2Z      equ $2B
+ICAX5Z      equ $2E
 
-RAMTOP      equ $006A
+LMARGN      equ $52
 
-COLDST      equ $0244
-RUNAD       equ $02E0
-RAMSIZ      equ $02E4
-MEMTOP      equ $02E5
-MEMLO       equ $02E7
+RAMTOP      equ $6A
 
-DDEVIC      equ $0300
-DUNIT       equ $0301
-DCOMND      equ $0302
-DSTATS      equ $0303
-DBYTLO      equ $0308
-DBYTHI      equ $0309
-DAUX1       equ $030A
-DAUX2       equ $030B
+COLDST      equ $244
+RUNAD       equ $2E0
+INITAD      equ $2E2
+RAMSIZ      equ $2E4
+MEMTOP      equ $2E5
+MEMLO       equ $2E7
 
-HATABS      equ $031A
-IOCB0       equ $0340
-IOCB1       equ $0350
-IOCB5       equ $0390
+DDEVIC      equ $300
+DUNIT       equ $301
+DCOMND      equ $302
+DSTATS      equ $303
+DBUFLO      equ $304
+DTIMLO      equ $306
+DBYTLO      equ $308
+DBYTHI      equ $309
+DAUX1       equ $30A
+DAUX2       equ $30B
 
-BASICF      equ $03F8
+HATABS      equ $31A
+IOCB0       equ $340
+IOCB1       equ $350
+IOCB5       equ $390
+
+BASICF      equ $3F8
 
 CARTCS      equ $BFFA
 CART        equ $BFFC
@@ -94,7 +99,7 @@ op_SBC_imd  equ $E9
 MC_jsr      equ $0000
 *  copy inside buffer by offset
 MC_cpy      equ $20
-* move from address to address
+*  move from address to address
 MC_mov      equ $4000
 *  like MC_jsr and end
 MC_jsrE     equ $8000
@@ -110,6 +115,14 @@ MC_4        equ $8000
 MC_5        equ $A000
 MC_6        equ $C000
 MC_7        equ $E000
+
+* date and time initial value
+INI_DAY     equ 30
+INI_MONTH   equ 04
+INI_YEAR    equ 22
+INI_HOUR    equ 17
+INI_MINUTE  equ 35
+INI_SECOND  equ 45
 
 * begin address of BW-DOS
 BW_BEGIN    equ $0700
@@ -184,7 +197,7 @@ L0768       ldy BUFOFF
 L0789       lda LBUF+2,Y
             cmp #':'
 L078E       beq L0795
-L0790       ldy #$41
+L0790       ldy #PROMPTD-LBUF
             jsr L07BE
 L0795       ldy BUFOFF
             jsr L07BE
@@ -196,7 +209,7 @@ L07A1       inc L07BE+1
             jsr L0795
             lda COMFNAM+1
             sta COMFNAM
-            lda #$31
+L07AD       lda #$31
             sta COMFNAM+1
             bne L079E
 L07B4       sta COMFNAM,X
@@ -217,7 +230,7 @@ L07CB       lda #$9B
             rts
 
 * HATAB for D:
-L07D4       dta a(OPEN_V)
+HATAB_D     dta a(OPEN_V)
             dta a(CLOSE_V)
             dta a(GETBYTE_V)
             dta a(PUTBYTE_V)
@@ -230,13 +243,13 @@ DOS_INI     cld
             dec L0047
             bit INCMND
             bpl L07F2
-            jsr L0847
-L07EF       jmp COMTAB
+            jsr JMP_DOSDINI
+JMP_COMTAB  jmp COMTAB
 
 L07F2       jsr MOVE_CALL
-  dta h(MC_mov+SMEMLO), l(SMEMLO), h(MC_2+MEMLO),  l(MEMLO)
-  dta h(MC_mov+L07EF+1),l(L07EF+1),h(MC_2+DOSVEC), l(DOSVEC)
-  dta h(MC_movE+L0DF2), l(L0DF2),  h(MC_2+ECHOFLG),l(ECHOFLG)
+  dta h(MC_mov+SMEMLO),l(SMEMLO),h(MC_2+MEMLO),l(MEMLO)
+  dta h(MC_mov+JMP_COMTAB+1),l(JMP_COMTAB+1),h(MC_2+DOSVEC),l(DOSVEC)
+  dta h(MC_movE+INIFLAGS),l(INIFLAGS),h(MC_2+ECHOFLG),l(ECHOFLG)
 
             txa
 L0802       sta L0E4C,X
@@ -271,30 +284,30 @@ L082B       cpx #'D'
             tay
             bmi L0843
 L0837       ldx #$FD
-L0839       lda L0844-$FD,X
+L0839       lda HATABS_D-$FD,X
 L083C       sta HATABS,Y
             iny
             inx
             bne L0839
 L0843       rts
 
-L0844       dta c'D',a(L07D4)
+HATABS_D    dta c'D',a(HATAB_D)
 
-L0847       jmp (DOSINI)
+JMP_DOSDINI jmp (DOSINI)
 
 * date time buffer
-DATTIMBUF   dta b(28,11,95)
-            dta b(22,14,06)
+DATTIMBUF   dta b(INI_DAY,INI_MONTH,INI_YEAR)
+            dta b(INI_HOUR,INI_MINUTE,INI_SECOND)
 
-* $850 set time date
+* set time date
 SETTD       jsr MOVE_CALL
   dta h(MC_movE+DATER),l(DATER),h(MC_6+DATTIMBUF),l(DATTIMBUF)
 
-* $857 get time data
+* get time data
 GETTD       jsr MOVE_CALL
   dta h(MC_movE+DATTIMBUF),l(DATTIMBUF),h(MC_6+DATER),l(DATER)
 
-_rts        rts
+_RTS        rts
 
 ADC_L       lda L1488+1
             dta b(op_BIT_abs)
@@ -494,7 +507,7 @@ L09BC       pla
 L09C0       tay
             rts
 
-* print error message
+* print error number
 PRN_ERR     jsr DO_CIO_0
             dta b($0B)
             dta a(ERROR1,6)
@@ -510,7 +523,9 @@ PRN_ERR     jsr DO_CIO_0
 
 * DOS entry
 _COMTAB     cld
-            jsr ext_init
+*            jsr ext_init
+            jsr L0B28
+            stx LMARGN
             stx TDOVER
             stx BUFOFF
             dex
@@ -724,7 +739,8 @@ R_XDIVIO    tya
             bmi L0B17
 L0B93       lda #$20
             jsr L0762
-            ldy #$45
+* extension *.bat
+            ldy #EXT_BAT-LBUF
             jsr L07BE
             ldy #$01
             dta b(op_BIT_abs)
@@ -772,12 +788,10 @@ L0BE9       dta b($90)
             dta c'DIR',b($D3)
             dta c'BASI',b($C3)
             dta b($00)
-* CHANGE: 9 free bytes, e.g. CREDIR is now MD etc.
-* 9 bytes are inserted after rts, just
-* to keep all other addresses stable
 
             jsr L0A71
-            ldy #$4A
+* standard execute *.com
+            ldy #EXT_COM-LBUF
             jsr L07BE
             clc
 L0C23       lda #$04 
@@ -787,14 +801,6 @@ L0C23       lda #$04
 L0C2C       dta b($08,$28)
             dta a(COMFNAM,28)
 L0C32       rts
-
-* CHANGE: 9 bytes inserted
-* we use them to set left margin to 0 at DOS entry
-            dta b($00,$00) ; just filler
-ext_init    lda #$00
-            sta $52    ; left margin 0
-            jmp L0B28  ; continue DOS entry
-* end of CHANGE
 
 INT_CMD     ldx #$FF
             stx L0043
@@ -840,9 +846,10 @@ L0C74       tay
             rts
 
 * commannd DIR/S
-CMD_DIR     lda #$80
+CMD_DIR     lda #$0D
 CMD_DIR_V   equ CMD_DIR-1
-CMD_DIRS    eor #$12
+            dta b(op_BIT_abs)
+CMD_DIRS    lda #$0C
 CMD_DIRS_V  equ CMD_DIRS-1
             pha
             lda COMFNAM-1,X
@@ -851,19 +858,21 @@ CMD_DIRS_V  equ CMD_DIRS-1
             and #$F9
             cmp #$38
             bne L0C97
-            ldy #$4F
+* standard *.*
+            ldy #STD_PAT-LBUF
 L0C94       jsr L07BE
 L0C97       pla
+            dta b(op_BIT_abs)
 
 * command TYPE
-CMD_TYPE    eor #$9F
+CMD_TYPE    lda #$08
 CMD_TYPE_V  equ CMD_TYPE-1
             sta L0CA0
             jsr DO_CIO_1
 L0CA0       dta b($08,$03)
             dta a(COMFNAM,28)
 L0CA6       jsr DO_CIO
-L0CA9       dta b($44,$07)
+            dta b($44,$07)
             dta a(LBUF)
             dta a(64)
             php
@@ -918,19 +927,19 @@ DIVIO       dta a(R_DIVIO)         ; +6
 XDIVIO      dta a(R_XDIVIO)        ; +8
 BUFOFF      dta b($00)             ; +10
 ZORIG       dta a(BW_BEGIN)        ; +11
-DATER       dta b(28,11,95)        ; +13
-TIMER       dta b(22,14,06)        ; +16
-ODATER      dta b(28,11,95)        ; +19
-OTIMER      dta b(22,14,06)        ; +22
+DATER       dta b(INI_DAY,INI_MONTH,INI_YEAR) ; +13
+TIMER       dta b(INI_HOUR,INI_MINUTE,INI_SECOND) ; +16
+ODATER      dta b(INI_DAY,INI_MONTH,INI_YEAR) ; +19
+OTIMER      dta b(INI_HOUR,INI_MINUTE,INI_SECOND) ; +22
 TDOVER      dta b($00)             ; +25
-TRUN        dta a(_rts)            ; +26
+TRUN        dta a(_RTS)            ; +26
             dta a(L1711)           ; +28 ??? buffer address ???
 SMEMLO      dta a(END_ADDR)        ; +30 start up MEMLO
 INCMND      dta b($00)             ; +32 Reset $00-CP $FF-Cart
 COMFNAM     dta c'D1:STARTUP.BAT'  ; +33 28 Bytes
             dta b($9B)
             dta c'             '
-RUNLOC      dta a(_rts)            ; +61 address for RUN
+RUNLOC      dta a(_RTS)            ; +61 address for RUN
 * start code to check for STARTUP.BAT
 LBUF        jsr L07F2              ; +63 comman line buffer 64 Bytes
             lda #$FF
@@ -949,23 +958,21 @@ LBUF        jsr L07F2              ; +63 comman line buffer 64 Bytes
             dta c'         '
 L0D43       equ LBUF+$0B
 L0D48       equ LBUF+$10
-* end of LBUF and COMTAB
-
 PROMPT      dta b($9B)
 PROMPTD     dta c'D1:'
             dta b($9B)
-            dta c'.BAT'
+EXT_BAT     dta c'.BAT'
             dta b($9B)
-            dta c'.COM'
+EXT_COM     dta c'.COM'
             dta b($9B)
-            dta c'*.*'
-
+STD_PAT     dta c'*.*'
 DAT_BUF     equ *
-            dta b($9B)
+TXT_VOLU    dta b($9B)
             dta c'Volume'
-L0D91       dta c':'
+TXT_PERI    dta c':'
 L0D92       dta c'          '
-L0D9C       dta c' '
+
+TXT_BUF     dta c' '
 L0D9D       dta c'  '
 L0D9F       dta c'  '
 L0DA1       dta c'   '
@@ -979,29 +986,34 @@ L0DAB       dta c'  '
 L0DB1       dta c'  '
 L0DB3       dta c'   '
 L0DB6       dta c'      '
-L0DBC       dta c'         '
+L0DBC       dta c' '
+L0DBD       dta c'        '
 L0DC5       dta c' '
-            dta b($9B)
+
+TXT_DIRY    dta b($9B)
             dta c'Directory:'
-L0DD1       dta b($E4,$E9,$F2) ; dir inverse
-L0DD4       dta c'<dir>'
-L0DD9       dta c'free sectors'
+TXT_DIRI    dta b($C4,$C9,$D2) ; DIR inverse
+TXT_DIRL    dta c'<DIR>'
+TXT_FREE    dta c'free sectors'
 L0DE5       dta b($00,$00)
-            dta b($00,$00)
+L0DE7       dta b($00,$00)
 L0DE9       dta b($80)
             dta c'    '
 L0DEE       dta c' '
 L0DEF       dta c' '
 L0DF0       dta c'  '
-L0DF2       dta b($FF,$FF)
-            dta c'DOS       '
+INIFLAGS    dta b($FF,$FF)
+L0DF4       dta c'DOS       '
 L0DFE       dta c' !'
-L0E00       dta b($00,$00,$00,$02)
-            dta b($00,$1C)
+L0E00       dta b($00,$00,$00)
+L0E03       dta b($02)
+            dta b($00)
+L0E05       dta b($1C)
 L0E06       dta b($17,$00)
 L0E08       dta a($0001)
-L0E0A       dta c'-'
+TXT_DASH    dta c'-'
 
+DAT_DEF     equ *
 * start of initialization after loading
 * after start it is used for buffers $141 bytes
 start       ldx #$1A
@@ -1016,7 +1028,7 @@ _srch_e     lda DDEVIC,X
             bcc _srch_e
 * E: not found => Self Test
             jmp SELFSV
-* update HATABS
+* update HATABS access
 _e_found    inx
             stx L0B32+1
             stx L0B65+3
@@ -1034,59 +1046,63 @@ _e_found    inx
             jmp LBUF
 dos_iniv    dta a(DOS_INI)
 dos_text    dta b($9B)
-            dta c'BW-DOS 1.31 BEWESOFT 2022-02-20'
+            dta c'BW-DOS 1.31 BEWESOFT 22-04-30'
             dta b($9B)
 dos_text_e  equ *
 
 * buffer addresses $0E0B-$0F4B ($141 Bytes)
-L0E0B       equ start
-L0E16       equ start+$0B
-L0E21       equ start+$16
-L0E24       equ start+$19
-L0E26       equ start+$1B
-L0E27       equ start+$1C
-L0E2F       equ start+$24
-L0E32       equ start+$27
-L0E38       equ start+$2D
-L0E39       equ start+$2E
-L0E3A       equ start+$2F
-L0E3B       equ start+$30
-L0E3C       equ start+$31
-L0E3D       equ start+$32
-L0E3E       equ start+$33
-L0E3F       equ start+$34
-L0E40       equ start+$35
-L0E41       equ start+$36
-L0E42       equ start+$37
-L0E43       equ start+$38
-L0E45       equ start+$3A
-L0E48       equ start+$3D
-L0E49       equ start+$3E
-L0E4B       equ start+$40
-L0E4C       equ start+$41
-L0E4D       equ start+$42
-L0E51       equ start+$46
-L0E52       equ start+$47
-L0E53       equ start+$48
-L0E55       equ start+$4A
-L0E56       equ start+$4B
-L0E58       equ start+$4D
-L0E5A       equ start+$4F
-L0E5D       equ start+$52
-L0E5F       equ start+$54
-L0E6B       equ start+$60
-L0E6D       equ start+$62
+L0E0B       equ DAT_DEF
+L0E16       equ DAT_DEF+$0B
+L0E21       equ DAT_DEF+$16
+L0E22       equ DAT_DEF+$17
+L0E24       equ DAT_DEF+$19
+L0E26       equ DAT_DEF+$1B
+L0E27       equ DAT_DEF+$1C
+L0E2F       equ DAT_DEF+$24
+L0E32       equ DAT_DEF+$27
+L0E38       equ DAT_DEF+$2D
+L0E39       equ DAT_DEF+$2E
+L0E3A       equ DAT_DEF+$2F
+L0E3B       equ DAT_DEF+$30
+L0E3C       equ DAT_DEF+$31
+L0E3D       equ DAT_DEF+$32
+L0E3E       equ DAT_DEF+$33
+L0E3F       equ DAT_DEF+$34
+L0E40       equ DAT_DEF+$35
+L0E41       equ DAT_DEF+$36
+L0E42       equ DAT_DEF+$37
+L0E43       equ DAT_DEF+$38
+L0E45       equ DAT_DEF+$3A
+L0E48       equ DAT_DEF+$3D
+L0E49       equ DAT_DEF+$3E
+L0E4B       equ DAT_DEF+$40
+L0E4C       equ DAT_DEF+$41
+L0E4D       equ DAT_DEF+$42
+L0E51       equ DAT_DEF+$46
+L0E52       equ DAT_DEF+$47
+L0E53       equ DAT_DEF+$48
+L0E55       equ DAT_DEF+$4A
+L0E56       equ DAT_DEF+$4B
+L0E58       equ DAT_DEF+$4D
+L0E5A       equ DAT_DEF+$4F
+L0E5D       equ DAT_DEF+$52
+L0E5F       equ DAT_DEF+$54
+L0E61       equ DAT_DEF+$56
+L0E63       equ DAT_DEF+$58
+L0E67       equ DAT_DEF+$5C
+L0E6B       equ DAT_DEF+$60
+L0E6D       equ DAT_DEF+$62
+L0ED7       equ DAT_DEF+$CC
+L0ED8       equ DAT_DEF+$CD
 
-L0ED7       equ start+$CC
-L0ED8       equ start+$CD
-L0F15       equ start+$10A
-L0F38       equ start+$12D
-L0F40       equ start+$135
-L0F43       equ start+$138
-L0F46       equ start+$13B
-L0F49       equ start+$13E
+L0F15       equ DAT_DEF+$10A
+L0F38       equ DAT_DEF+$12D
+L0F40       equ DAT_DEF+$135
+L0F43       equ DAT_DEF+$138
+L0F46       equ DAT_DEF+$13B
+L0F49       equ DAT_DEF+$13E
 
-            blk dos start+$141 ; $0F4C
+            blk dos DAT_DEF+$141 ; $0F4C
 
 L0F4C       ldx L0E3D
             lda L0E3E
@@ -1094,7 +1110,7 @@ L0F4C       ldx L0E3D
             ldy L0E3F
             rts
 
-L0F59       lda L0F78-$20,Y
+JSR_SIO     lda L0F78-$20,Y
             and #$1F
             pha
             lda L0F66-$20,Y
@@ -1102,23 +1118,29 @@ L0F59       lda L0F78-$20,Y
             ldx L0046
             rts
 
-* internal CIO code tab
-*           RENAME,ERASE,OPEN,PROTECT
-L0F66       dta b($D0,$D0,$96,$D0) ; $20-$23
+* internal CIO code/vectortab
+* low
+*           RENAME,ERASE, OPEN,  PROTECT
+L0F66 dta l(L1CD1V,L1CD1V,L1597V,L1CD1V) ; $20-$23
 *           UNPROTECT,POINT,NOTE,GETFLEN
-            dta b($D0,$31,$E8,$EB) ; $24-$27
-*           LOAD,SAVE,MD,RD
-            dta b($21,$8F,$89,$19) ; $28-$2B
-*           CD,CLOSE,?,CHKDSK
-            dta b($94,$7C,$E8,$53) ; $2C-$2F
-*           GETBYTER,PUTBYTE
-            dta b($8C,$95)         ; $30-$31
-
-L0F78       dta b($FC,$FC,$95,$FC) ; $20-$23
-            dta b($FC,$34,$36,$36) ; $24-$27
-            dta b($3E,$D5,$F5,$FD) ; $28-$2B
-            dta b($FA,$53,$12,$F1) ; $2C-$2F
-            dta b($12,$12)         ; $30-$31
+      dta l(L1CD1V,L1432V,L16E9V,L16ECV) ; $24-$27
+*           LOAD,  SAVE,  MD,    RD
+      dta l(L1E22V,L1590V,L158AV,L1D1AV) ; $28-$2B
+*           CD,    CLOSE, ???,   CHKDSK
+      dta l(L1A95V,L137DV,L12E9V,L1154V) ; $2C-$2F
+*           GETBYTE,PUTBYTE
+      dta l(L128DV,L1296V)               ; $30-$31
+* high
+*           RENAME,      ERASE,       OPEN,        PROTECT
+L0F78 dta h($E000+L1CD1V,$E000+L1CD1V,$8000+L1597V,$E000+L1CD1V) ; $20-$23
+*           UNPROTECT,   POINT,       NOTE,        GETFLEN
+      dta h($E000+L1CD1V,$2000+L1432V,$2000+L16E9V,$2000+L16ECV) ; $24-$27
+*           LOAD,        SAVE,        MD,RD
+      dta h($2000+L1E22V,$C000+L1590V,$E000+L158AV,$E000+L1D1AV) ; $28-$2B
+*           CD,          CLOSE,       ???,   CHKDSK
+      dta h($E000+L1A95V,$4000+L137DV,L12E9V,$E000+L1154V) ; $2C-$2F
+*           GETBYTE,PUTBYTE
+      dta h(L128DV,L1296V) ; $30-$31
 
 * CIO D: routines
 SPECIAL     ldy ICCOMZ
@@ -1154,12 +1176,12 @@ L0FAF       cld
             sta L10BA+1
             cpy #$28
             bne L0FC4
-            jsr L0F59
+            jsr JSR_SIO
             dta b(op_BIT_abs)
 L0FBF       ldy #$A1
 L0FC1       jmp L10DB
 L0FC4       tsx
-            stx RET_ERR2+1
+            stx RET_ERRY+1
             inx
             inx
             lda STACK,X
@@ -1200,7 +1222,7 @@ L1011       lda L0E55,Y
             sbc #$1A
             tay
             bcs L1011
-            jsr RET_ERR1
+            jsr RET_ERRS
 *           dta ($A0) from LDY #..
 L1023       ldy #$85
             lda L109B+1
@@ -1229,7 +1251,7 @@ L1031       lda L0E55-$E6,X
             iny
             cmp (L0043),Y
             bcc L105F
-L105B       jsr RET_ERR1
+L105B       jsr RET_ERRS
             dta b($94)
 L105F       ldy #$16
 L1061       lda L0E4D,Y
@@ -1261,7 +1283,7 @@ L1093       ldy L0E39
             lda L0DE9,Y
             sta L0045
 L109B       ldy #$00
-            jsr L0F59
+            jsr JSR_SIO
             bit L0FEB+1
             bvc L10AB
             jsr L10E2
@@ -1276,9 +1298,11 @@ L10B0       lda L0E38-$EB,X
 L10BA       ldy #$01
             bne L10DB
 
-RET_ERR1    jsr INC_PC
+* Error code on stack
+RET_ERRS    jsr INC_PC
             tay
-RET_ERR2    ldx #$00
+* Error code in Y
+RET_ERRY    ldx #$00
             txs
             tya
             pha
@@ -1353,7 +1377,9 @@ L1149       lda L0E4D,Y
             bcc L1147
             rts
 
+* CHKDSK
 L1154       jsr MOVE_CALL
+L1154V      equ L1154-1
   dta h(MC_movE+ICBLLZ),l(ICBLLZ),h(MC_2+L1185+1),l(L1185+1)
 
             ldy #$20
@@ -1402,7 +1428,7 @@ L11A2       jsr CLR_TXT_BUF
             jsr MOVE_CALL
   dta h(MC_jsr+SET_TO_9),l(SET_TO_9)
   dta h(MC_mov+DECOUT+5),l(DECOUT+5),h(MC_3+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12),l(L0DD9-DAT_BUF),(L0DA1-DAT_BUF)
+  dta b(MC_cpyE+12,TXT_FREE-DAT_BUF,L0DA1-DAT_BUF)
 
             beq L1215
 
@@ -1418,7 +1444,7 @@ L11BD       ldx #$00
 
             jsr MOVE_CALL
   dta h(MC_mov+DECOUT+2),l(DECOUT+2),h(MC_6+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12),l(L0DD9-DAT_BUF),(L0DA4-DAT_BUF)
+  dta b(MC_cpyE+12,TXT_FREE-DAT_BUF,L0DA4-DAT_BUF)
 
             beq L1215
 
@@ -1437,7 +1463,7 @@ L11E6       and #$10
             beq L11F0
 
             jsr MOVE_CALL
-  dta b(MC_cpyE+3,L0DD1-DAT_BUF,L0DA7-DAT_BUF)
+  dta b(MC_cpyE+3,TXT_DIRI-DAT_BUF,L0DA7-DAT_BUF)
 
 L11F0       lda L0E21+3
             ldx L0E21+4
@@ -1472,10 +1498,10 @@ L1217       jsr MOVE_CALL
             jsr MOVE_CALL
   dta b(MC_cpy+8,L0E27-DAT_BUF,L0D9D-DAT_BUF)
   dta b(MC_cpy+3,L0E2F-DAT_BUF,L0DA6-DAT_BUF)
-  dta b(MC_cpy+5,L0DD4-DAT_BUF,L0DAA-DAT_BUF)
-  dta b(MC_cpy+1,L0E0A-DAT_BUF,L0DB3-DAT_BUF)
-  dta b(MC_cpy+1,L0E0A-DAT_BUF,L0DB6-DAT_BUF)
-  dta b(MC_cpyE+1,L0D91-DAT_BUF,L0DBC-DAT_BUF)
+  dta b(MC_cpy+5,TXT_DIRL-DAT_BUF,L0DAA-DAT_BUF)
+  dta b(MC_cpy+1,TXT_DASH-DAT_BUF,L0DB3-DAT_BUF)
+  dta b(MC_cpy+1,TXT_DASH-DAT_BUF,L0DB6-DAT_BUF)
+  dta b(MC_cpyE+1,TXT_PERI-DAT_BUF,L0DBC-DAT_BUF)
 
             lda L0E21
             and #$20
@@ -1517,11 +1543,15 @@ L1283       lda #$00
             bcs L12EE
             jmp L1217
 
-            ldx L0E48
+* GETBYTE
+L128D       ldx L0E48
+L128DV      equ L128D-1
             cpx #$16
             beq L1283
             lda #$6A
-            eor #$6A
+* PUBYTE
+L1296       eor #$6A
+L1296V      equ L1296-1
             sta L0048
             and #$0C
             eor #$07
@@ -1564,7 +1594,8 @@ L12DF       jsr MOVE_CALL
   dta h(MC_mov+L12D6+1),l(L12D6+1),h(MC_2+L1426+1),l(L1426+1)
   dta b(MC_cpyE+2,L0E08-DAT_BUF,L0E51-DAT_BUF)
 
-            jsr L136A
+L12E9       jsr L136A
+L12E9V      equ L12E9-1
             bpl L12D9
 L12EE       lda #$8B
 L12F0       eor #$03
@@ -1639,8 +1670,11 @@ L136A       lda L0E48
             ldy #$87
 L1376       and #$04
             bne L13BF
-            jmp RET_ERR2
-            lda L0E48
+            jmp RET_ERRY
+
+* CLOSE
+L137D       lda L0E48
+L137DV      equ L137D-1
             cmp #$16
             bne L1387
             lsr L0E53
@@ -1668,7 +1702,7 @@ L139E       lda #$00
             dta b(op_BIT_abs)
 L13AE       lda #$00
             dta b(op_BIT_abs)
-            lda #$FF
+L13B1       lda #$FF
             sta L0048
 
             jsr MOVE_CALL
@@ -1695,15 +1729,15 @@ L13D9       jsr L14BF
             lda L0E48
             and #$08
             bne L13F6
-L13F0       jsr RET_ERR1
+L13F0       jsr RET_ERRS
             dta b($A6)
 L13F4       dex
 L13F5       rts
 
 L13F6       jsr MOVE_CALL
-            dta b($1B,$6C)
-            dta b($22,$5B,$B0)
-            dta b($8F,$4C)
+  dta h(MC_jsr+L1B6C),l(L1B6C)
+  dta b(MC_cpy+2,L0DE5-DAT_BUF,L0E3A-DAT_BUF)
+  dta h(MC_jsrE+L0F4C),l(L0F4C)
 
             lda L0DE5
             sta (L0043),y
@@ -1715,8 +1749,8 @@ L140E       ldx L0E3A
 L1411       lda L0E3B
 
             jsr MOVE_CALL
-            dta b($1B,$E9)
-            dta b($D4,$27,$54,$82)
+  dta h(MC_jsr+L1BE9),l(L1BE9)
+  dta h(MC_movE+L1426+1),l(L1426+1),h(MC_2+L1481+1),l(L1481+1)
 
             ldy L0E3C
             bit L0048
@@ -1728,7 +1762,10 @@ L1426       sta $FFFF,X
             cpx L1488+1
             bne L1424
             beq L148F
-            ldy #$FD
+
+* POINT
+L1432       ldy #$FD
+L1432V      equ L1432-1
 L1434       lda IOCB0+ICAX3,X
             sta L0DEE-$FD,Y
             inx
@@ -1738,10 +1775,10 @@ L143E       lda L0DF0
             bmi L13F0
 
             jsr MOVE_CALL
-            dta b($21,$79,$B5)
-            dta b($22,$B9,$B3)
-            dta b($23,$64,$B6)
-            dta b($93,$54)
+  dta b(MC_CPY+1,L0E03-DAT_BUF,L0E3F-DAT_BUF)
+  dta b(MC_CPY+2,L0E43-DAT_BUF,L0E3D-DAT_BUF)
+  dta b(MC_CPY+3,L0DEE-DAT_BUF,L0E40-DAT_BUF)
+  dta h(MC_jsrE+L1354),l(L1354)
 
             bcs L145A
             lda L0E48
@@ -1814,7 +1851,7 @@ CLR_TXT_BUF jsr INC_PC
             tax
             lda #$9B
             tay
-L14E6       sta L0D9C,X
+L14E6       sta TXT_BUF,X
             lda #$20
             dex
             bne L14E6
@@ -1841,35 +1878,35 @@ L150B       rts
 
 L150C       lda #$14
             dta b(op_BIT_abs)
-            lda #$0C
+L150F       lda #$0C
 L1511       sta L0E48
             pha
 
             jsr MOVE_CALL
-            dta b($23,$76,$64)
-            dta b($94,$3E)
+  dta b(MC_cpy+3,L0E00-DAT_BUF,L0DEE-DAT_BUF)
+  dta h(MC_jsrE+L143E),l(L143E)
 
             pla
             cmp #$10
             bcc L152D
 
             jsr MOVE_CALL
-            dta b($21,$7C,$BB)
-            dta b($13,$AE)
-            dta b($A3,$9A,$BB)
+  dta b(MC_cpy+1,L0E06-DAT_BUF,L0E45-DAT_BUF)
+  dta h(MC_jsr+L13AE),l(L13AE)
+  dta b(MC_cpyE+3,L0E24-DAT_BUF,L0E45-DAT_BUF)
 
 L152D       rts
 
-            jsr MOVE_CALL
-            dta b($2B,$81,$9D)
-            dta b($23,$76,$9A)
-            dta b($CD,$06,$CE,$32)
+L152E       jsr MOVE_CALL
+  dta b(MC_cpy+11,L0E0B-DAT_BUF,L0E27-DAT_BUF)
+  dta b(MC_cpy+3,L0E00-DAT_BUF,L0E24-DAT_BUF)
+  dta h(MC_movE+DATER),l(DATER),h(MC_6+L0E32),l(L0E32)
 
             bit TDOVER
             bpl L1547
 
             jsr MOVE_CALL
-            dta b($CD,$0C,$CE,$32)
+  dta h(MC_movE+ODATER),l(ODATER),h(MC_6+L0E32),l(L0E32)
 
 L1547       lda L0049
             sta L0E48
@@ -1884,8 +1921,8 @@ L1554       bit L0E53
             sta L0049
 
             jsr MOVE_CALL
-            dta b($16,$00)
-            dta b($AB,$81,$08)
+  dta h(MC_jsr+L1600),l(L1600)
+  dta b(MC_cpyE+11,L0E0B-DAT_BUF,L0D92-DAT_BUF)
 
             stx L1283+1
             lda ICAX2Z
@@ -1898,23 +1935,28 @@ L1554       bit L0E53
             sty L0DC5
 
             jsr MOVE_CALL
-            dta b($28,$00,$13)
-            dta b($28,$D9,$1F)
-            dta b($2B,$3C,$27)
-            dta b($A8,$9D,$33)
+  dta b(MC_cpy+8,TXT_VOLU-DAT_BUF,L0D9D-DAT_BUF)
+  dta b(MC_cpy+8,L0E63-DAT_BUF,L0DA9-DAT_BUF)
+  dta b(MC_cpy+11,TXT_DIRY-DAT_BUF,L0DB1-DAT_BUF)
+  dta b(MC_cpyE+8,L0E27-DAT_BUF,L0DBD-DAT_BUF)
 
 L1585       sec
             ror L0E53
             rts
 
-            lda #$28
+* MD
+L158A       lda #$28
+L158AV      equ L158A-1
             ldx #$09
             bne L15A0
-            lda ICAX1Z
+* SAVE
+L1590       lda ICAX1Z
+L1590V      equ L1590-1
             and #$F0
             ora #$04
             dta b(op_BIT_abs)
-            lda $2A
+L1597       lda $2A
+L1597V      equ L1597-1
             and #$3F
             dta b(op_BIT_abs)
 L159C       lda #$14
@@ -1941,7 +1983,7 @@ L15BE       ldy #$A3
 L15C1       ldy #$A9
             dta b(op_BIT_abs)
 L15C4       ldy #$A1
-            jmp RET_ERR2
+            jmp RET_ERRY
 
 L15C9       ldx #$0A
 L15CB       lda L0E0B,X
@@ -1952,24 +1994,24 @@ L15CB       lda L0E0B,X
 
             jmp (GETTDV)
 L15D8       lda #$00
-            bpl L1622
+            bpl ERR_170
 
             jsr MOVE_CALL
-            dta b($2B,$81,$8C)
-            dta b($2B,$6A,$81)
-            dta b($22,$CC,$B9)
-            dta b($15,$0C)
-            dta b($9D,$C5)
+  dta b(MC_cpy+11,L0E0B-DAT_BUF,L0E16-DAT_BUF)
+  dta b(MC_cpy+11,L0DF4-DAT_BUF,L0E0B-DAT_BUF)
+  dta b(MC_cpy+2,L0E56-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsr+L150C),l(L150C)
+  dta h(MC_jsrE+L1DC5),l(L1DC5)
 
-            bne L1622
+            bne ERR_170
 
             jsr MOVE_CALL
-            dta b($2B,$8C,$81)
-            dta b($22,$98,$B9)
-            dta b($15,$0C)
-            dta b($9D,$C2)
+  dta b(MC_cpy+11,L0E16-DAT_BUF,L0E0B-DAT_BUF)
+  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsr+L150C),l(L150C)
+  dta h(MC_jsrE+L1DC2),l(L1DC2)
 
-            bne L1622
+            bne ERR_170
             jmp L16B2
 
 L1600       jsr L1AAE
@@ -1990,7 +2032,7 @@ L1618       lda L0049
             and #$08
             bne L162C
 
-L1622       jsr RET_ERR1
+ERR_170     jsr RET_ERRS
             dta b($AA)
 
 L1626       jsr L15C9
@@ -1999,19 +2041,19 @@ L162C       bit L0E4C
             bmi L15C1
 
             jsr MOVE_CALL
-            dta b($15,$C9)
-            dta b($15,$2E)
-            dta b($1B,$6C)
-            dta b($22,$5B,$98)
-            dta b($21,$7B,$BE)
-            dta b($13,$9B)
-            dta b($22,$C1,$5D)
-            dta b($22,$76,$C1)
-            dta b($13,$9E)
-            dta b($23,$BB,$9A)
-            dta b($13,$9B)
-            dta b($22,$5D,$C1)
-            dta b($93,$9E)
+  dta h(MC_jsr+L15C9),l(L15C9)
+  dta h(MC_jsr+L152E),l(L152E)
+  dta h(MC_jsr+L1B6C),l(L1B6C)
+  dta b(MC_cpy+2,L0DE5-DAT_BUF,L0E22-DAT_BUF)
+  dta b(MC_cpy+1,L0E05-DAT_BUF,L0E48-DAT_BUF)
+  dta h(MC_jsr+L139B),l(L139B)
+  dta b(MC_cpy+2,L0E4B-DAT_BUF,L0DE7-DAT_BUF)
+  dta b(MC_cpy+2,L0E00-DAT_BUF,L0E4B-DAT_BUF)
+  dta h(MC_jsr+L139E),l(L139E)
+  dta b(MC_cpy+3,L0E45-DAT_BUF,L0E24-DAT_BUF)
+  dta h(MC_jsr+L139B),l(L139B)
+  dta b(MC_cpy+2,L0DE7-DAT_BUF,L0E4B-DAT_BUF)
+  dta h(MC_jsrE+L139E),l(L139e)
 
             lda L0049
             and #$20
@@ -2019,16 +2061,16 @@ L162C       bit L0E4C
 L165A       beq L1618
 
             jsr MOVE_CALL
-            dta b($22,$B9,$5D)
-            dta b($22,$98,$B9)
-            dta b($15,$0F)
-            dta b($15,$2E)
-            dta b($21,$7C,$9A)
-            dta b($22,$5D,$98)
-            dta b($13,$B1)
-            dta b($22,$98,$B9)
-            dta b($15,$0C)
-            dta b($93,$9E)
+  dta b(MC_cpy+2,L0E43-DAT_BUF,L0DE7-DAT_BUF)
+  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsr+L150F),l(L150F)
+  dta h(MC_jsr+L152E),l(L152E)
+  dta b(MC_cpy+1,L0E06-DAT_BUF,L0E24-DAT_BUF)
+  dta b(MC_cpy+2,L0DE7-DAT_BUF,L0E22-DAT_BUF)
+  dta h(MC_jsr+L13B1),l(L13B1)
+  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsr+L150C),l(L150C)
+  dta h(MC_jsrE+L139E),l(L139E)
 
 L1678       jmp L16B2
 
@@ -2044,7 +2086,7 @@ L1684       and #$20
             ldy #$97
             dta b(op_BIT_abs)
 L1691       ldy #$A4
-            jmp RET_ERR2
+            jmp RET_ERRY
 L1696       lda L0049
             and #$08
             beq L16B2
@@ -2061,8 +2103,8 @@ L16AC       lda #$00
             inc L0049
 
 L16B2       jsr MOVE_CALL
-            dta b($22,$B9,$BF)
-            dta b($A5,$98,$B9)
+  dta b(MC_cpy+2,L0E43-DAT_BUF,L0E49-DAT_BUF)
+  dta b(MC_cpyE+5,L0E22-DAT_BUF,L0E43-DAT_BUF)
 
 L16BB       lda L0049
             jsr L1511
@@ -2071,28 +2113,32 @@ L16BB       lda L0049
             bcc L16DB
 
             jsr MOVE_CALL
-            dta b($22,$B9,$BF)
-            dta b($A2,$76,$C1)
+  dta b(MC_cpy+2,L0E43-DAT_BUF,L0E49-DAT_BUF)
+  dta b(MC_cpyE+2,L0E00-DAT_BUF,L0E4B-DAT_BUF)
 
             lda L0049
             and #$07
             bne L16DB
 
             jsr MOVE_CALL
-            dta b($A3,$B6,$BB)
+  dta b(MC_cpyE+3,L0E40-DAT_BUF,L0E45-DAT_BUF)
 
 L16DB       lda L0049
             lsr @
             bcc L16FD
 
             jsr MOVE_CALL
-            dta b($A3,$BB,$64)
+  dta b(MC_cpyE+3,L0E45-DAT_BUF,L0DEE-DAT_BUF)
 
             jmp L143E
 
-            ldy #$00
+* NOTE
+L16E9       ldy #$00
+L16E9V      equ L16E9-1
             dta b(op_BIT_ABS)
-            ldy #$05
+* GETFLEN
+L16EC       ldy #$05
+L16ECV      equ L16EC-1
 L16EE       lda L0E40,Y
             sta IOCB0+ICAX3,X
             iny
@@ -2108,9 +2154,9 @@ L16FE       stx L1C2B+1
             sta L0F49,X
             txa
             clc
-            adc #$17
+            adc >L1711
             sta L0044
-            lda #$11
+            lda <L1711
             sta L0043
             rts
 
@@ -2189,10 +2235,12 @@ L1A8E       ror L1AFD+1
             plp
             rts
 
-            jsr MOVE_CALL
-            dta b($1A,$9F)
-            dta b($1A,$FA)
-            dta b($A2,$B9,$E3)
+* CD
+L1A95       jsr MOVE_CALL
+L1A95V      equ L1A95-1
+  dta h(MC_jsr+L1A9F),l(L1A9F)
+  dta h(MC_jsr+L1AFA),l(L1AFA)
+  dta b(MC_cpyE+2,L0E43-DAT_BUF,L0E6D-DAT_BUF)
 
 L1A9F       ldy #$02
 L1AA1       lda (ICBALZ),Y
@@ -2201,7 +2249,7 @@ L1AA1       lda (ICBALZ),Y
             dey
             bne L1AA1
 
-L1AAA       jsr RET_ERR1
+L1AAA       jsr RET_ERRS
             dta b($96)
 
 L1AAE       jsr L1A9F
@@ -2209,15 +2257,15 @@ L1AAE       jsr L1A9F
 L1AB4       lsr L16AC+1
 
             jsr MOVE_CALL
-            dta b($22,$E3,$B9)
-            dta b($9A,$23)
+  dta b(MC_cpy+2,L0E6D-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsrE+L1A23),l(L1A23)
 
             bne L1AF4
             cmp #'>'
             bne L1AE0
 
             jsr MOVE_CALL
-            dta b($A2,$CC,$B9)
+  dta b(MC_cpyE+2,L0E56-DAT_BUF,L0E43-DAT_BUF)
 
             beq L1AEF
 L1ACD       jsr L150C
@@ -2242,7 +2290,7 @@ L1AEF       jsr L1A23
 L1AF4       cmp #'>'
             beq L1AEC
             bne L1AE7
-            jsr L1AB4
+L1AFA       jsr L1AB4
 L1AFD       lda #$00
             bmi L1B12
 L1B01       lsr L16AC+1
@@ -2251,7 +2299,7 @@ L1B01       lsr L16AC+1
             bmi L1AAA
 
 L1B0C       jsr MOVE_CALL
-            dta b($A2,$98,$B9) ; MOVE8 L0E22, L0E43, 3
+  dta b(MC_cpyE+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
 
 L1B12       rts
 
@@ -2290,16 +2338,16 @@ L1B45       stx DCOMND
             sta DBYTHI
 
             jsr MOVE_CALL
-            dta b($5B,$70,$23,$06)
-            dta b($47,$AE,$23,$00)
-            dta b($40,$43,$43,$04)
-            dta b($8C,$EE)
+  dta h(MC_mov+L1B6F+1),l(L1B6F+1),h(MC_1+DTIMLO),l(DTIMLO)
+  dta h(MC_mov+L07AD+1),l(L07AD+1),h(MC_1+DDEVIC),l(DDEVIC)
+  dta h(MC_mov+L0043),l(L0043),h(MC_2+DBUFLO),l(DBUFLO)
+  dta h(MC_jsrE+SSIOV),l(SSIOV)
 
             bmi L1BE2
 L1B6B       rts
 
 L1B6C       lda L0E48
-            cmp #$10
+L1B6F       cmp #$10
             bcs L1B76
             ldy #$00
             dta b(op_BIT_abs)
@@ -2368,7 +2416,7 @@ L1BCD       lda L0DE5-$FE,X
             dey
             beq L1B76
             ldy #$A2
-L1BE2       jmp RET_ERR2
+L1BE2       jmp RET_ERRY
 
 L1BE5       lda #$00
             ldx #$01
@@ -2445,16 +2493,16 @@ L1C6D       lda #$00
             jmp L1B2B
 
 L1C7C       jsr MOVE_CALL
-            dta b($22,$B0,$5B)
-            dta b($9D,$8A)
+  dta b(MC_cpy+2,L0E3A-DAT_BUF,L0DE5-DAT_BUF)
+  dta h(MC_jsrE+L1D8A),l(L1D8A)
 
             ora (L0043),Y
             sta (L0043),Y
 
             jsr MOVE_CALL
-            dta b($1C,$2B)
-            dta b($22,$79,$D7)
-            dta b($A2,$CE,$D5)
+  dta h(MC_jsr+L1C2B),l(L1C2B)
+  dta b(MC_cpy+2,L0E03-DAT_BUF,L0E61-DAT_BUF)
+  dta b(MC_cpyE+2,L0E58-DAT_BUF,L0E5F-DAT_BUF)
 
             ldy #$04
 L1C95       lsr L0E5F+1
@@ -2491,7 +2539,9 @@ L1CC6       rts
 L1CC7       dta l(L1CAB,L1D34,L1CC6,L1CBB,L1CBD)
 L1CCC       dta h(L1CAB,L1D34,L1CC6,L1CBB,L1CBD)
 
-            tya
+* RENAME, ERASE, PROTECT, UNPROTECT
+L1CD1       tya
+L1CD1V      equ L1CD1-1
             and #$07
             pha
             tay
@@ -2506,10 +2556,10 @@ L1CDC       lda L1CCC,Y
             bne L1CFC
 
             jsr MOVE_CALL
-            dta b($2B,$81,$97)
-            dta b($1A,$23)
-            dta b($2B,$81,$8C)
-            dta b($AB,$97,$81)
+  dta b(MC_cpy+11,L0E0B-DAT_BUF,L0E21-DAT_BUF)
+  dta h(MC_jsr+L1A23),l(L1A23)
+  dta b(MC_cpy+11,L0E0B-DAT_BUF,L0E16-DAT_BUF)
+  dta b(MC_cpyE+11,L0E21-DAT_BUF,L0E0B-DAT_BUF)
 
 L1CFC       jsr L1D0D
             bne L1D3D
@@ -2526,7 +2576,9 @@ L1D12       lda #$00
             bne L1D0D
 L1D19       rts
 
-            lda #$24
+* RD
+L1D1A       lda #$24
+L1D1AV      equ L1D1A-1
 L1D1C       jsr L159E
             ldx #$0A
             lda #'?'
@@ -2546,17 +2598,17 @@ L1D34       lda L0E21
 L1D3D       ldy #$AA
             dta b(op_BIT_abs)
 L1D40       ldy #$A7
-            jmp RET_ERR2
+            jmp RET_ERRY
 
 L1D45       lda #$10 
             sta L0E21
             jsr L139B
 
 L1D4D       jsr MOVE_CALL
-            dta b($22,$B9,$BF)
-            dta b($22,$98,$B9)
-            dta b($15,$0F)
-            dta b($A1,$79,$B5)
+  dta b(MC_cpy+2,L0E43-DAT_BUF,L0E49-DAT_BUF)
+  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsr+L150F),l(L150F)
+  dta b(MC_cpyE+1,L0E03-DAT_BUF,L0E3F-DAT_BUF)
 
 L1D5B       jsr L12F6
             beq L1D63
@@ -2568,9 +2620,9 @@ L1D63       ldy L0045
             bne L1D5B
 
             jsr MOVE_CALL
-            dta b($22,$B3,$B0)
-            dta b($1C,$7C)
-            dta b($8F,$4C)
+  dta b(MC_cpy+2,L0E3D-DAT_BUF,L0E3A-DAT_BUF)
+  dta h(MC_jsr+L1C7C),l(L1C7C)
+  dta h(MC_jsrE+L0F4C),l(L0F4C)
 
             ldy #$00
             lda (L0043),Y
@@ -2579,8 +2631,8 @@ L1D63       ldy L0045
             bne L1D5B
 
             jsr MOVE_CALL
-            dta b($22,$BF,$B9)
-            dta b($95,$0C)
+  dta b(MC_cpy+2,L0E49-DAT_BUF,L0E43-DAT_BUF)
+  dta h(MC_jsrE+L150C),l(L150C)
 
             jmp L139E
 
@@ -2595,7 +2647,7 @@ L1D92       pha
             ror @
             dey
             bne L1D92
-            jsr L14FD
+L1D9B       jsr L14FD
             sta L1DBC+1
             txa
             clc
@@ -2617,16 +2669,16 @@ L1DBC       ldy #$00
 
 L1DBF       lda #$80
             dta b(op_BIT_abs)
-            lda L0049
+L1DC2       lda L0049
             dta b(op_BIT_abs)
 L1DC5       lda #$20
             sta L1DF3+1
 
             jsr MOVE_CALL
-            dta b($A2,$68,$C1)
+  dta b(MC_cpyE+2,INIFLAGS-DAT_BUF,L0E4B-DAT_BUF)
 
 L1DD0       jsr MOVE_CALL
-            dta b($A2,$B6,$5D)
+  dta b(MC_cpyE+2,L0E40-DAT_BUF,L0DE7-DAT_BUF)
 
             bit L0E41
             bmi L1E19
@@ -2647,8 +2699,8 @@ L1DF3       lda #$00
             and #$20
             bne L1DD0
 L1DFE       ldx #$0B
-L1E00       lda L0E0A,X
-            cmp #$3F
+L1E00       lda TXT_DASH,X
+            cmp #'?'
             beq L1E0C
             cmp L0E26,X
             bne L1DD0
@@ -2659,7 +2711,7 @@ L1E0C       dex
 L1E10       pha
 
             jsr MOVE_CALL
-            dta b($A2,$5D,$C1)
+  dta b(MC_cpyE+2,L0DE7-DAT_BUF,L0E4B-DAT_BUF)
 
             pla
             rts
@@ -2670,7 +2722,9 @@ L1E19       lda #$FF
             tax
             rts
 
-            stx L1ED5+1
+* LOAD
+L1E22       stx L1ED5+1
+L1E22V      equ L1E22-1
             lda ICAX2Z
             sta L1EDA+1
             ldy #$22
@@ -2691,7 +2745,7 @@ L1E49       lda #$00
             lsr L1E49+1
 
             jsr MOVE_CALL
-            dta b($D1,$86,$42,$E0)
+  dta h(MC_movE+L1185+1),l(L1185+1),h(MC_2+RUNAD),l(RUNAD)
 
 L1E57       jsr L1E92
             bpl L1E42
@@ -2708,29 +2762,27 @@ L1E61       tya
             bne L1E91
 
             jsr MOVE_CALL
-            dta b($42,$E0,$4D,$13)
-            dta b($CD,$13,$4D,$36)
+  dta h(MC_mov+RUNAD),l(RUNAD),h(MC_2+TRUN),l(TRUN)
+  dta h(MC_movE+TRUN),l(TRUN),h(MC_2+RUNLOC),l(RUNLOC)
 
             lda #$E0
             bne L1EC2
 
 L1E7D       jsr MOVE_CALL
-* MOVE L1E89, L1427, 3
-            dta b($5E,$89,$54,$27)
-* CALL L1EC9
-            dta b($9E,$C9)
+  dta h(MC_mov+L1E88+1),l(L1E88+1),h(MC_2+L1426+1),l(L1426+1)
+  dta h(MC_jsrE+L1EC9),l(L1EC9)
 
             bmi L1E91
-            lda L1185+1
+L1E88       lda L1185+1
             and L1185+2
             cmp #$FF
             tya
 L1E91       rts
 
 L1E92       jsr MOVE_CALL
-            dta b($5D,$9C,$42,$E2)
-            dta b($5C,$AE,$54,$27)
-            dta b($9E,$C9)
+  dta h(MC_mov+L1D9B+1),l(L1D9B+1),h(MC_2+INITAD),l(INITAD)
+  dta h(MC_mov+L1CAD+1),l(L1CAD+1),h(MC_2+L1426+1),l(L1426+1)
+  dta h(MC_jsrE+L1EC9),l(L1EC9)
 
             bmi L1E91
             sec
@@ -2745,8 +2797,8 @@ L1EA4       lda L0E16-$FE,X
             dta a(L0E51)
 
             jsr MOVE_CALL
-            dta b($51,$86,$54,$27)
-            dta b($9E,$CF)
+  dta h(MC_mov+L1185+1),l(L1185+1),h(MC_2+L1426+1),l(L1426+1)
+  dta h(MC_jsrE+L1ECF),l(L1ECF)
 
             bmi L1E91
             lda #$E2
@@ -2755,11 +2807,10 @@ L1EC2       jsr L1EDA
             ldy #$01
             rts
 
-            jsr MOVE_CALL
-* MOVE8 L0E03, L0E51, 3
-            dta b($A2,$79,$C7)
+L1EC9       jsr MOVE_CALL
+  dta b(MC_cpyE+2,L0E03-DAT_BUF,L0E51-DAT_BUF)
 
-            ldy #$2E
+L1ECF       ldy #$2E
 L1ED1       ldx #$00
             stx L0048
 L1ED5       ldx #$00

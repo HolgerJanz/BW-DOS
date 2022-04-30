@@ -54,7 +54,7 @@ L070A       equ $070A
 CHKBUF_V    equ CHKBUF     ; fs version
 CHKBUF_SS   equ CHKBUF+1   ; sector size
 CHKBUF_SC   equ CHKBUF+2   ; sector count
-CHKBUF_SF   equ CHKBUF+4   ; dector free
+CHKBUF_SF   equ CHKBUF+4   ; sector free
 CHKBUF_NAM  equ CHKBUF+6   ; volume name
 CHKBUF_SN   equ CHKBUF+14  ; sequence number
 CHKBUF_RN   equ CHKBUF+15  ; random number

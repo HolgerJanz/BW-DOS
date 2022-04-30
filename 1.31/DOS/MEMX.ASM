@@ -7,6 +7,7 @@
 ; Equates
 ;
 RAMTOP      equ $6a
+SDLSTH      equ $231
 RAMSIZ      equ $2e4
 MEMTOP      equ $2e5
 MEMLO       equ $2e7
@@ -34,15 +35,10 @@ ICBLH       equ $0349
 ICAX1       equ $034a
 ICAX2       equ $034b
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Start of code
-;
-            org $2800
-start
-
-; print RAM data
-            lda RAMTOP
+* Start of code
+            blk dos $2800
+* print RAM data
+start       lda RAMTOP
             jsr convh2a
             sta _ramtop+0
             stx _ramtop+1
@@ -231,32 +227,37 @@ PORTB       equ $D301
 DMACTL      equ $D400
 NMIEN       equ $D40E
 
-ZBNKSWTMSK  equ $00D0
-
 ; memory addresses to check for alias of main memory
 ; see RAMBO 256k
-            org $3000
+            blk dos $3000
 RB256TEST   .byte $00 
-
 ; bit mask kind Rambo1 ($00), Rambo2 ($01), or Compy ($FF)
 USEDMASK    .byte $FF
-
 BNKCNT      .byte $00
-SPARBNKS    .byte $00
 
-; determine extended memory
-;
-check_ext   lda #<BNKSWTMSK             ; check Compy
-            sta ZBNKSWTMSK
-            lda #>BNKSWTMSK
-            sta ZBNKSWTMSK+1
+* use zero page for performance
+* buffer for bank switch masks $40
+BNKSWTBUF   equ $80
+* buffer for bytes used for testing $40
+BNKSAVBUF   equ $C0
+
+* determine extended memory
+
+check_ext   ldx #$3f
+compyLoop   lda BNKSWTMSK,X
+            sta BNKSWTBUF,x
+            dex
+            bpl compyLoop
+
             jsr CHKBNKS
             stx BNKCNT
 
-            lda #<BNKSWTMSKR1           ; check Rambo1
-            sta ZBNKSWTMSK
-            lda #>BNKSWTMSKR1
-            sta ZBNKSWTMSK+1
+            ldx #$3f
+rambo1Loop  lda BNKSWTMSKR1,X
+            sta BNKSWTBUF,x
+            dex
+            bpl rambo1Loop
+
             jsr CHKBNKS
             cpx BNKCNT
             bmi check_r2
@@ -265,10 +266,12 @@ check_ext   lda #<BNKSWTMSK             ; check Compy
             sta USEDMASK                ; used mask $00 Rambo1
             stx BNKCNT                  ; save higher cnt
 
-check_r2    lda #<BNKSWTMSKR2           ; check Rambo2
-            sta ZBNKSWTMSK
-            lda #>BNKSWTMSKR2
-            sta ZBNKSWTMSK+1
+check_r2    ldx #$3f
+rambo2Loop  lda BNKSWTMSKR2,X
+            sta BNKSWTBUF,x
+            dex
+            bpl rambo2Loop
+
             jsr CHKBNKS
             cpx BNKCNT
             bmi check_r1
@@ -277,49 +280,30 @@ check_r2    lda #<BNKSWTMSKR2           ; check Rambo2
             sta USEDMASK                ; used mask $01 Rambo2
             stx BNKCNT                  ; save higher cnt
 
-            ldx #$00                    ; copy Rambo2 to mask
-CPYR2M      lda BNKSWTMSKR2,X
-            sta BNKSWTMSK,X
-            inx
-            cpx #$40  
-            bne CPYR2M
             jmp start_rambo
 
-check_r1
-            bit USEDMASK
+check_r1    bit USEDMASK
             bmi start_compy
-            ldx #$00             ; copy Rambo1 to mask
-CPYR1M      lda BNKSWTMSKR1,X
-            sta BNKSWTMSK,X
-            inx
-            cpx #$40  
-            bne CPYR1M
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; write kind of extended memory
-;            
-start_rambo
-            jsr PRINT
+* write kind of extended memory
+            
+start_rambo jsr PRINT
             .byte '  ExtRambo=',$FF
             jmp start_check
 
-start_compy
-            cpx #$04
+start_compy cpx #$04
             bcc start_check
             jsr PRINT
             .byte '  ExtCompy=',$FF
 
-start_check
-; check bank count
-            ldx BNKCNT
+start_check ldx BNKCNT
             cpx #$04
             bcc EXT_NO
             bne EXT_192
             jsr PRINT
             .byte '64k PORTB-Bits=23',$9B,$FF
             jmp EXT_END
-; no banks            
+
 EXT_NO      jsr PRINT
             .byte '  No Extended Memory',$9B,$FF
             jmp EXT_END
@@ -377,64 +361,56 @@ CMP_1088    jsr PRINT
             .byte '1024K PORTB-Bits=236710',$9B,$FF
 EXT_END     rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Subroutine check banks
-;
-CHKBNKS
-; save PIA PORT B
-            lda PORTB
+***************************************
+*
+* Subroutine check banks
+*
+CHKBNKS     lda PORTB
             pha
-; set carry if BASIC is active
-            and #$02
-            lsr
-            lsr
-            php
-; wait for vertical blank interrupt
+* wait for vertical blank interrupt
             inc CRITIC
             jsr WAITSYNC
-; switch off interrupts
-            plp
+* switch off interrupts
             lda #$00
-; if BASIC is active then do not switch off screen,
-; if BASIC is not active then switch off screen to
-; prevent bad screen if BASIC is switch in at test
+* if CAR/BAS is active then do not switch off screen,
+* if CAR/BAS is not active then switch off screen to
+* prevent bad screen if BASIC is switch in at test,
+* check position of DL
+            ldx SDLSTH
+            cpx #$A0
             bcc *+5
             sta DMACTL
             sta NMIEN
             sei
 
-; try to save and write banks            
+* try to save and write banks            
             ldy #$3F
-BNKSAVWRT   lda (ZBNKSWTMSK),Y
-            tax
+BNKSAVWRT   ldx BNKSWTBUF,Y
             stx PORTB
             lda $7000
             sta BNKSAVBUF,Y
-;            lda (ZBNKSWTMSK),Y
             stx $7000
             dey
             bpl BNKSAVWRT
 
-; write to check memory aliases (RAMBO 256k)
+* write to check memory aliases (RAMBO 256k)
             lda #$FF
             sta RB256TEST
-; check banks
+* check banks
 BNKCHK      iny
-            lda (ZBNKSWTMSK),Y
+            lda BNKSWTBUF,Y
             sta PORTB
-;            lda (ZBNKSWTMSK),Y
             cmp $7000
             bne BNKSTOP
             cpy #$3F
             bne BNKCHK
             iny
-BNKSTOP     tya                 ; save bank count in X
+BNKSTOP     tya       ; save bank count in X
             tax
 
-; restore banks
+* restore banks
             ldy #$00
-BNKRESTR    lda (ZBNKSWTMSK),Y
+BNKRESTR    lda BNKSWTBUF,Y
             sta PORTB
             lda BNKSAVBUF,Y
             sta $7000
@@ -442,18 +418,17 @@ BNKRESTR    lda (ZBNKSWTMSK),Y
             cpy #$40
             bne BNKRESTR
 
-; reset check memory aliases (RAMBO 256k)
+* reset check memory aliases (RAMBO 256k)
             lda #$00
             sta RB256TEST
-; restore PIA PORT B
+* restore PIA PORT B
             pla
             sta PORTB
-; enable interrupts
+* enable interrupts
             lda #$E0
             sta NMIEN
             dec CRITIC
             cli
-            jsr WAITSYNC
             rts
 
 ; wait for sync            
@@ -462,10 +437,8 @@ WAITLOOP    cmp RTCLOK+2
             beq WAITLOOP
             rts            
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Compy Shop
-BNKSWTMSK
-            .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
+* Compy Shop
+BNKSWTMSK   .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
             .byte $A2,$A6,$AA,$AE ; 1010:0010 1010:0110 1010:1010 1010:1110
             .byte $62,$66,$6A,$6E ; 0110:0010 0110:0110 0110:1010 0110:1110 
             .byte $22,$26,$2A,$2E ; 0010:0010 0010:0110 0010:1010 0010:1110
@@ -473,7 +446,7 @@ BNKSWTMSK
             .byte $A0,$A4,$A8,$AC ; 1010:0000 1010:0100 1010:1000 1010:1100
             .byte $60,$64,$68,$6C ; 0110:0000 0110:0100 0110:1000 0110:1100
             .byte $20,$24,$28,$2C ; 0010:0000 0010:0100 0010:1000 0010:1100
-; extension for 1088k
+* extension for 1088k
             .byte $E3,$E7,$EB,$EF ; 1110:0011 1110:0111 1110:1011 1110:1111
             .byte $A3,$A7,$AB,$AF ; 1010:0011 1010:0111 1010:1011 1010:1111
             .byte $63,$67,$6B,$6F ; 0110:0011 0110:0111 0110:1011 0110:1111 
@@ -483,12 +456,8 @@ BNKSWTMSK
             .byte $61,$65,$69,$6D ; 0110:0001 0110:0101 0110:1001 0110:1101
             .byte $21,$25,$29,$2D ; 0010:0001 0010:0101 0010:1001 0010:1101
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Bank masks Rambo 1 and 2
-;
-BNKSWTMSKR1
-            .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
+* Bank masks Rambo 1 and 2
+BNKSWTMSKR1 .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
             .byte $A2,$A6,$AA,$AE ; 1010:0010 1010:0110 1010:1010 1010:1110
             .byte $C2,$C6,$CA,$CE ; 1100:0010 1100:0110 1100:1010 1100:1110
             .byte $82,$86,$8A,$8E ; 1000:0010 1000:0110 1000:1010 1000:1110
@@ -496,7 +465,7 @@ BNKSWTMSKR1
             .byte $A0,$A4,$A8,$AC ; 1010:0000 1010:0100 1010:1000 1010:1100
             .byte $C0,$C4,$C8,$CC ; 1100:0000 1100:0100 1100:1000 1100:1100
             .byte $80,$84,$88,$8C ; 1000:0000 1000:0100 1000:1000 1000:1100
-; extension for 1088k
+* extension for 1088k
             .byte $62,$66,$6A,$6E ; 0110:0010 0110:0110 0110:1010 0110:1110
             .byte $22,$26,$2A,$2E ; 0010:0010 0010:0110 0010:1010 0010:1110
             .byte $42,$46,$4A,$4E ; 0100:0010 0100:0110 0100:1010 0100:1110
@@ -506,8 +475,7 @@ BNKSWTMSKR1
             .byte $40,$44,$48,$4C ; 0100:0000 0100:0100 0100:1000 0100:1100
             .byte $00,$04,$08,$0C ; 0000:0000 0000:0100 0000:1000 0000:1100
 
-BNKSWTMSKR2
-            .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
+BNKSWTMSKR2 .byte $E2,$E6,$EA,$EE ; 1110:0010 1110:0110 1110:1010 1110:1110
             .byte $A2,$A6,$AA,$AE ; 1010:0010 1010:0110 1010:1010 1010:1110
             .byte $C2,$C6,$CA,$CE ; 1100:0010 1100:0110 1100:1010 1100:1110
             .byte $82,$86,$8A,$8E ; 1000:0010 1000:0110 1000:1010 1000:1110
@@ -515,7 +483,7 @@ BNKSWTMSKR2
             .byte $22,$26,$2A,$2E ; 0010:0010 0010:0110 0010:1010 0010:1110
             .byte $42,$46,$4A,$4E ; 0100:0010 0100:0110 0100:1010 0100:1110
             .byte $02,$06,$0A,$0E ; 0000:0010 0000:0110 0000:1010 0000:1110
-; extension for 1088k
+* extension for 1088k
             .byte $E0,$E4,$E8,$EC ; 1110:0000 1110:0100 1110:1000 1110:1100
             .byte $A0,$A4,$A8,$AC ; 1010:0000 1010:0100 1010:1000 1010:1100
             .byte $C0,$C4,$C8,$CC ; 1100:0000 1100:0100 1100:1000 1100:1100
@@ -525,6 +493,5 @@ BNKSWTMSKR2
             .byte $40,$44,$48,$4C ; 0100:0000 0100:0100 0100:1000 0100:1100
             .byte $00,$04,$08,$0C ; 0000:0000 0000:0100 0000:1000 0000:1100
 
-; $20 Bytes extension $40
-BNKSAVBUF   equ *
+            end
 

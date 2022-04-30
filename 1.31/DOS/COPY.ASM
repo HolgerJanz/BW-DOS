@@ -612,7 +612,7 @@ L60DA       pha                    ; 48
             lda #$9B               ; A9 9B
             jsr put_char           ; 20 27 60
 ; stop divert input (force end of file)
-abort2dos       ldy #BW_ZXDIVIO        ; A0 08
+abort2dos   ldy #BW_ZXDIVIO        ; A0 08
             lda (DOSVEC),Y         ; B1 0A
             sta L60FD+1            ; 8D FE 60
             iny                    ; C8
@@ -668,3 +668,5 @@ L6153       sec                    ; 38
             rts                    ; 60
 
 _memlo2     equ *
+
+            end
