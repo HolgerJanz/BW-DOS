@@ -6,7 +6,7 @@ _print      pla
 _print_loop inc _print_lda+1
             bne _print_lda
             inc _print_lda+2
-_print_lda lda $FFFF
+_print_lda  lda $FFFF
             beq _print_lend
             jsr _putc
             jmp _print_loop
@@ -20,9 +20,9 @@ _print_lend lda _print_lda+2
 _putc       tay
             lda #$00
             tax
-            sta $340+ICBLL,X
-            sta $340+ICBLH,X
+            sta $340+$08,X
+            sta $340+$09,X
             lda #$0B
-            sta $340+ICCOM,X
+            sta $340+$02,X
             tya
             jmp $E456
