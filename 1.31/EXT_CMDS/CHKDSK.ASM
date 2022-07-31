@@ -204,9 +204,6 @@ convh2a     pha
             cld
             rts
 
-            icl '_PRINT.ASM'
-            icl '_CHKBWD.ASM'
-
 * call CRNAME
 CRNAME      jmp exe_rts
 
@@ -240,6 +237,10 @@ close_1     ldx #$10
             lda #$0C ; close
             sta IOCB0+ICCOM,X
             jmp CIOV
+
+            icl '_PRINT'
+            icl '_CHKBWD'
+
 * buffer for CIO checkdsk result (17 Bytes)
 CHKBUF      equ *
 

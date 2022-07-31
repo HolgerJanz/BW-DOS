@@ -1,10 +1,7 @@
 * Cold Start with jump to The!Cart Menu
 
 * OS equates
-SDMCTL  equ $022f
-DMACTL  equ $d400 
-NMIEN   equ $d40e
-COLDSV  equ $e477
+       icl '_SYSEQU.ASM'
 
 * The!Cart Register (from-to,default)
 
@@ -93,6 +90,19 @@ TCCOLO equ $d5af
 * at $d5aX.
 
         blk dos $2800
+        jsr _chkbwdos
+* set XDIVIO
+        ldy #BW_XDIVIO
+        lda (DOSVEC),Y
+        sta XDIVIO+1
+        iny
+        lda (DOSVEC),Y
+        sta XDIVIO+2
+* stop batch and hard copy
+        ldy #$01
+        jsr XDIVIO
+        ldy #$00
+        jsr XDIVIO
 * switch The!Cart
         lda #$00    ; switch off DMA
         sta SDMCTL
@@ -114,5 +124,10 @@ TCCOLO equ $d5af
         sta TCPBEN  ; TC register any further
 * jump cold start
         jmp COLDSV 
+
+XDIVIO  jmp WARMSV
+
+        icl '_PRINT'
+        icl '_CHKBWD'
 
         end

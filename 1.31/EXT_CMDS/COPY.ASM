@@ -1,44 +1,14 @@
-; COPY for BW-DOS
+* COPY 1.3 for BW-DOS
 
-;
-; System equates
-;
-ICHID       equ $0000
-ICDNO       equ $0001
-ICCOM       equ $0002
-ICSTA       equ $0003
-ICBAL       equ $0004
-ICBAH       equ $0005
-ICPTL       equ $0006
-ICPTH       equ $0007
-ICBLL       equ $0008
-ICBLH       equ $0009
-ICAX1       equ $000A
-ICAX2       equ $000B
-DOSVEC      equ $000A
-MEMTOP      equ $02E5
-IOCB0       equ $0340
-CIOV        equ $E456
-WARMSV      equ $E474
+* System equates
+            icl '_SYSEQU.ASM'
 
-;
-; BW-DOS equates
-;
-
-BW_ZXDIVIO  equ $08
-BW_BUFOFF   equ $0a
-BW_ODATER   equ $13
-BW_OTIMER   equ $16
-BW_TDOVER   equ $19
-BW_LBUF     equ $3f
-BW_COMFNAM  equ $21
-
-;
-; Code equates
-;
+* Code equates
+* offset of file name in path
 path1_fn    equ $0080
 path2_fn    equ $0081
-L0082       equ $0082
+* temporar variables
+zp_temp1    equ $0082
 L0083       equ $0083
 L0084       equ $0084
 L0085       equ $0085
@@ -57,75 +27,72 @@ L058A       equ $058A
 L058C       equ $058C
 L0591       equ $0591
 L05E0       equ $05E0
-DOSBEG      equ $0700
 
-;
-; Opcodes 6502
-;
+* Opcodes 6502
 opcode_BIT  equ $2c
 
-;
-; Start of code
-;
-
+* Start of code
 start_addr  equ $2d00
             org start_addr
-; check DOS version
-start       lda DOSBEG              ; AD 00 07
-            cmp #'S'               ; C9 53
-            beq sd_found           ; F0 1E
-            jsr print              ; 20 03 60
-            .byte $9B
-            .byte 'Incorrect DOS version'
-            .byte $9B,$00
-            jmp (DOSVEC)           ; 6C 0A 00
+* check DOS version
+start       lda sparta_flag
+            cmp #'S'
+            beq sd_found
+            jsr print
+            dta b($9B)
+            dta c'Incorrect DOS version'
+            dta b($9B,$00)
+            jmp (DOSVEC)
+* set CRNAME vector
+sd_found    lda DOSVEC
+            clc
+            adc #$03
+            sta CRNAME_V+1
+            lda DOSVEC+1
+            adc #$00
+            sta CRNAME_V+2
+* check for parameters
+            ldy #BW_BUFOFF
+            lda (DOSVEC),Y
+            clc
+            adc #BW_LBUF
+            tay
+            lda (DOSVEC),Y
+            cmp #$9B
+            bne par_found
+            jsr print
+            dta b($9B)
+            dta c'COPY 1.3 for BW-DOS'
+            dta b($9B)
+            dta c'Syntax: COPY source destination[/A]'
+            dta b($9B,$00)
+            jmp (DOSVEC)
+* get paths
+par_found   jsr close_123
+* set path1 and path1_fn
+            lda #$00
+            jsr get_path
+            sta path1_fn
+* set path2 and path2_fn
+            lda #$40
+            jsr get_path
+            sta path2_fn
+; search fname1 for wildcards
+            ldx path1_fn
+nxt_fn1char lda path1,X
+            inx
+            cmp #'?'
+            beq L6259
+            cmp #'*'
+            beq L6259
+            cmp #$9B
+            bne nxt_fn1char
 
-; set CRNAME vector and check for parameter
-sd_found    lda DOSVEC             ; A5 0A
-            clc                    ; 18
-            adc #$03               ; 69 03
-            sta _CRNAME+1          ; 8D 3B 60
-            lda DOSVEC+1           ; A5 0B
-            adc #$00               ; 69 00
-            sta _CRNAME+2          ; 8D 3C 60
-            ldy #BW_BUFOFF         ; A0 0A
-            lda (DOSVEC),Y         ; B1 0A
-            clc                    ; 18
-            adc #BW_LBUF               ; 69 3F
-            tay                    ; A8
-            lda (DOSVEC),Y         ; B1 0A
-            cmp #$9B               ; C9 9B
-            bne par_found          ; D0 46
-            jsr print              ; 20 03 60
-            .byte 'COPY 1.2 16k for BW-DOS'
-            .byte $9B
-            .byte 'Syntax: COPY source destination[/A]'
-            .byte $9B,$00
-            jmp (DOSVEC)           ; 6C 0A 00
-
-; get paths
-par_found   jsr close_123          ; 20 61 60
-            lda #$00               ; A9 00
-            jsr get_path           ; 20 3D 60
-            sta path1_fn           ; 85 80
-            lda #$40               ; A9 40
-            jsr get_path           ; 20 3D 60
-            sta path2_fn           ; 85 81
-; search for wildcards
-            ldx path1_fn           ; A6 80
-L61F0       lda path1,X            ; BD 00 05
-            inx                    ; E8
-            cmp #'?'               ; C9 3F
-            beq L6259              ; F0 61
-            cmp #'*'               ; C9 2A
-            beq L6259              ; F0 5D
-            cmp #$9B               ; C9 9B
-            bne L61F0              ; D0 F0
             lda path1              ; AD 00 05
             cmp #'D'               ; C9 44
             beq L6256              ; F0 4F
-            jsr chk_p1_star        ; 20 3D 62
-            jsr chk_p2_star        ; 20 40 62
+            jsr set_p1_star        ; 20 3D 62
+            jsr set_p2_star        ; 20 40 62
             ldx path1_fn           ; A6 80
             jsr L6427              ; 20 27 64
             ldx #$0B               ; A2 0B
@@ -147,22 +114,23 @@ L6214       lda L05E0,X            ; BD E0 05
 L6238       ldy #$A5 ; bad file name ; A0 A5
             jmp error              ; 4C BD 60
 
-chk_p1_star ldx path1_fn           ; A6 80
-            .byte opcode_BIT
-chk_p2_star ldx path2_fn           ; 2C A6 81
-            lda path1,X            ; BD 00 05
-            cmp #$9B               ; C9 9B
-            bne L6255              ; D0 0C
-            ldy #$03               ; A0 03
-L624B       lda star.star,Y        ; B9 78 60
-            sta path1,X            ; 9D 00 05
-            inx                    ; E8
-            dey                    ; 88
-            bpl L624B              ; 10 F6
-L6255       rts                    ; 60
+* set path end to *.*, if no file name
+set_p1_star ldx path1_fn
+            dta b(opcode_BIT)
+set_p2_star ldx path2_fn
+            lda path1,X
+            cmp #$9B
+            bne no_setstar
+            ldy #$03
+nxt_starc   lda star.star,Y
+            sta path1,X
+            inx
+            dey
+            bpl nxt_starc
+no_setstar  rts
 
-L6256       jsr chk_p1_star        ; 20 3D 62
-L6259       jsr chk_p2_star        ; 20 40 62
+L6256       jsr set_p1_star        ; 20 3D 62
+L6259       jsr set_p2_star        ; 20 40 62
             ldx path2_fn           ; A6 81
             jsr L6427              ; 20 27 64
             lsr L0086              ; 46 86
@@ -325,14 +293,14 @@ L63A1       pla                    ; 68
             tya                    ; 98
             pha                    ; 48
             jsr CIOV               ; 20 56 E4
-            sty L0082              ; 84 82
+            sty zp_temp1              ; 84 82
             pla                    ; 68
             tay                    ; A8
             lda IOCB0+ICBLL,X      ; BD 48 03
             sta _memsiz,Y            ; 99 8C 63
             lda IOCB0+ICBLH,X      ; BD 49 03
             sta _memsiz+1,Y            ; 99 8D 63
-            ldy L0082              ; A4 82
+            ldy zp_temp1              ; A4 82
             bpl L63E6              ; 10 04
             cpy #$88               ; C0 88
             bne L6424              ; D0 3E
@@ -369,7 +337,7 @@ L6424       jmp error              ; 4C BD 60
 
 L6427       ldy #$00               ; A0 00
             lda #$06               ; A9 06
-            sta L0082              ; 85 82
+            sta zp_temp1              ; 85 82
             bne L643A              ; D0 0B
 L642F       lda #$3F               ; A9 3F
             jsr L646C              ; 20 6C 64
@@ -383,11 +351,11 @@ L643A       lda path1,X            ; BD 00 05
             beq L644C              ; F0 07
             jsr char_ok              ; 20 3B 61
             bcc L6436              ; 90 EC
-            ror L0082              ; 66 82
+            ror zp_temp1              ; 66 82
 L644C       lda #$20               ; A9 20
             jsr L646C              ; 20 6C 64
             bcc L644C              ; 90 F9
-            ror L0082              ; 66 82
+            ror zp_temp1              ; 66 82
             bcc L6439              ; 90 E2
             lda #$08               ; A9 08
             sta L0084              ; 85 84
@@ -402,7 +370,7 @@ L646B       rts                    ; 60
 
 L646C       cpy #$08               ; C0 08
             bcc L6479              ; 90 09
-            bit L0082              ; 24 82
+            bit zp_temp1              ; 24 82
             bpl L6478              ; 10 04
             cpy #$0B               ; C0 0B
             bcc L647C              ; 90 04
@@ -502,54 +470,56 @@ L601E       lda L6013+2            ; AD 15 60
             pha                    ; 48
 L6026       rts                    ; 60
 
-; put char to console
-put_char    tay                    ; A8
-            lda #$00               ; A9 00
-            tax                    ; AA
-            sta IOCB0+ICBLL,X      ; 9D 48 03
-            sta IOCB0+ICBLH,X      ; 9D 49 03
-            lda #$0B               ; A9 0B
-            sta IOCB0+ICCOM,X      ; 9D 42 03
-            tya                    ; 98
-            jmp CIOV               ; 4C 56 E4
+* put char to console
+put_char    tay
+            lda #$00
+            tax
+            sta IOCB0+ICBLL,X
+            sta IOCB0+ICBLH,X
+            lda #$0B
+            sta IOCB0+ICCOM,X
+            tya
+            jmp CIOV
 
-; CRNAME vector
-_CRNAME     jmp L6026              ; 4C 26 60
+* CRNAME vector
+CRNAME_V    jmp L6026
 
-; get parameter set path
-get_path    pha                    ; 48
-            jsr _CRNAME            ; 20 3A 60
-            pla                    ; 68
-            tax                    ; AA
-            ldy #BW_COMFNAM        ; A0 21
-L6045       stx L0082              ; 86 82
-L6047       lda (DOSVEC),Y         ; B1 0A
-            sta path1,X            ; 9D 00 05
-            inx                    ; E8
-            iny                    ; C8
-            cmp #':'               ; C9 3A
-            beq L6045              ; F0 F3
-            cmp #'>'               ; C9 3E
-            beq L6045              ; F0 EF
-            cmp #'<'               ; C9 3C
-            beq L6045              ; F0 EB
-            cmp #$9B               ; C9 9B
-            bne L6047              ; D0 E9
-            lda L0082              ; A5 82
-L6060       rts                    ; 60
+* get parameter set path
+* >A start offset $00 or $40
+* A> contains offset of file name
+get_path    pha
+            jsr CRNAME_V
+            pla
+            tax
+            ldy #BW_COMFNAM
+set_nameoff stx zp_temp1
+nxt_pchar   lda (DOSVEC),Y
+            sta path1,X
+            inx
+            iny
+            cmp #':'
+            beq set_nameoff
+            cmp #'>'
+            beq set_nameoff
+            cmp #'<'
+            beq set_nameoff
+            cmp #$9B
+            bne nxt_pchar
+            lda zp_temp1
+_rts        rts
 
-; close IOCBs
-close_123   jsr close_1            ; 20 FF 64
-close_23    ldx #$30               ; A2 30
-            jsr close              ; 20 6B 60
-close_2     ldx #$20               ; A2 20
-close       lda #$0C               ; A9 0C
-            sta IOCB0+ICCOM,X      ; 9D 42 03
-            jsr CIOV               ; 20 56 E4
-            bpl L6060              ; 10 EB
-            jmp error              ; 4C BD 60
+* close IOCBs
+close_123   jsr close_1
+close_23    ldx #$30
+            jsr close
+close_2     ldx #$20
+close       lda #$0C
+            sta IOCB0+ICCOM,X
+            jsr CIOV
+            bpl _rts
+            jmp error
 
-star.star   .byte $9B,'*.*'
+star.star   dta b($9B),c'*.*'
 
 ; open IOCB number X mode A
 open_m      sta IOCB0+ICAX1,X      ; 9D 4A 03
@@ -582,52 +552,52 @@ get_rec     ldx #$10               ; A2 10
             cpy #$88               ; C0 88
             beq L6097              ; F0 DA
 
-; error message and handling
-error       tya                    ; 98
-            pha                    ; 48
-            jsr print              ; 20 03 60
-            .byte $9B
-            .byte 'Error '
-            .byte $00
-; conv hex error code to dec ATASCII
-            ldx #$02               ; A2 02
-            pla                    ; 68
-L60CD       ldy #$00               ; A0 00
-L60CF       cmp dec_dig,X            ; DD 0C 61
-            bcc L60DA              ; 90 06
-            sbc dec_dig,X            ; FD 0C 61
-            iny                    ; C8
-            bne L60CF              ; D0 F5
-L60DA       pha                    ; 48
-            txa                    ; 8A
-            pha                    ; 48
-            tya                    ; 98
-            ora #$30               ; 09 30
-            jsr put_char           ; 20 27 60
-            pla                    ; 68
-            tax                    ; AA
-            pla                    ; 68
-            dex                    ; CA
-            bpl L60CD              ; 10 E4
-            lda #$9B               ; A9 9B
-            jsr put_char           ; 20 27 60
-; stop divert input (force end of file)
-abort2dos   ldy #BW_ZXDIVIO        ; A0 08
-            lda (DOSVEC),Y         ; B1 0A
-            sta L60FD+1            ; 8D FE 60
-            iny                    ; C8
-            lda (DOSVEC),Y         ; B1 0A
-            sta L60FD+2            ; 8D FF 60
-            ldy #$01 ; stop batch  ; A0 01
-L60FD       jsr WARMSV             ; 20 74 E4
-close2dos   jsr close_123          ; 20 61 60
-; reset date time override flag
-            ldy #BW_TDOVER         ; A0 19
-            lda #$00               ; A9 00
-            sta (DOSVEC),Y         ; 91 0A
-            jmp (DOSVEC)           ; 6C 0A 00
+* error message and handling
+error       tya
+            pha
+            jsr print
+            dta b($9B)
+            dta c'Error '
+            dta b($00)
+* conv hex error code to dec ATASCII
+            ldx #$02
+            pla
+nxt_digit   ldy #$00
+nxt_sbc     cmp dec_dig,X
+            bcc prn_digit
+            sbc dec_dig,X
+            iny
+            bne nxt_sbc
+prn_digit   pha
+            txa
+            pha
+            tya
+            ora #$30
+            jsr put_char
+            pla
+            tax
+            pla
+            dex
+            bpl nxt_digit
+            lda #$9B
+            jsr put_char
+* stop batch (force end of file)
+abort2dos   ldy #BW_XDIVIO
+            lda (DOSVEC),Y 
+            sta ZXDIVIO_V+1
+            iny
+            lda (DOSVEC),Y 
+            sta ZXDIVIO_V+2
+            ldy #$01
+ZXDIVIO_V   jsr WARMSV
+close2dos   jsr close_123
+* reset date time override flag
+            ldy #BW_TDOVER
+            lda #$00
+            sta (DOSVEC),Y
+            jmp (DOSVEC)
 
-dec_dig    .byte 1,10,100
+dec_dig     dta b(1,10,100)
 
 L610F       lda #$20               ; A9 20
             sta L058C              ; 8D 8C 05
@@ -648,25 +618,26 @@ L6124       iny                    ; C8
             bcc L6120              ; 90 EC
             lda #$9B               ; A9 9B
             sta path1,X            ; 9D 00 05
-L6139       clc                    ; 18
-L613A       rts                    ; 60
+clc_rts     clc
+L613A       rts
 
-; check for valid character
-char_ok     cmp #'?'               ; C9 3F
-            beq L6139              ; F0 FA
-            cmp #'_'               ; C9 5F
-            beq L6139              ; F0 F6
-            cmp #'0'               ; C9 30
-            bcc L6153              ; 90 0C
-            cmp #':'               ; C9 3A
-            bcc L6139              ; 90 EE
-            cmp #'A'               ; C9 41
-            bcc L6153              ; 90 04
-            cmp #'['               ; C9 5B
-            bcc L6139              ; 90 E6
-L6153       sec                    ; 38
-            rts                    ; 60
+* check for valid character
+char_ok     cmp #'?'
+            beq clc_rts
+            cmp #'_'
+            beq clc_rts
+            cmp #'0'
+            bcc sec_rts
+            cmp #':'
+            bcc clc_rts
+            cmp #'A'
+            bcc sec_rts
+            cmp #'['
+            bcc clc_rts
+sec_rts     sec
+            rts
 
+* start buffer 2 
 _memlo2     equ *
 
             end
