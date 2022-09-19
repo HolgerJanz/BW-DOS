@@ -51,7 +51,7 @@ ZP_CNT      equ $0082
 * call PERCOM read
             lda #$31
             sta DDEVIC
-            ldy #BW_COMFNAM +1
+            ldy #BW_COMFNAM+1
             lda (DOSVEC),Y
             and #$0F
             sta DUNIT

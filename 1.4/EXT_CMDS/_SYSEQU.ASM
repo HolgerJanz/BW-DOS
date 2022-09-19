@@ -18,6 +18,7 @@ ICAX6       equ $0F
 DOSVEC      equ $0A
 
 MEMTOP      equ $2E5
+SDMCTL      equ $22F
 
 DDEVIC      equ $300
 DUNIT       equ $301
@@ -33,22 +34,23 @@ IOCB0       equ $340
 
 sparta_flag equ $700
 
-* BW-DOS COMTAB offsets
-BW_LSIO     equ $0A
+BW_CONVDC   equ $70A
+
 BW_DECOUT   equ $13
 
 BW_CRNAME   equ $03
-BW_ZXDIVIO  equ $08
+BW_LSIO     equ $0A
+BW_XDIVIO   equ $08
 BW_BUFOFF   equ $0a
 BW_ODATER   equ $13
 BW_OTIMER   equ $16
 BW_TDOVER   equ $19
-BW_COMFNAM  equ $21
 BW_LBUF     equ $3f
+BW_COMFNAM  equ $21
 
-* BW-DOS equates
-BW_CONVDC   equ $070A
+DMACTL      equ $D400 
+NMIEN       equ $D40E
 
 CIOV        equ $E456
-SIO         equ $E459
 WARMSV      equ $E474
+COLDSV      equ $E477

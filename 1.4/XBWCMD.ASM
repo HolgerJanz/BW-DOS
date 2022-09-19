@@ -654,7 +654,7 @@ L0BE9       dta b($90)
             dta c'DI',b($D2)
             dta c'DIR',b($D3)
             dta c'BASI',b($C3)
-            dta c'HEL',b($D0)
+            dta c'MA',b($CE)
             dta b($00)
 
             jsr L0A71
