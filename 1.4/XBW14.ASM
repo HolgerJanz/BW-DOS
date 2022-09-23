@@ -1,4 +1,4 @@
-* BW-DOS 1.31 22-05-31
+* BW-DOS 1.4 04-09-2022
 * use Fast Assembler
 * https://github.com/HolgerJanz/FastAssembler
 
@@ -132,7 +132,7 @@ BW_BEGIN    equ $0700
             dta c'S'       ;$700 the character "S" for SpartaDOS
             dta b($32)     ;$701 compatibility with SpartaDOS 3.2
             dta b($00)     ;$702 ??? 
-            dta c'BW'      ;$703 "BW" when BW-DOS is installed
+            dta c'BW'      ;$703 "BW", if BW-DOS is installed
             dta b($14)     ;$705 BW-DOS version 1.4 
 GETTDV      dta a(GETTD)   ;$706 Adress of the "GETTD" routine
 SETTDV      dta a(SETTD)   ;$708 Adress of the "SETTD" routine
