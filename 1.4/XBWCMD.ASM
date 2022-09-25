@@ -635,8 +635,8 @@ PARSE_CMD   jsr INT_CMD
             dta c'RE',b($CE)       ; 32
             dta c'DE',b($CC)       ; 33
             dta b($9B)
-            dta c'LOC',b($CB)      ; 35
-            dta c'UNLOC',b($CB)    ; 36
+            dta c'PRO',b($D4)      ; 35
+            dta c'UNPRO',b($D4)    ; 36
 ERROR1      dta b($9B)
 ERROR2      dta c'Error',b($9B)
             dta b($9B)

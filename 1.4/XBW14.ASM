@@ -117,7 +117,7 @@ MC_6        equ $C000
 MC_7        equ $E000
 
 * date and time initial value
-INI_DAY     equ 04
+INI_DAY     equ 25
 INI_MONTH   equ 09
 INI_YEAR    equ 22
 INI_HOUR    equ 14
@@ -280,7 +280,7 @@ _e_found    inx
             jmp LBUF
 dos_iniv    dta a(DOS_INI)
 dos_text    dta b($9B)
-            dta c'BW-DOS 1.4 BEWESOFT 04-09-2022'
+            dta c'BW-DOS 1.4 BEWESOFT 25-09-2022'
             dta b($9B)
 dos_text_e  equ *
 
