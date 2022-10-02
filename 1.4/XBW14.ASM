@@ -1,4 +1,4 @@
-* BW-DOS 1.4 04-09-2022
+* BW-DOS 1.4
 * use Fast Assembler
 * https://github.com/HolgerJanz/FastAssembler
 
@@ -117,7 +117,7 @@ MC_6        equ $C000
 MC_7        equ $E000
 
 * date and time initial value
-INI_DAY     equ 25
+INI_DAY     equ 29
 INI_MONTH   equ 09
 INI_YEAR    equ 22
 INI_HOUR    equ 14
@@ -130,19 +130,17 @@ BW_BEGIN    equ $0700
             blk dos BW_BEGIN
 
             dta c'S'       ;$700 the character "S" for SpartaDOS
-            dta b($32)     ;$701 compatibility with SpartaDOS 3.2
-            dta b($00)     ;$702 ??? 
+            dta b($32)     ;$701 version, compatible with SpartaDOS 3.2
+            dta b($00)     ;$702 subversion e.g. SDX 4.49 => $09
             dta c'BW'      ;$703 "BW", if BW-DOS is installed
             dta b($14)     ;$705 BW-DOS version 1.4 
 GETTDV      dta a(GETTD)   ;$706 Adress of the "GETTD" routine
 SETTDV      dta a(SETTD)   ;$708 Adress of the "SETTD" routine
             dta a(CONVDC)  ;$70A Adress CONVDC
-            jmp SSIOV      ;$70C jmp LSIO 4C EE 0C
-
-* code for command line interpreter
-            icl 'XBWCMD.ASM'
-
+BW_SIO      jmp SSIOV      ;$70C jmp LSIO
+BW_FAIL     dta a(PRN_ERR_A) ;$70F print eror A and DOSVEC
 * Start of COMTAB
+* static, can be used absolut (not only relative to DOSVEC)
 DWARM       dta b($FF)             ; -21
             dta b($80)             ; -20 ???
 DECOUT      dta b($20,$20,$20,$20) ; -19
@@ -154,7 +152,7 @@ BATFLG      dta b($FF)             ; -7
 DECIN       dta b($00,$00,$00,$00) ; -6
 WRTCMD      dta c'P'               ; -2 W($57)=verify P($50)=no verify
 SWARMST     dta b($FF)             ; -1 00 in CP, $FF trap errors
-* DOSVEC => $0cf9
+* DOSVEC
 COMTAB      jmp _COMTAB            ; COMTAB Jump to DOS CP
 CRNAME      jmp _CRNAME            ; +3
 DIVIO       dta a(R_DIVIO)         ; +6
@@ -192,6 +190,7 @@ LBUF        jsr L07F2              ; +63 comman line buffer 64 Bytes
             dta c'         '
 L0D43       equ LBUF+$0B
 L0D48       equ LBUF+$10
+
 PROMPT      dta b($9B)
 PROMPTD     dta c'D1:'
             dta b($9B)
@@ -249,7 +248,7 @@ TXT_DASH    dta c'-'
 
 DAT_DEF     equ *
 * start of initialization after loading
-* start it is used for buffers $141 bytes
+* after start it is used for buffers $141 bytes
 start       ldx #$1A
 * search for E:
 _srch_e     lda DDEVIC,X
@@ -280,7 +279,7 @@ _e_found    inx
             jmp LBUF
 dos_iniv    dta a(DOS_INI)
 dos_text    dta b($9B)
-            dta c'BW-DOS 1.4 BEWESOFT 25-09-2022'
+            dta c'BW-DOS 1.4 BEWESOFT 29-09-2022'
             dta b($9B)
 dos_text_e  equ *
 
@@ -337,6 +336,8 @@ L0F46       equ DAT_DEF+$13B
 L0F49       equ DAT_DEF+$13E
 
             blk dos DAT_DEF+$141 ; $0F4C
+* code for command line interpreter
+            icl 'XBWCMD.ASM'
 * code for CIO D: implementation
             icl 'XBWCIO1.ASM'
             icl 'XBWCIO2.ASM'

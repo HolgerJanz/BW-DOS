@@ -35,7 +35,7 @@ opcode_BIT  equ $2c
 start_addr  equ $2d00
             org start_addr
 * check DOS version
-start       lda sparta_flag
+start       lda BW_SPARTA
             cmp #'S'
             beq sd_found
             jsr print
@@ -52,10 +52,10 @@ sd_found    lda DOSVEC
             adc #$00
             sta CRNAME_V+2
 * check for parameters
-            ldy #BW_BUFOFF
+            ldy #SD_BUFOFF
             lda (DOSVEC),Y
             clc
-            adc #BW_LBUF
+            adc #SD_LBUF
             tay
             lda (DOSVEC),Y
             cmp #$9B
@@ -106,7 +106,7 @@ L6214       lda L05E0,X            ; BD E0 05
             ldx $81                ; A6 81
             jsr L610F              ; 20 0F 61
             bcs L6238              ; B0 0C
-            ldy #BW_TDOVER         ; A0 19
+            ldy #SD_TDOVER         ; A0 19
             lda #$00               ; A9 00
             sta (DOSVEC),Y         ; 91 0A
             jsr copy_23              ; 20 47 63
@@ -151,7 +151,7 @@ nxt_file    ldx $80              ; A6 80
             lda #$00               ; A9 00
             bit L0083              ; 24 83
             bpl L62B1              ; 10 29
-            ldy #BW_ODATER         ; A0 13
+            ldy #SD_ODATER         ; A0 13
             ldx #$14               ; A2 14
 L628C       txa                    ; 8A
             pha                    ; 48
@@ -176,7 +176,7 @@ L628C       txa                    ; 8A
             lda #$00               ; A9 00
             sta (DOSVEC),Y         ; 91 0A
             lda #$FF               ; A9 FF
-L62B1       ldy #BW_TDOVER         ; A0 19
+L62B1       ldy #SD_TDOVER         ; A0 19
             sta (DOSVEC),Y         ; 91 0A
             jsr L64C6              ; 20 C6 64
             lda path1              ; AD 00 05
@@ -491,7 +491,7 @@ get_path    pha
             jsr CRNAME_V
             pla
             tax
-            ldy #BW_COMFNAM
+            ldy #SD_COMFNAM
 set_nameoff stx zp_temp1
 nxt_pchar   lda (DOSVEC),Y
             sta path1,X
@@ -582,7 +582,7 @@ prn_digit   pha
             lda #$9B
             jsr put_char
 * stop batch (force end of file)
-abort2dos   ldy #BW_XDIVIO
+abort2dos   ldy #SD_XDIVIO
             lda (DOSVEC),Y 
             sta ZXDIVIO_V+1
             iny
@@ -592,7 +592,7 @@ abort2dos   ldy #BW_XDIVIO
 ZXDIVIO_V   jsr WARMSV
 close2dos   jsr close_123
 * reset date time override flag
-            ldy #BW_TDOVER
+            ldy #SD_TDOVER
             lda #$00
             sta (DOSVEC),Y
             jmp (DOSVEC)

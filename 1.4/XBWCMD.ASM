@@ -422,7 +422,7 @@ CMD_CAR_V   equ CMD_CAR-1
             jmp (CARTCS)
 
 * toggle BASIC
-L0A32       sta BASICF
+TOGGLE_BAS  sta BASICF
             php
 
             jsr DO_CIO_0
@@ -472,18 +472,18 @@ CMD_BASIC_V equ CMD_BASIC-1
             bne L0A92
             lda COMFNAM+4
             cmp #'F'
-            beq L0A32
+            beq TOGGLE_BAS
             clc
             eor #'N'
-            beq L0A32
+            beq TOGGLE_BAS
 * cartridge error
 L0A92       lda #$9C
-L0A94       pha
+PRN_ERR_A   pha
             jmp PRN_ERR
 
-L0A98       dta b($00,$00,$00,$00)
-L0A9C       dta b($00,$00)
-L0A9E       dta b($00,$00)
+HATABS_X    dta b($00,$00,$00,$00)
+HT_X_GET    dta b($00,$00)
+HT_X_PUT    dta b($00,$00)
             dta b($00,$00,$00,$00)
 
 L0AA4       jmp (L09B8)
@@ -552,7 +552,7 @@ L0B17       ldy L0AFF+1
             lda #$FF
             sta IOCB0,X
 L0B28       lda HATABS+2
-            cmp #$0A
+            cmp >HATABS_X
             beq L0B5A
 
             jsr MOVE_CALL
@@ -561,14 +561,14 @@ L0B32 dta h(MC_movE+HATABS),b($FF),h(MC_2+L0B38+1),l(L0B38+1)
 
             ldx #$0B
 L0B38       lda $FFFF,X
-L0B3B       sta L0A98,X
+L0B3B       sta HATABS_X,X
             dex
             bpl L0B38
 
             jsr MOVE_CALL
-  dta h(MC_mov+L0A9C),l(L0A9C),h(MC_4+L09B8),l(L09B8)
-  dta h(MC_mov+L0A9E),l(L0A9E),h(MC_2+L0A6F),l(L0A6F)
-  dta h(MC_movE+L09F5),l(L09F5),h(MC_4+L0A9C),l(L0A9C)
+  dta h(MC_mov+HT_X_GET),l(HT_X_GET),h(MC_4+L09B8),l(L09B8)
+  dta h(MC_mov+HT_X_PUT),l(HT_X_PUT),h(MC_2+L0A6F),l(L0A6F)
+  dta h(MC_movE+L09F5),l(L09F5),h(MC_4+HT_X_GET),l(HT_X_GET)
 
             jsr ADC_1
             dta a(L09B8)
@@ -583,9 +583,10 @@ L0B5A       lda ECHOFLG
             jsr MOVE_CALL
 * $ff is updated at start with offset for E:
 L0B65 dta h(MC_mov+L0B3B+1),l(L0B3B+1),h(MC_2+HATABS),b($FF)
-      dta h(MC_movE+L0A9E),l(L0A9E),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
+      dta h(MC_movE+HT_X_PUT),l(HT_X_PUT),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
 
             beq L0AFA
+* command PRINT
 CMD_PRINT   bne L0BA0
 CMD_PRINT_V equ CMD_PRINT-1
             lda COMFNAM
@@ -614,7 +615,7 @@ L0B93       lda #$20
 L0BA0       ldy #$00
 L0BA2       jsr R_DIVIO
             bpl L0BC1
-            jmp L0A94
+            jmp PRN_ERR_A
 
 PARSE_LINE  lda LBUF
             cmp #'-'

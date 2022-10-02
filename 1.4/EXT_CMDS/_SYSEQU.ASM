@@ -16,8 +16,13 @@ ICAX5       equ $0E
 ICAX6       equ $0F
 
 DOSVEC      equ $0A
+RTCLOK      equ $12
+CRITIC      equ $42
+RAMTOP      equ $6a
 
-MEMTOP      equ $2E5
+RAMSIZ      equ $2e4
+MEMTOP      equ $2e5
+MEMLO       equ $2e7
 SDMCTL      equ $22F
 
 DDEVIC      equ $300
@@ -32,21 +37,45 @@ DAUX2       equ $30B
 
 IOCB0       equ $340
 
-sparta_flag equ $700
+* static BW-DOS variables
+BW_SPARTA   equ $700 ; SpartaDOS flag 'S'
+BW_SVERS    equ $701 ; SparataDOS version
+BW_SSVERS   equ $702 ; SparataDOS sub version
+BW_DOS      equ $703 ; BW-DOS flag 'BW'
+BW_VERS     equ $705 ; BW-DOS version
+BW_GETTD    equ $706 ; address to get date/time
+BW_SETTD    equ $708 ; address to set date/time
+BW_CONVDC   equ $70A ; address conv 24bit binary to ascii vector
+BW_BBSIO    equ $70C ; jump to SIO for compatibility with BiboDOS
+BW_FAIL     equ $70F ; fail vector
+BW_DWARM    equ $711 ; flag memory was externally changed 
+BW_DECOUT   equ $713 ; output buffer for CONVDC
+BW_SIO      equ $71B ; SIO vector
+BW_LSIO     equ $71C ; address to used SIO, after boot $E456
+BW_ECHOFLG  equ $71E ; HATABS index for hard copy, $FF no hard copy
+BW_BATFLG   equ $71F ; HATABS index for batch, $FF no batch
+BW_DECIN    equ $720 ; Input for BW_CONVDC
+BW_WRTCMD   equ $724 ; Writw command P without verify, W with verify
+BW_COMTAB   equ $726 ; Jump to command processor
+BW_CRNAME   equ $729 ; Jump to CRNAME
 
-BW_CONVDC   equ $70A
+* dynamic SpartaDOS variables (relative to DOSVEC)
+* substract
+SD_DECOUT   equ $13
+* add
+SD_CRNAME   equ $03
+SD_LSIO     equ $0A
+SD_XDIVIO   equ $08
+SD_BUFOFF   equ $0a
+SD_ODATER   equ $13
+SD_OTIMER   equ $16
+SD_TDOVER   equ $19
+SD_LBUF     equ $3f
+SD_COMFNAM  equ $21
 
-BW_DECOUT   equ $13
+AXLON       equ $CFFF
 
-BW_CRNAME   equ $03
-BW_LSIO     equ $0A
-BW_XDIVIO   equ $08
-BW_BUFOFF   equ $0a
-BW_ODATER   equ $13
-BW_OTIMER   equ $16
-BW_TDOVER   equ $19
-BW_LBUF     equ $3f
-BW_COMFNAM  equ $21
+PORTB       equ $D301
 
 DMACTL      equ $D400 
 NMIEN       equ $D40E
@@ -54,3 +83,9 @@ NMIEN       equ $D40E
 CIOV        equ $E456
 WARMSV      equ $E474
 COLDSV      equ $E477
+
+REVDAT      equ $ffee
+XLXEOP      equ $fff1
+PATNUM      equ $fff2
+REVNUM      equ $fff7
+CHKSUM      equ $fff8

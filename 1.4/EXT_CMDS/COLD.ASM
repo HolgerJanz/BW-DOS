@@ -92,7 +92,7 @@ TCCOLO equ $d5af
         blk dos $2800
         jsr _chkbwdos
 * set XDIVIO
-        ldy #BW_XDIVIO
+        ldy #SD_XDIVIO
         lda (DOSVEC),Y
         sta XDIVIO+1
         iny

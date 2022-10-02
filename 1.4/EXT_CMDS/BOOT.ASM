@@ -21,7 +21,7 @@ DIR_ENTRY   equ $05C0
 * Start of code
             blk dos $2800
 * check for SparataDOS
-start       lda sparta_flag
+start       lda BW_SPARTA
             cmp #'S'
             beq sd_fnd
             jsr _print
