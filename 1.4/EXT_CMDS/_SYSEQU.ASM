@@ -58,6 +58,7 @@ BW_DECIN    equ $720 ; Input for BW_CONVDC
 BW_WRTCMD   equ $724 ; Writw command P without verify, W with verify
 BW_COMTAB   equ $726 ; Jump to command processor
 BW_CRNAME   equ $729 ; Jump to CRNAME
+BW_XDIVIO   equ $72E ; address of XDIVIO
 
 * dynamic SpartaDOS variables (relative to DOSVEC)
 * substract
