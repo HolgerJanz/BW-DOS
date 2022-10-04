@@ -59,6 +59,7 @@ BW_WRTCMD   equ $724 ; Writw command P without verify, W with verify
 BW_COMTAB   equ $726 ; Jump to command processor
 BW_CRNAME   equ $729 ; Jump to CRNAME
 BW_XDIVIO   equ $72E ; address of XDIVIO
+BW_COMFNAM  equ $747 ; result from BW_CRNAME
 
 * dynamic SpartaDOS variables (relative to DOSVEC)
 * substract
