@@ -20,7 +20,7 @@ CHAR_V      equ $0082
 CHAR_CNT    equ $0084
 
 * Start of code
-            blk dos $2800
+            blk dos $3000
             jsr _chkbwdos
 * set CRNAME
             lda DOSVEC

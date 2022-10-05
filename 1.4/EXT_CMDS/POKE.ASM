@@ -61,7 +61,7 @@ SD_LSIO     equ $0A ; negative offset to SIO vector
 ;
 ; Start of code
 ;
-            org $2800
+            org $3000
 start
             jsr pcheck            ; check for parameter 1
             bcs start_poke

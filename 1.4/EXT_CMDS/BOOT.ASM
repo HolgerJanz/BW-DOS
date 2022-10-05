@@ -19,7 +19,7 @@ INT_NAME    equ $0540
 DIR_ENTRY   equ $05C0
 
 * Start of code
-            blk dos $2800
+            blk dos $3000
 * check for SparataDOS
 start       lda BW_SPARTA
             cmp #'S'

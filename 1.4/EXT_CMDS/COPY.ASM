@@ -32,7 +32,7 @@ L05E0       equ $05E0
 opcode_BIT  equ $2c
 
 * Start of code
-start_addr  equ $2d00
+start_addr  equ $3000
             org start_addr
 * check DOS version
 start       lda BW_SPARTA

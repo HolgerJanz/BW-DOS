@@ -18,7 +18,7 @@ PC_MISC     equ PERCOM_BUF+9 ; Misc bytes
 ZP_CNT      equ $0080
 
 * Start of code
-            blk dos $2800
+            blk dos $3000
             jsr _chkbwdos14
 * get parameter
             jsr BW_CRNAME

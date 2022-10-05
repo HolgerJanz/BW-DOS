@@ -3,7 +3,7 @@
             icl '_SYSEQU.ASM'
 
 * Start of code
-            blk dos $2400
+            blk dos $3400
 start       jsr _chkbwdos14
 * print RAM data
             jsr IRQ_OFF
