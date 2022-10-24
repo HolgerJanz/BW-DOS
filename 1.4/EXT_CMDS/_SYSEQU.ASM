@@ -16,6 +16,7 @@ ICAX5       equ $0E
 ICAX6       equ $0F
 
 DOSVEC      equ $0A
+DOSINI      equ $0C
 RTCLOK      equ $12
 CRITIC      equ $42
 RAMTOP      equ $6a
@@ -31,6 +32,7 @@ DCMND       equ $302
 DSTATS      equ $303
 DBUFA       equ $304
 DTIMLO      equ $306
+DUNUSE      equ $307
 DBYT        equ $308
 DAUX1       equ $30A
 DAUX2       equ $30B
@@ -58,6 +60,8 @@ BW_DECIN    equ $720 ; Input for BW_CONVDC
 BW_WRTCMD   equ $724 ; Writw command P without verify, W with verify
 BW_COMTAB   equ $726 ; Jump to command processor
 BW_CRNAME   equ $729 ; Jump to CRNAME
+BW_DATER    equ $733 ; date for GETTD and SETTD
+BW_TIMER    equ $736 ; time for GETTD and SETTD
 BW_XDIVIO   equ $72E ; address of XDIVIO
 BW_COMFNAM  equ $747 ; result from BW_CRNAME
 

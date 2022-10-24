@@ -220,7 +220,7 @@ convh2a     sed
             clc
             adc #$90
             adc #$40
-            cld            
+            cld
             rts
 
 * _print subroutine
