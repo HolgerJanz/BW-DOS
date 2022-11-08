@@ -1,57 +1,33 @@
 * FujiNet FCONFIG 
-        icl '_SYSEQU'
+        icl '_SYSEQU.ICL'
+        icl '_FNEQU.ICL'
 
         blk dos $3000
-        jsr _chkbwdos14
+        jsr _chksdos
 * read config via SIO
         ldx #$0b
 nxtsiod lda siodata,X
         sta DDEVIC,X
         dex
         bpl nxtsiod
-* first try old buffer size $8B
-        jsr BW_SIO
-        bpl adptbuf
-        cpy #$8F ; check sum record
-        beq newconf
-error   tya
-        jmp (BW_FAIL)
-* second try new buffer size $8C
-newconf inc DBYT
-        lda #$40
-        sta DSTATS
-        jsr BW_SIO
+        jsr SD_SIO
         bpl output
-        jmp error
-* adapt buffer for old config
-adptbuf ldx #$20
-nxtbb   lda fconfig,X
-        inx
-        sta fconfig,X
-        inx
-        cpx siobsz
-        bcc nxtbb
-        lda #$00
-        sta fconfig+$20
-* configuretion output
-output  ldx #$02
-        lda #$00
-clrdci  sta BW_DECIN,X
-        dex
-        bpl clrdci
+        tya
+        jmp SD_FAIL
 
-        jsr _print
+* configuration output
+output  jsr _print
         dta c'           SSID: ',b($00)
         ldx <fc_ssid
         ldy >fc_ssid
-        lda #$21
+        lda #fn_ssid_ln
         jsr prnchar
 
         jsr _print
         dta c'       Hostname: ',b($00)
         ldx <fc_host
         ldy >fc_host
-        lda #$40
+        lda #fn_host_ln
         jsr prnchar
 
         jsr _print
@@ -91,42 +67,27 @@ clrdci  sta BW_DECIN,X
         jsr prnmac
 
         jsr _print
-        dta c'FCONFIG Version: 1.0 24-10-2022',b($9b,$00)
+        dta c'FCONFIG Version: 1.0 06-11-2022',b($9b,$00)
 
         jsr _print
         dta c'  Fuji Firmware: ',b($00)
         ldx <fc_firm
         ldy >fc_firm
-        lda #$0f
+        lda #fn_firm_ln
         jsr prnchar
 
         rts
 
 * DCB data for Fuji get adapter config
-siodata dta b($70,$01)  ; FUJINET device and unit
+siodata dta b($70,$01)  ; FujiNet device and unit
         dta b($E8)      ; Command GET ADAPTER CONFIG
 siostat dta b($40)      ; status
-        dta a(fconfig)  ; buffer for date time
-        dta b($40)      ; time out 15s
+        dta a(fconfig)  ; CONFIG buffer
+        dta b($10)      ; time out
         dta b($00)      ; unused
-siobsz  dta a(fconf_e-fconfig-1) ; buffer size -1 for old version
-        dta b($00)      ; AUX1 and iter for DATER
-        dta b($00)      ; AUX2 and iter for print
-
-fconfig equ *
-fc_ssid dta c'                                 '
-fc_host dta c'                                                                '
-fc_loIP dta b($00,$00,$00,$00)
-fc_gate dta b($00,$00,$00,$00)
-fc_nmsk dta b($00,$00,$00,$00)
-fc_dnsi dta b($00,$00,$00,$00)
-fc_maca dta b($00,$00,$00,$00,$00,$00)
-fc_bssi dta b($00,$00,$00,$00,$00,$00)
-fc_firm dta c'               '
-fconf_e equ *
-
-iter1   dta b($00)
-iter2   dta b($00)
+siobsz  dta a(fconf_e-fconfig) ; buffer size
+        dta b($00)      ; AUX1
+        dta b($00)      ; AUX2
 
 * print characters
 * address: X,Y length: A
@@ -146,36 +107,20 @@ cpxchar cpx #$00
 prneol  lda #$9b
         jmp _putc
 
-
 * print IP address
 prnip   stx nxtipp+1
         sty nxtipp+2
         ldx #$00
         stx iter1
 nxtipp  lda $ffff,X
-
-        sta BW_DECIN
-        jsr CONVDC
-        ldx #$05
-nxtipd  lda BW_DECOUT,X
-        cmp #' '
-        beq nxtipx
-        stx iter2
-        jsr _putc
-        ldx iter2
-nxtipx  inx
-        cpx #$08
-        bcc nxtipd
-
+        jsr SD_PUTDEC
         inc iter1
         ldx iter1
         cpx #$04
         beq prneol
-
         lda #'.'
         jsr _putc
         ldx iter1
-
         jmp nxtipp
 
 * print MAC
@@ -184,7 +129,6 @@ prnmac  stx nxtmacp+1
         ldx #$00
         stx iter1
 nxtmacp lda $ffff,X
-
         jsr _convh2a
         tya
         pha
@@ -192,21 +136,34 @@ nxtmacp lda $ffff,X
         jsr _putc
         pla
         jsr _putc
-
         inc iter1
         ldx iter1
         cpx #$06
         beq prneol
-
         lda #':'
         jsr _putc
         ldx iter1
-
         jmp nxtmacp
 
-CONVDC  jmp (BW_CONVDC)
-        icl '_CHKBWD14'
-        icl '_PRINT'
-        icl '_CONVH2A'
+        icl '_CHKSDOS.ICL'
+        icl '_SDFAIL.ICL'
+        icl '_SDLSIO.ICL'
+        icl '_PRINT.ICL'
+        icl '_CONVH2A.ICL'
+
+* data declaration
+iter1   equ *
+* FujiNet SIO CONFIG block
+fconfig equ iter1+1
+fc_ssid equ fconfig
+fc_host equ fc_ssid+fn_ssid_ln
+fc_loIP equ fc_host+fn_host_ln
+fc_gate equ fc_loIP+fn_ip_ln
+fc_nmsk equ fc_gate+fn_ip_ln
+fc_dnsi equ fc_nmsk+fn_ip_ln
+fc_maca equ fc_dnsi+fn_ip_ln
+fc_bssi equ fc_maca+fn_mac_ln
+fc_firm equ fc_bssi+fn_mac_ln
+fconf_e equ fc_firm+fn_firm_ln
 
         end

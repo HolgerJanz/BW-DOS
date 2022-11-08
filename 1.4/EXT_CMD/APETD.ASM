@@ -1,6 +1,6 @@
 * Fuji APE Clock red-only driver
 
-        icl '_SYSEQU'
+        icl '_SYSEQU.ICL'
         blk dos $3000
 
 reabeg  equ *
@@ -123,6 +123,6 @@ td_out  dta c'dd-mm-yy hh:mm:ss',b($9b,$00)
 
 * vector for CONVDC
 CONVDC  jmp (BW_CONVDC)
-        icl '_PRINT'
-        icl '_CHKBWD14'
+        icl '_PRINT.ICL'
+        icl '_CHKBW14.ICL'
         end

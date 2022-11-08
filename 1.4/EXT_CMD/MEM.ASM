@@ -1,6 +1,6 @@
 * MEM for BW-DOS
 
-            icl '_SYSEQU.ASM'
+            icl '_SYSEQU.ICL'
 
 * Start of code
             blk dos $3400
@@ -33,8 +33,8 @@ calc_main   pla
             jsr IRQ_ON
 * calc main
             lda RAMSIZ
-            lsr
-            lsr
+            lsr @
+            lsr @
             clc
 _add_OSRAM  adc #$00
             sta BW_DECIN
@@ -178,7 +178,6 @@ _chksum     dta c'xxxx'
 
 CONVDC      jmp (BW_CONVDC)
 
-
 * move hex to atascii
 *  read hex ($80) offset $82
 *  write atascii ($83) offset $85
@@ -224,8 +223,8 @@ convh2a     sed
             rts
 
 * _print subroutine
-            icl '_PRINT.ASM'
-            icl '_CHKBWD14.ASM'
+            icl '_PRINT.ICL'
+            icl '_CHKBWD14.ICL'
 
 * extended memory check
 
@@ -329,7 +328,6 @@ prnt_um4    cmp #$04
             dta c'  Axlon',b($00)
             jmp prnt_nmbrs
 
-
 prnt_nmbrs  lda #$00
             ldx BNKCNT
             stx BW_DECIN
@@ -342,7 +340,6 @@ prnt_nmbrs  lda #$00
             sta _extbanks+1
             lda BW_DECOUT+7
             sta _extbanks+2
-
 
             ldx #$04
 prnt_size   lda BNKCNT
@@ -371,9 +368,9 @@ prnt_size   lda BNKCNT
             sta _extsize+3
 
             jsr _print
-            dta ': '
-_extsize    dta 'xxxx kB Banks:'
-_extbanks   dta 'yyy'
+            dta c': '
+_extsize    dta c'xxxx kB Banks:'
+_extbanks   dta c'yyy'
             dta b($9B,$00)
 
 prnt_end    rts
@@ -537,4 +534,3 @@ BNKSWTMSKR2 dta b($F3,$EB,$E3,$C3,$83,$01,$81)
 BNK0R256    dta b($83)
 
             end
-

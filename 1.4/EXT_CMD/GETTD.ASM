@@ -1,5 +1,6 @@
 * Print Current Date time
-        icl '_SYSEQU'
+        icl '_SYSEQU.ICL'
+
         blk dos $3000
         jsr _chkbwdos14
         jsr GETTD
@@ -32,7 +33,9 @@ itdtr   dta b($00)      ; iter for DATER
 itprn   dta b($00)      ; iter for print
 GETTD   jmp (BW_GETTD)
 CONVDC  jmp (BW_CONVDC)
-        icl '_CHKBWD14'
-        icl '_PRINT'
+
+        icl '_CHKBWD14.ICL'
+        icl '_PRINT.ICL'
+
         end
 

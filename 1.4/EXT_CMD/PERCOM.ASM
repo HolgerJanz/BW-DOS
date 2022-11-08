@@ -1,7 +1,7 @@
 * PERCOM for SpartaDOS 16k
 
 * System equates
-            icl '_SYSEQU.ASM'
+            icl '_SYSEQU.ICL'
 
 * PERCOM buffer layout
 PC_SIDES    equ PERCOM_BUF+4 ; Sides-1
@@ -172,8 +172,8 @@ prn_hexa    pha
             jsr _putc
             rts
 
-            icl '_PRINT.ASM'
-            icl '_CHKBWD14.ASM'
+            icl '_PRINT.ICL'
+            icl '_CHKBW14.ICL'
 
 * buffer for PERCOM (12 Bytes)
 PERCOM_BUF  equ *

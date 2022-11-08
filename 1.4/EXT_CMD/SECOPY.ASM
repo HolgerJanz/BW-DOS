@@ -1,104 +1,78 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Sector Copy
-;
+* Sector Copy
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; Equates
-;
+* Equates
 
-; 
-; CIO
-; 
-CIOV       = $E456
-; CIOCB addresses
-ICHID      = $0340
-ICDNO      = $0341
-ICCOM      = $0342
-ICSTA      = $0343
-ICBAL      = $0344
-ICBAH      = $0345
-ICPTL      = $0346
-ICPTH      = $0347
-ICBLL      = $0348
-ICBLH      = $0349
-ICAX1      = $034a
-ICAX2      = $034b
+* CIO
+CIOV       equ $E456
+* CIOCB addresses
+ICHID      equ $0340
+ICDNO      equ $0341
+ICCOM      equ $0342
+ICSTA      equ $0343
+ICBAL      equ $0344
+ICBAH      equ $0345
+ICPTL      equ $0346
+ICPTH      equ $0347
+ICBLL      equ $0348
+ICBLH      equ $0349
+ICAX1      equ $034a
+ICAX2      equ $034b
 
-; 
-; SIO
-; 
-SIOV       = $E459
-; SIOCB addresses
-DDEVIC     = $0300
-DUNIT      = $0301
-DCOMND     = $0302
-DSTATS     = $0303
-DBUFLO     = $0304
-DBUFHI     = $0305
-DTIMLO     = $0306
-DTIMHI     = $0307
-DBYTLO     = $0308
-DBYTHI     = $0309
-DAUX1      = $030a
-DAUX2      = $030b
+* SIO
+SIOV       equ $E459
+* SIOCB addresses
+DDEVIC     equ $0300
+DUNIT      equ $0301
+DCOMND     equ $0302
+DSTATS     equ $0303
+DBUFLO     equ $0304
+DBUFHI     equ $0305
+DTIMLO     equ $0306
+DTIMHI     equ $0307
+DBYTLO     equ $0308
+DBYTHI     equ $0309
+DAUX1      equ $030a
+DAUX2      equ $030b
 
-; cursor
-CRSINH     = $02F0
+* cursor
+CRSINH     equ $02F0
 
-;
-; SpartaDOS 
-;
-DOSVEC     = $000A
-;
-SD_BUFOFF  = $0A ; offset in line buffer
-SD_LBUF    = $3F ; offset to line buffer
-SD_ZCRNAME = $03 ; offset for jmp to crunch name
-SD_COMFNAM = $21 ; offset to buffer for crunch name 
-SD_LSIO    = $0A ; negative offset to SIO vector
+* SpartaDOS
+DOSVEC     equ $000A
+SD_BUFOFF  equ $0A ; offset in line buffer
+SD_LBUF    equ $3F ; offset to line buffer
+SD_ZCRNAME equ $03 ; offset for jmp to crunch name
+SD_COMFNAM equ $21 ; offset to buffer for crunch name 
+SD_LSIO    equ $0A ; negative offset to SIO vector
 
-;
-; zero page buffers
-;
-BUFRLO      = $0032
-BUFRHI      = $0033
+* zero page buffers
+BUFRLO     equ $0032
+BUFRHI     equ $0033
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;  start of code
-;
-
-            org $3000
+* start of code
+            blk dos $3000
 start       lda #$ff
             sta CRSINH    ; cursor off
-; get parameter
+* get parameter
             jsr pcheck
             bcc start_manu
             jmp start_para
 start_manu  jsr PRINT
-            .byte 'Sector Copy 2022-02-20',$9B
-            .byte '  Use: SECOPY Dx: Dy:    disk to disk',$9B
-            .byte '       SECOPY Dx: Dy:fn  disk to file',$9B
-            .byte '       SECOPY Dx:fn Dy:  file to disk',$9B
-            .byte '  No format and drive check',$9b
-            .byte '  Single density only',$9B
-            .byte $ff
+            dta c'Sector Copy 2022-02-20',b($9B)
+            dta c'  Use: SECOPY Dx: Dy:    disk to disk',b($9B)
+            dta c'       SECOPY Dx: Dy:fn  disk to file',b($9B)
+            dta c'       SECOPY Dx:fn Dy:  file to disk',b($9B)
+            dta c'  No format and drive check',b($9b)
+            dta c'  Single density only',b($9B)
+            dta b($ff)
             jmp the_end
 
 start_para  jsr pget
             beq start_rdrv
             jmp start_wopen
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; copy sector of disk to file
-;
-; SECOPY Dx: Dy:FILE
-;
-
+* copy sector of disk to file
+* SECOPY Dx: Dy:FILE
 start_rdrv  ldy #SD_COMFNAM+1    ; read drive number
             lda (DOSVEC),Y
             sta start_rdnm
@@ -106,13 +80,13 @@ start_rdrv  ldy #SD_COMFNAM+1    ; read drive number
             sta start_rdn+1
             sta start_xdn+1
             jsr print
-            .byte 'Read from drive D'
-start_rdnm  .byte 'X:',$9b,$ff
+            dta c'Read from drive D'
+start_rdnm  dta c'X:',b($9b,$ff)
 
             jsr pcheck
             bcs start_rpath
             jsr print
-            .byte 'Second parameter missing',$9b,$ff
+            dta c'Second parameter missing',b($9b,$ff)
             jmp the_end
 
 start_rpath jsr pget
@@ -120,7 +94,7 @@ start_rpath jsr pget
             jmp start_xdrv
 
 start_ropen jsr print
-            .byte 'Sectors to file',$9b,$ff
+            dta c'Sectors to file',b($9b,$ff)
 
             ldx #$10    ; channel 1
             lda #$03    ; open
@@ -137,23 +111,23 @@ start_ropen jsr print
             jsr CIOV
             bpl start_rlops
 
-; error open file for write
+* error open file for write
             lda ICSTA
             jsr convh2a
             stx start_rof
             sty start_rof+1
             jsr print
-            .byte 'Open for write file state $'
-start_rof   .byte 'ff',$9b,$ff
+            dta c'Open for write file state $'
+start_rof   dta c'ff',b($9b,$ff)
             jmp end_close
 
 start_rlops jsr print
-            .byte $9c,'Sector $',$ff
-; loop over sector            
+            dta b($9c),c'Sector $',b($ff)
+* loop over sector            
 start_rloop inc start_rsl+1
             bne start_rssio 
             inc start_rsh+1
-; write info
+* write info
 start_rssio lda start_rsh+1
             jsr convh2a
             stx start_rsnr
@@ -163,10 +137,10 @@ start_rssio lda start_rsh+1
             stx start_rsnr+2
             sty start_rsnr+3
             jsr print
-start_rsnr  .byte 'ffff'
-            .byte $1e,$1e,$1e,$1e,$ff
-            
-; set SIOCB and read sector
+start_rsnr  dta c'ffff'
+            dta b($1e,$1e,$1e,$1e,$ff)
+
+* set SIOCB and read sector
             lda #$31    ; disk drive
             sta DDEVIC
 start_rdn   lda #$00
@@ -175,9 +149,9 @@ start_rdn   lda #$00
             sta DCOMND
             lda #$40    ; state S/R $40, W/P $80
             sta DSTATS
-            lda #<buffer_sector
+            lda <buffer_sector
             sta DBUFLO
-            lda #>buffer_sector    ; buffer adress
+            lda >buffer_sector    ; buffer adress
             sta DBUFHI
             lda #$07    ; timeout default 7, format(!) $e0
             sta DTIMLO
@@ -193,13 +167,13 @@ start_rsh   lda #$00
             bit DSTATS
             bmi start_rend
 
-; write sector to file            
+* write sector to file
             ldx #$10    ; channel 1
             lda #$0b    ; put chars
             sta ICCOM,X
-            lda #<buffer_sector
+            lda <buffer_sector
             sta ICBAL,X    ; adr of file name
-            lda #>buffer_sector
+            lda >buffer_sector
             sta ICBAH,X
             lda #$80
             sta ICBLL,X    ; length $80
@@ -215,29 +189,24 @@ start_rfend ldx #$10
             stx start_rwfm
             sty start_rwfm+1
             jsr print
-            .byte $9b,'Write file state $'
-start_rwfm  .byte 'ff',$9b,$ff
+            dta b($9b),c'Write file state $'
+start_rwfm  dta c'ff',b($9b,$ff)
 
 start_rend  lda DSTATS
             jsr convh2a
             stx start_rstam
             sty start_rstam+1
             jsr print
-            .byte $9b,'Read sector state $'
-start_rstam .byte 'ff',$9b,$ff
+            dta b($9b),c'Read sector state $'
+start_rstam dta c'ff',b($9b,$ff)
 
-; close file
+* close file
             jmp end_close
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; copy file to sector of disk
-;
-; SECOPY Dx:FILE Dy:
-;
-
+* copy file to sector of disk
+* SECOPY Dx:FILE Dy:
 start_wopen jsr print
-            .byte 'File to sectors',$9b,$ff
+            dta c'File to sectors',b($9b,$ff)
 
             ldx #$10    ; channel 1
             lda #$03    ; open
@@ -254,29 +223,29 @@ start_wopen jsr print
             jsr CIOV
             bpl start_wc2p
 
-; error open file for write
+* error open file for write
             lda ICSTA
             jsr convh2a
             stx start_wof
             sty start_wof+1
             jsr print
-            .byte 'Open for read file state $'
-start_wof   .byte 'ff',$9b,$ff
-; close file
+            dta c'Open for read file state $'
+start_wof   dta c'ff',b($9b,$ff)
+* close file
             jmp end_close
 
 start_wc2p  jsr pcheck
             bcs start_wc2pd
             jsr print
-            .byte 'Second parameter missing',$9b,$ff
-; close file
+            dta c'Second parameter missing',b($9b,$ff)
+* close file
             jmp end_close
 
 start_wc2pd jsr pget
             beq start_wdrv
             jsr print
-            .byte 'Second parameter no drive number',$9b,$ff
-; close file
+            dta c'Second parameter no drive number',b($9b,$ff)
+* close file
             jmp end_close
 
 start_wdrv  ldy #SD_COMFNAM+1    ; read drive number
@@ -285,16 +254,16 @@ start_wdrv  ldy #SD_COMFNAM+1    ; read drive number
             and #$0f
             sta start_wdn+1
             jsr print
-            .byte 'Write to drive D'
-start_wdnm  .byte 'X:',$9b,$ff
+            dta c'Write to drive D'
+start_wdnm  dta c'X:',b($9b,$ff)
 
             jsr print
-            .byte $9c,'Sector $',$ff
-; loop over sector            
+            dta b($9c),c'Sector $',b($ff)
+* loop over sector
 start_wloop inc start_wsl+1
             bne start_wssio 
             inc start_wsh+1
-; write info
+* write info
 start_wssio lda start_wsh+1
             jsr convh2a
             stx start_wsnr
@@ -304,16 +273,16 @@ start_wssio lda start_wsh+1
             stx start_wsnr+2
             sty start_wsnr+3
             jsr print
-start_wsnr  .byte 'ffff'
-            .byte $1e,$1e,$1e,$1e,$ff
+start_wsnr  dta c'ffff'
+            dta b($1e,$1e,$1e,$1e,$ff)
 
-; read sector from file            
+* read sector from file
             ldx #$10    ; channel 1
             lda #$07    ; get chars
             sta ICCOM,X
-            lda #<buffer_sector
+            lda <buffer_sector
             sta ICBAL,X    ; adr of buffer
-            lda #>buffer_sector
+            lda >buffer_sector
             sta ICBAH,X
             lda #$80
             sta ICBLL,X    ; length $80
@@ -321,8 +290,8 @@ start_wsnr  .byte 'ffff'
             sta ICBLH,X
             jsr CIOV
             bmi start_wfend
-            
-; set SIOCB and write sector
+
+* set SIOCB and write sector
             lda #$31    ; disk drive
             sta DDEVIC
 start_wdn   lda #$00
@@ -331,9 +300,9 @@ start_wdn   lda #$00
             sta DCOMND
             lda #$80    ; state S/R $40, W/P $80
             sta DSTATS
-            lda #<buffer_sector
+            lda <buffer_sector
             sta DBUFLO
-            lda #>buffer_sector    ; buffer adress $4000
+            lda >buffer_sector    ; buffer adress $4000
             sta DBUFHI
             lda #$07    ; timeout default 7, format(!) $e0
             sta DTIMLO
@@ -356,18 +325,18 @@ start_wfend ldx #$10
             stx start_wwfm
             sty start_wwfm+1
             jsr print
-            .byte $9b,'Read file state $'
-start_wwfm  .byte 'ff',$9b,$ff
+            dta b($9b),c'Read file state $'
+start_wwfm  dta c'ff',b($9b,$ff)
 
 start_wend  lda DSTATS
             jsr convh2a
             stx start_wstam
             sty start_wstam+1
             jsr print
-            .byte $9b,'Write sector state $'
-start_wstam .byte 'ff',$9b,$ff
+            dta b($9b),c'Write sector state $'
+start_wstam dta c'ff',b($9b,$ff)
 
-; close file
+* close file
 end_close   ldx #$10    ; channel 1
             lda #$0C    ; close
             sta ICCOM,X
@@ -375,33 +344,28 @@ end_close   ldx #$10    ; channel 1
 
             jmp the_end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; copy sector to sector of disk
-;
-; SECOPY Dx: Dy:
-;
-
+* copy sector to sector of disk
+* SECOPY Dx: Dy:
 start_xdrv  ldy #SD_COMFNAM+1    ; read drive number
             lda (DOSVEC),Y
             sta start_xdnm
             and #$0f
             sta start_ydn+1
             jsr print
-            .byte 'Write to drive D'
-start_xdnm  .byte 'X:',$9b,$ff
+            dta c'Write to drive D'
+start_xdnm  dta c'X:',b($9b,$ff)
 
             jsr print
-            .byte 'Sectors to sectors',$9b
-            .byte $9c,'Sector $',$ff
+            dta c'Sectors to sectors',b($9b)
+            dta b($9c),c'Sector $',b($ff)
 
-; loop over sector
+* loop over sector
 start_xloop inc start_xsl+1
             inc start_ysl+1
             bne start_xssio 
             inc start_xsh+1
             inc start_ysh+1
-; write info
+* write info
 start_xssio lda start_xsh+1
             jsr convh2a
             stx start_xsnr
@@ -411,10 +375,10 @@ start_xssio lda start_xsh+1
             stx start_xsnr+2
             sty start_xsnr+3
             jsr print
-start_xsnr  .byte 'ffff'
-            .byte $1e,$1e,$1e,$1e,$ff
+start_xsnr  dta c'ffff'
+            dta b($1e,$1e,$1e,$1e,$ff)
 
-; set SIOCB and read sector
+* set SIOCB and read sector
             lda #$31    ; disk drive
             sta DDEVIC
 start_xdn   lda #$00
@@ -423,9 +387,9 @@ start_xdn   lda #$00
             sta DCOMND
             lda #$40    ; state S/R $40, W/P $80
             sta DSTATS
-            lda #<buffer_sector
+            lda <buffer_sector
             sta DBUFLO
-            lda #>buffer_sector ; buffer adress
+            lda >buffer_sector ; buffer adress
             sta DBUFHI
             lda #$07    ; timeout default 7, format(!) $e0
             sta DTIMLO
@@ -441,7 +405,7 @@ start_xsh   lda #$00
             bit DSTATS
             bmi start_xend
 
-; set SIOCB and write sector
+* set SIOCB and write sector
             lda #$31    ; disk drive
             sta DDEVIC
 start_ydn   lda #$00
@@ -450,9 +414,9 @@ start_ydn   lda #$00
             sta DCOMND
             lda #$80    ; state S/R $40, W/P $80
             sta DSTATS
-            lda #<buffer_sector
+            lda <buffer_sector
             sta DBUFLO
-            lda #>buffer_sector ; buffer adress $4000
+            lda >buffer_sector ; buffer adress $4000
             sta DBUFHI
             lda #$07    ; timeout default 7, format(!) $e0
             sta DTIMLO
@@ -467,7 +431,7 @@ start_ysh   lda #$00
             jsr lsio
             bit DSTATS
             bmi start_xfend
-            
+
             jmp start_xloop
 
 start_xfend lda DSTATS
@@ -475,8 +439,8 @@ start_xfend lda DSTATS
             stx start_xwfm
             sty start_xwfm+1
             jsr print
-            .byte $9b,'Write sector state $'
-start_xwfm  .byte 'ff',$9b,$ff
+            dta b($9b),c'Write sector state $'
+start_xwfm  dta c'ff',b($9b,$ff)
             lda #$01
             sta DSTATS
 
@@ -485,21 +449,16 @@ start_xend  lda DSTATS
             stx start_xstam
             sty start_xstam+1
             jsr print
-            .byte $9b,'Read sector state $'
-start_xstam .byte 'ff',$9b,$ff
+            dta b($9b),c'Read sector state $'
+start_xstam dta c'ff',b($9b,$ff)
 
 the_end     lda #$00
             sta CRSINH
             rts
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; local SIO vector to SpartaDOS SIO            
-;
-lsio_set    .byte $ff
-lsio        ; set address, if necessary
-            bit lsio_set
+* local SIO vector to SpartaDOS SIO            
+lsio_set    dta b($ff)
+lsio        lda lsio_set
             bpl lsio_call
 
             lda DOSVEC
@@ -524,15 +483,9 @@ lsio        ; set address, if necessary
 lsio_call   jsr $ffff
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; parameter subroutines            
-;
-
-;
-; check for next parameter
-;   sets carry if next parameter is available
-;
+* parameter subroutines            
+* check for next parameter
+*   sets carry if next parameter is available
 pcheck      ldy #SD_BUFOFF
             lda (DOSVEC),Y
             clc
@@ -545,14 +498,10 @@ pcheck      ldy #SD_BUFOFF
             sec
 pcheck_end  rts
 
-;
-; get next parameter
-;   calls crunch name 
-;
-; jump for jsr to crunch name
-pget_set    .byte $ff
-pget        ; set crunch name address, if necessary
-            bit pget_set
+* get next parameter
+*   calls crunch name 
+pget_set    dta b($ff)
+pget        lda pget_set
             bpl pget_call
 
             lda DOSVEC
@@ -570,16 +519,13 @@ pget        ; set crunch name address, if necessary
 pget_call   jsr $ffff
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; convert hex to atascii
-;   hex A -> atascii X,Y            
-;
+* convert hex to atascii
+*   hex A -> atascii X,Y
 convh2a     pha
-            lsr
-            lsr
-            lsr
-            lsr
+            lsr @
+            lsr @
+            lsr @
+            lsr @
             sed
             clc
             adc #$90
@@ -594,11 +540,7 @@ convh2a     pha
             cld
             rts
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; print subroutine            
-;
+* print subroutine
 print       pla
             sta print_iter+1
             pla
@@ -616,7 +558,7 @@ print_end   lda print_iter+2
             lda print_iter+1
             pha
             rts
-; call cio put char subroutine
+* call cio put char subroutine
 cioputchr   ldx #$00
             stx ICBLL
             stx ICBLH
@@ -624,8 +566,7 @@ cioputchr   ldx #$00
             sty ICCOM
             jmp CIOV
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; sector buffer            
-;
+* sector buffer
 buffer_sector equ *
+
+            end

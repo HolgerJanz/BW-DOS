@@ -1,13 +1,12 @@
-; Clears Memory from MEMLO to MEMTOP
+* Clears Memory from MEMLO to MEMTOP
 
 MEMTOP      equ $02E5
 MEMLO       equ $02E7
 CH          equ $02FC
 
-
-; CIO
+* CIO
 CIOV        equ $E456
-; CIOCB addresses
+* CIOCB addresses
 ICHID       equ $0340
 ICDNO       equ $0341
 ICCOM       equ $0342
@@ -21,7 +20,7 @@ ICBLH       equ $0349
 ICAX1       equ $034a
 ICAX2       equ $034b
 
-; SpartaDOS 
+* SpartaDOS 
 DOSVEC      equ $000A
 SD_BUFOFF   equ $0A ; offset in line buffer
 SD_LBUF     equ $3F ; offset to line buffer
@@ -29,14 +28,14 @@ SD_ZCRNAME  equ $03 ; offset for jmp to crunch name
 SD_COMFNAM  equ $21 ; offset to buffer for crunch name 
 SD_LSIO     equ $0A ; negative offset to SIO vector
 
-            org $500
+            blk dos $500
 
             jsr pcheck          ; check for parameter 1
             bcc startClear
 
             jsr pget            ; get parameter
             beq parameterError
-            
+
             ldx #$00
             ldy #SD_COMFNAM+3   ; get value
 loop_r2     lda (DOSVEC),Y
@@ -47,7 +46,7 @@ loop_r2     lda (DOSVEC),Y
             inx
 vchar_cnt   cpx #$02
             bne loop_r2
-            
+
             lda (DOSVEC),Y      ; check for end after second char
             cmp #$9b
             bne parameterError
@@ -60,10 +59,9 @@ vchar_cnt   cpx #$02
             jsr pcheck          ; check for too many parameter
             bcc startClear
 
-parameterError
-            jsr print
-            .byte 'MEMCLEAR 2022-02-20',$9b
-            .byte 'Parameter Error use: MEMCLEAR [hh]',$9b,$ff
+parameterError jsr print
+            dta c'MEMCLEAR 2022-02-20',b($9b)
+            dta c'Parameter Error use: MEMCLEAR [hh]',b($9b,$ff)
             rts
 
 startClear  lda MEMLO+1
@@ -85,16 +83,16 @@ startClear  lda MEMLO+1
             sty adr_high+3
 
             jsr PRINT
-            .byte 'Clear $' 
-adr_low     .byte 'xxxx-$'
-adr_high    .byte 'yyyy with $'
-clr_char    .byte '00? (Y)',$ff
+            dta c'Clear $' 
+adr_low     dta c'xxxx-$'
+adr_high    dta c'yyyy with $'
+clr_char    dta c'00? (Y)',b($ff)
 
             jsr getKey
             cmp #$2B
             beq clear_start
             jsr PRINT
-            .byte $9b,'Abort',$9b,$ff 
+            dta b($9b),c'Abort',b($9b,$ff)
             rts
 
 clear_start lda MEMLO
@@ -118,14 +116,10 @@ clear_inc   inc clear_loop+1    ; inc address
             jmp clear_loop
             
 clear_end   jsr PRINT
-            .byte $9b,'Done',$9b,$ff 
+            dta b($9b),c'Done',b($9b,$ff)
             rts
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; print subroutine            
-;
+* print subroutine
 print       pla
             sta print_iter+1
             pla
@@ -136,14 +130,14 @@ print_loop  inc print_iter+1
 print_iter  lda $ffff
             cmp #$ff
             beq print_end
-            
+
             ldx #$00            ; put char
             stx ICBLL
             stx ICBLH
             ldy #$0B
             sty ICCOM
             jsr CIOV
-            
+
             jmp print_loop
 print_end   lda print_iter+2
             pha
@@ -151,17 +145,14 @@ print_end   lda print_iter+2
             pha
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; convert hex to atascii
-;   hex A -> atascii X,Y            
-;
+* convert hex to atascii
+*   hex A -> atascii X,Y
 convh2a     pha
-            lsr
-            lsr
-            lsr
-            lsr
-            sed        
+            lsr @
+            lsr @
+            lsr @
+            lsr @
+            sed
             clc
             adc #$90
             adc #$40
@@ -172,26 +163,23 @@ convh2a     pha
             adc #$90
             adc #$40
             tay
-            cld            
+            cld
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; convert atascii to hex
-;   atascii X,Y -> hex A            
-;
+* convert atascii to hex
+*   atascii X,Y -> hex A
 conva2h     txa
             jsr conva2h_h
-            asl
-            asl
-            asl
-            asl
+            asl @
+            asl @
+            asl @
+            asl @
             sta conva2h_o+1
             tya
             jsr conva2h_h
 conva2h_o   ora #$00
             rts
-            
+
 conva2h_h   sec
             sbc #'0'
             cmp #$0A
@@ -201,10 +189,7 @@ conva2h_h   sec
 conva2h_hl  and #$0F
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; get key
-;
+* get key
 getKey      lda #$FF ; check for key
             tax
             cmp CH
@@ -213,11 +198,8 @@ getKey      lda #$FF ; check for key
             stx CH
             rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; check for next parameter
-;   sets carry if next parameter is available
-;
+* check for next parameter
+*   sets carry if next parameter is available
 pcheck      ldy #SD_BUFOFF
             lda (DOSVEC),Y
             clc
@@ -230,28 +212,25 @@ pcheck      ldy #SD_BUFOFF
             sec
 pcheck_end  rts
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; get next parameter
-;   calls crunch name 
-;
-; jump for jsr to crunch name
-pget_set    .byte $ff
-pget        ; set crunch name address, if necessary
-            bit pget_set
+* get next parameter
+*   calls crunch name 
+pget_set    dta b($ff)
+pget        lda pget_set
             bpl pget_call
-            
+
             lda DOSVEC
             clc
             adc #SD_ZCRNAME
             sta pget_call+1
-            
+
             lda DOSVEC+1
             adc #$00
             sta pget_call+2
-            
+
             lda #$00
             sta pget_set
-            
+
 pget_call   jsr $ffff
             rts
+
+            end

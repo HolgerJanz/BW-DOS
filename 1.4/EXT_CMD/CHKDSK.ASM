@@ -1,7 +1,7 @@
 * CHKDSK for SpartaDOS 16k
 
 * System equates
-            icl '_SYSEQU.ASM'
+            icl '_SYSEQU.ICL'
 
 * SparataDOS equates
 SD_CONVDC   equ $070A
@@ -238,8 +238,8 @@ close_1     ldx #$10
             sta IOCB0+ICCOM,X
             jmp CIOV
 
-            icl '_PRINT'
-            icl '_CHKBWD'
+            icl '_PRINT.ICL'
+            icl '_CHKBWD.ICL'
 
 * buffer for CIO checkdsk result (17 Bytes)
 CHKBUF      equ *

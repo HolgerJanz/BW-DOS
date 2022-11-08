@@ -337,16 +337,16 @@ L0F49       equ DAT_DEF+$13E
 
             blk dos DAT_DEF+$141 ; $0F4C
 * code for command line interpreter
-            icl 'XBWCMD.ASM'
+            icl 'XBWCMD.ICL'
 * code for CIO D: implementation
-            icl 'XBWCIO1.ASM'
-            icl 'XBWCIO2.ASM'
+            icl 'XBWCIO1.ICL'
+            icl 'XBWCIO2.ICL'
 
 CIO_BUF     equ *
 
             blk dos CIO_BUF+$300
 * code for low level file management system
-            icl 'XBWFMS.ASM'
+            icl 'XBWFMS.ICL'
 
 END_ADDR    equ *
 

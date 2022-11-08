@@ -1,7 +1,7 @@
 * BW-DOS Command BOOT file_name
 
 * System equates
-            icl '_SYSEQU.ASM'
+            icl '_SYSEQU.ICL'
 
 * Code equates
 * index of last seperator in path
@@ -142,7 +142,7 @@ cp_cb_loop  lda _ddevic,X
             rts
 sio_error   jmp error
 
-            icl '_PRINT.ASM'
+            icl '_PRINT.ICL'
 
 * call CRNAME
 crname      jmp exe_rts
