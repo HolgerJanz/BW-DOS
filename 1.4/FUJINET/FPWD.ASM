@@ -42,7 +42,7 @@ _bufoff ldx $ffff
         cmp #$9b
         beq sslt
 badpara jsr _print
-        dta c'Usage: FWDD <slot#1..8>',b($9b,$00)
+        dta c'Usage: FPWD <slot#1..8>',b($9b,$00)
         ldy #$9C ; Bad Parameter
         jmp SD_FAIL
 * set slot
