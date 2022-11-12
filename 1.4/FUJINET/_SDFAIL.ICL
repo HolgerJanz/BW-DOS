@@ -43,4 +43,3 @@ _next_dec   pha
 
 * array with decimals
 _decimal    dta b(1,10,100)
-

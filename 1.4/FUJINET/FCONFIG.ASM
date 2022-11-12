@@ -12,7 +12,6 @@ nxtsiod lda siodata,X
         bpl nxtsiod
         jsr SD_SIO
         bpl output
-        tya
         jmp SD_FAIL
 
 * configuration output
