@@ -1,0 +1,25 @@
+$DE 	Write App Key
+===================================================
+
+Description
+
+After performing an Open App Key command with mode set to write, this command writes up to 64 bytes to the key file.
+
+Although the MAX_APPKEY_LEN (64) bytes are always transferred during this operation, the actual number of bytes stored in the key file are specified in DAUX1 and DAUX2 (16-bit unsigned value).
+
+Currently, there's no allowance for writing more than MAX_APPKEY_LEN bytes in a key. The key file is closed immediately after the write operation is completed, so there's no need to call Close App Key (that function is saved for possible future use). Any other operations on the app key will require another Open App Key command.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$DE
+DSTATS 	$80
+DBUF 	Pointer to buffer with MAX_APPKEY_LEN bytes
+DTIMLO 	15
+DBYT 	MAX_APPKEY_LEN (64)
+DAUX 	lo/hi value of actual number of bytes to store in key file from buffer
+
+Examples
+
+See appkey-sample in the fujinet-apps repository.

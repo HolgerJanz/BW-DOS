@@ -1,0 +1,31 @@
+$B2 	DIAGNOSTIC: Alter SIO Timing for T2
+===================================================
+
+Description
+
+Alters the Timing value (in microseconds) for Timing value 2.
+
+From the Atari Hardware Manual:
+
+  The peripheral generates a delay (t2) between the raising of 
+    COMMAND- and the transmission of the ACK byte by the peripheral. 
+
+    computer t2 (min) = O microsec. 
+    computer t2 (max) = 16 msec. 
+
+    peripheral t2 (min) = ?? 
+    peripheral t2 (max) = ?? 
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	0xB2
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX 	16-bit value containing # of microseconds in little-endian order
+Examples
+
+See thwap tool, for examples of how to alter this value: GitHub Link

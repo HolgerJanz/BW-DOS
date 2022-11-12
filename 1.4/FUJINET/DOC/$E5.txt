@@ -1,0 +1,21 @@
+$E5 	Get Directory Position
+===================================================
+
+Description
+
+The current directory stream position will be returned as a 16-bit unsigned value. The directory must have been previously opened with Open Directory. This value can subsequently be used in a call to Set Directory Position.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$E5
+DSTATS 	$40
+DBUF 	pointer to a 2 byte buffer to store returned 16-bit index
+DTIMLO 	15
+DBYT 	2
+DAUX1 	0
+DAUX2 	0
+
+Examples
+./.

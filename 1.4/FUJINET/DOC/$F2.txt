@@ -1,0 +1,53 @@
+$F2 	Read Device Slots
+===================================================
+
+Description
+
+Read the current FujiNet device slot configuration. Information for up to 8 device slots is returned at one time, with each device comprising of a 38-byte structure:
+
+00: Host slot (0-7)
+01: Mount mode (0 = Read, 1 = Read/Write)
+02-37: Display name
+
+The 36-byte Display Name may not be the full name of the file mounted in the slot. Names will automatically be shortened to a length that fits in the buffer.
+
+DAUX1 is used to specify a device slot offset as follows:
+
+$00: Device slots 0-7
+$10: Tape slot (in this case, the buffer is only expected to be 36 bytes long)
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$F2
+DSTATS 	$40
+DBUF 	Pointer to a 304 byte buffer to hold eight device slots, or a 38 byte buffer when DAUX1 = $10
+DTIMLO 	$0F
+DBYT 	296
+DAUX1 	Slot offset $00, $10 (see above)
+DAUX2 	Not Used
+
+Examples
+CC65
+
+union
+{
+  struct
+  {
+  unsigned char hostSlot;
+  char file[36];
+  } slot[8];
+  unsigned char rawData[296];
+} deviceSlots;    
+    
+// Query for host slots
+OS.dcb.ddevic=0x70;
+OS.dcb.dunit=1;
+OS.dcb.dcomnd=0xF2; // Get device slots
+OS.dcb.dstats=0x40;
+OS.dcb.dbuf=&deviceSlots.rawData;
+OS.dcb.dtimlo=0x0f;
+OS.dcb.dbyt=256;
+OS.dcb.daux=0;
+siov();

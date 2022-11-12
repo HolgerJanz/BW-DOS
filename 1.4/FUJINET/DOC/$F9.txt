@@ -1,0 +1,60 @@
+$F9 	Mount Host
+===================================================
+
+Description
+
+Mounts a host. Details of what happens are implementation-dependent. For example, in the case of a TNFS host FujiNet simply establishes a connection to that host
+
+A slot number is given in DAUX1.
+
+If host name is already mounted in an available slot, then the existing session ID is used, internally, and a TNFS mount request is not sent.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$F9
+DSTATS 	$00
+DBUF 	Not used.
+DTIMLO 	$0F
+DBYT 	0
+DAUX1 	The Host Slot # (0-7)
+DAUX2 	0
+
+Examples
+CC65
+
+// Mount host
+OS.dcb.ddevic=0x70;
+OS.dcb.dunit=1;
+OS.dcb.dcomnd=0xF9;
+OS.dcb.dstats=0x00;
+OS.dcb.dbuf=NULL;
+OS.dcb.dtimlo=0x0f;
+OS.dcb.dbyt=0;
+OS.dcb.daux=SLOT;
+siov();
+
+ASM
+
+        LDA #$70
+        STA $0300
+        STA #$01
+        STA $0301
+        STA #$F9
+        STA $0302
+        STA #$00
+        STA $0303
+        LDA #$00
+        STA $0304
+        STA $0305
+        LDA #$0F
+        STA $0306
+        LDA #$00
+        STA $0308
+        STA $0309
+        LDA HOSTSLOT
+        STA $030A
+        LDA #$00
+        STA $030B
+        JSR SIOV

@@ -1,0 +1,39 @@
+$D7 	Mount All
+===================================================
+
+Description
+
+Causes the #FujiNet to mount all device and host slots. This is a single command equivalent to iterating through each device slot and mounting it (and the corresponding host), and is used by the mini booter.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$D7
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	$0F
+DBYT 	0
+DAUX1 	0
+DAUX2 	0
+
+Examples
+CC65
+
+/**
+ * Mount everything
+ */
+void mountall(void)
+{
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xD7; // reset FujiNet device
+  OS.dcb.dstats=0x00; // No payload
+  OS.dcb.dbuf=0x00;
+  OS.dcb.dtimlo=0x0F; // 15 second timeout
+  OS.dcb.dbyt=0;      
+  OS.dcb.daux=0;
+  siov();
+
+  return OS.dcb.dstats; // 1 = successful, anything else = error.
+}

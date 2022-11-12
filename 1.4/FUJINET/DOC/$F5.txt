@@ -1,0 +1,36 @@
+$F5 	Close Directory
+===================================================
+
+Description
+
+Close the directory opened by Open Directory. Used both to end directory listings, as well as in preparation for Open Directory for further pagination.
+
+DAUX1 specifies the host slot whose directory we want to close.
+
+As there can only be one directory open at a time per host, we do not need to specify any parameters, and therefore there is no data frame. DSTATS is 0x00.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$F5
+DSTATS 	0x00
+DBUF 	No buffer, can be NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX1 	requested host slot
+DAUX2 	0
+
+Examples
+CC65
+
+// Close dir read
+OS.dcb.ddevic=0x70;
+OS.dcb.dunit=1;
+OS.dcb.dcomnd=0xF5;
+OS.dcb.dstats=0x00;
+OS.dcb.dbuf=NULL;
+OS.dcb.dtimlo=0x0F;
+OS.dcb.dbyt=0;
+OS.dcb.daux=0;
+siov();

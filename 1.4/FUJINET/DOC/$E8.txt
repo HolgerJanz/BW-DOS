@@ -1,0 +1,51 @@
+$E8 	Get Adapter Config
+===================================================
+
+Description
+
+Return current network adapter configuration:
+
+    SSID
+    Local IP Address
+    Gateway Address
+    Netmask
+    MAC Address
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$E8
+DSTATS 	$40
+DBUF 	adapterConfig buffer (139 bytes)
+DTIMLO 	$0F
+DBYT 	139
+DAUX1 	0
+DAUX2 	0
+
+Examples
+C
+
+// Response to SIO_FUJICMD_GET_ADAPTERCONFIG
+struct
+{
+    char ssid[32];
+    char hostname[64];
+    unsigned char localIP[4];
+    unsigned char gateway[4];
+    unsigned char netmask[4];
+    unsigned char dnsIP[4];
+    unsigned char macAddress[6];
+    unsigned char bssid[6];
+    char fn_version[15];
+} cfg;
+   
+OS.dcb.ddevic=0x70;
+OS.dcb.dunit=1;
+OS.dcb.dcomnd=0xE8;
+OS.dcb.dstats=0x40;
+OS.dcb.dbuf=cfg;
+OS.dcb.dtimlo=0x0f;
+OS.dcb.dbyt=sizeof(cfg);
+OS.dcb.daux=0; 
+siov();

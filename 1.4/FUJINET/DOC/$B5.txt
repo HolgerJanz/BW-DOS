@@ -1,0 +1,34 @@
+$B5 	DIAGNOSTIC: Alter SIO Timing for T5
+===================================================
+
+Description
+
+Alters the Timing value (in microseconds) for Timing value 4.
+
+From the Atari Hardware Manual:
+
+  The Peripheral generates a delay (t5) between the the receipt of 
+    the last bit of the ACK byte and the first bit of the COMPLETE 
+    byte by the computer. 
+
+    computer t5 (min) = 250 microsec. 
+    computer t5 (max) = 255 sec. (handler-dependent) 
+
+    peripheral t5 (min) = ?? 
+    peripheral t5 (max) = N/A 
+
+Parameters
+
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	0xB5
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX 	16-bit value containing # of microseconds in little-endian order
+
+Examples
+
+See thwap tool, for examples of how to alter this value: GitHub Link

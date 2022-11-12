@@ -1,0 +1,31 @@
+$B1 	DIAGNOSTIC: Alter SIO Timing for T1
+===================================================
+
+Description
+
+Alters the Timing value (in microseconds) for Timing value 1.
+
+From the Atari Hardware Manual:
+
+  The computer generates a delay (tl) between the transmission of 
+    the last bit of the command frame and the raising of the COMMAND- line. 
+
+    computer tl (min) = 650 microsec. 
+    computer tl (max) = 950 microsec. 
+
+    peripheral tl (min) = ?? 
+    peripheral tl (max) = ?? 
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	0xB1
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX 	16-bit value containing # of microseconds in little-endian order
+Examples
+
+See thwap tool, for examples of how to alter this value: GitHub Link

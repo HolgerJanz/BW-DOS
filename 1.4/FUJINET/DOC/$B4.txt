@@ -1,0 +1,32 @@
+$B4 	DIAGNOSTIC: Alter SIO Timing for T4
+===================================================
+
+Description
+
+Alters the Timing value (in microseconds) for Timing value 4.
+
+From the Atari Hardware Manual:
+
+  The peripheral generates a delay (t4) between the transmission of 
+    the last bit of the data frame and the receipt of the first bit 
+    of the ACK byte by the computer. 
+
+    computer t4 (min) = 850 microsec. 
+    computer t4 (max) = 16 msec. 
+
+    peripheral t4 (min) = ?? 
+    peripheral t4 (max) = ?? 
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	0xB4
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX 	16-bit value containing # of microseconds in little-endian order
+Examples
+
+See thwap tool, for examples of how to alter this value: GitHub Link

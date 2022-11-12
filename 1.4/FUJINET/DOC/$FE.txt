@@ -1,0 +1,54 @@
+$FE 	Get SSID
+===================================================
+
+Description
+
+FujiNet will return the SSID (33 characters + NULL) and passphrase (64 characters) currently stored in its configuration.
+
+Both string values are NUL terminated.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$FE
+DSTATS 	$40
+DBUF 	Pointer to a 97 byte buffer to store returned SSID and password, example struct below
+DTIMLO 	$0F
+DBYT 	97
+DAUX1 	0
+DAUX2 	0
+
+Examples
+C
+
+/**
+   Network Configuration
+*/
+union
+{
+  struct
+  {
+    char ssid[33];
+    char password[64];
+  };
+  unsigned char rawData[97];
+} netConfig;
+
+/**
+ * Read current SSID and password from SIO
+ */
+unsigned char config_set_ssid(void)
+{
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xFE; // Get SSID
+  OS.dcb.dstats=0x40; // Peripheral->Computer
+  OS.dcb.dbuf=&netConfig.rawData;
+  OS.dcb.dtimlo=0x0f; // 15 second timeout
+  OS.dcb.dbyt=sizeof(netConfig.rawData);
+  OS.dcb.daux=0;
+  siov();
+
+  return OS.dcb.dstats;
+}

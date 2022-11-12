@@ -1,0 +1,39 @@
+$E1 	Set Host Prefix
+===================================================
+
+Description
+
+Causes the FujiNet to set the host prefix to what's specified by the buffer.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$E1
+DSTATS 	$80
+DBUF 	Pointer to 256 byte buffer
+DTIMLO 	$FE
+DBYT 	256
+DAUX1 	Host Slot
+DAUX2 	Not used
+
+Examples
+CC65
+
+/**
+ * Ask fujinet for host prefix for given slot
+ */
+void fuji_set_host_prefix(unsigned char slot, char prefix)
+{
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xE0;
+  OS.dcb.dstats=0x80;
+  OS.dcb.dbuf=prefix;
+  OS.dcb.dtimlo=0xFE; // Max timeout
+  OS.dcb.dbyt=256;
+  OS.dcb.daux1=slot; // Host slot 1
+  siov();
+}
+
+fuji_set_host_prefix(0,"Games/"); // Set prefix for host slot 1 to /Games

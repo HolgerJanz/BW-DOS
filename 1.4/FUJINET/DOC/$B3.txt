@@ -1,0 +1,34 @@
+$B3 	DIAGNOSTIC: Alter SIO Timing for T3
+===================================================
+
+Description
+
+Alters the Timing value (in microseconds) for Timing value 3.
+
+From the Atari Hardware Manual:
+
+  The computer generates a delay (t3) between the receipt of the 
+    last bit of the ACK byte and the transmission of the first bit of 
+    the data frame by the computer. 
+
+    computer t3 (min) = 1000 microsec. 
+    computer t3 (max) = 1800 microsec. 
+
+    peripheral t3 (min> = ?? 
+    peripheral t3 <max> = ?? 
+
+Parameters
+
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	0xB3
+DSTATS 	0x00
+DBUF 	NULL
+DTIMLO 	0x0F
+DBYT 	0
+DAUX 	16-bit value containing # of microseconds in little-endian order
+
+Examples
+
+See thwap tool, for examples of how to alter this value: GitHub Link

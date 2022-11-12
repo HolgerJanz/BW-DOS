@@ -1,0 +1,99 @@
+$F6 	Read Directory
+===================================================
+
+Description
+
+Retrieve the next directory entry text and place into buffer.
+
+AUX1 specifies a maximum length to retrieve. If the directory entry path is longer than this, it will be truncated to fit this value (along with a terminating NULL character). This is useful for making read commands more efficient for display, and using a subsequent Directory Open/Directory Read to get the full 256 character filename for mounting.
+
+AUX2 indicates whether to return additional file details along with the entry text. Setting bit 7 (0x80) will return 10 additional bytes (see RETURNS section below for details) followed by the directory entry text. The max directory entry text length returned will be reduced by 10 bytes to accommodate the additional data.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$F6
+DSTATS 	$40
+DBUF 	Buffer to contain the directory entry 0-255 bytes
+DTIMLO 	# of seconds before timeout
+DBYT 	# of bytes to return in directory entry
+DAUX1 	Maximum length of entry response
+DAUX2 	If bit 0x80 set, additional file details returned
+
+Returns
+
+NULL terminated string with directory entry.
+
+First and second bytes are both set to 0x7F (0x7F7F) when the end of the directory has been reached.
+
+If AUX2 bit 7 (0x80) is set on the request, the following data will be returned before the directory entry text:
+
+Byte 	Item 	Description
+0x00 	MODIFIED_YEAR 	File modified date-time: years since 1970
+0x01 	MODIFIED_MONTH 	File modified date-time: month (1-12)
+0x02 	MODIFIED_DAY 	File modified date-time: day of month (1-31)
+0x03 	MODIFIED_HOUR 	File modified date-time: hour (0-23)
+0x04 	MODIFIED_MINUTE 	File modified date-time: minute (0-59)
+0x05 	MODIFIED_SECOND 	File modified date-time: second (0-59)
+0x06 	FILE_SIZE_LO 	File size low byte
+0x07 	FILE_SIZE_HI 	File size high byte
+0x08 	FILE_FLAGS 	One or more file flag values (see below)
+0x09 	FILE_TYPE 	One of the file type values (see below)
+
+The file's modified date-time value will be adjusted to the local time zone (if any) set on FujiNet.
+
+File Flag 	Value 	Description
+FF_DIR 	0x01 	Entry is a directory
+FF_TRUNC 	0x02 	Entry name was truncated to fit requested size
+File Type 	Value 	Description
+FT_UNKNOWN 	0x00 	File type could not be determined
+FT_ATR 	0x01 	ATR disk image
+FT_ATX 	0x02 	ATX disk image
+FT_XEX 	0x03 	Atari executable
+
+Examples
+CC65
+
+/**
+   A directory entry, with stat() information
+*/
+union
+{
+  struct
+  {
+    unsigned short mode;
+    unsigned long size;
+    char filename[256];
+  } entry;
+  unsigned char rawData[262]; // max size.
+} dirEntry;
+
+
+// loop and read dir for display
+while ((dirEntry.entry.filename[0]!=0x7F))
+  {
+    memset(dirEntry.rawData,0,sizeof(dirEntry.rawData);
+    dirEntry.entry.filename[0]=0x7F;
+    OS.dcb.ddevic=0x70;
+    OS.dcb.dunit=1;
+    OS.dcb.dcomnd=0xF6;
+    OS.dcb.dstats=0x40;
+    OS.dcb.dbuf=&path;
+    OS.dcb.dtimlo=0x0F;
+    OS.dcb.dbyt=36;
+    OS.dcb.daux1=36;
+    OS.dcb.daux2=hostSlot;
+    siov();
+
+    if (dirEntry.entry.filename[0]=='.')
+      continue;
+    else if (dirEntry.entry.filename[0]==0x7F)
+      break;
+    else
+      {
+        strcpy(files[num_entries],path);
+        screen_puts(0,num_entries+2,path);
+        num_entries++;
+      }
+  }

@@ -1,0 +1,23 @@
+$E4 	Set Directory Position
+===================================================
+
+Description
+
+The current directory stream position will be updated to the given unsigned value. The directory must have been previously opened with Open Directory.
+
+DAUX1 and DAUX2 are used to provide the new 16-bit unsigned position value in low/high byte order.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$E4
+DSTATS 	$40
+DBUF 	0
+DTIMLO 	15
+DBYT 	0
+DAUX1 	low byte of new position
+DAUX2 	high byte of new position
+
+Examples
+./.

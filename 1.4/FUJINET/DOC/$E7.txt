@@ -1,0 +1,51 @@
+$E7 	New Disk
+===================================================
+
+Description
+
+Given the following parameters:
+
+    Number of total sectors
+    Sector Size
+    Host Slot
+    Device Slot
+
+Create a new, blank disk image on the specified host.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$E7
+DSTATS 	$80
+DBUF 	newDisk buffer (262 bytes)
+DTIMLO 	$E0
+DBYT 	42
+DAUX1 	0
+DAUX2 	0
+
+Examples
+C
+
+union
+{
+  struct
+  {
+    unsigned short numSectors;
+    unsigned short sectorSize;
+    unsigned char hostSlot;
+    unsigned char deviceSlot;
+    char filename[256];
+  };
+  unsigned char rawData[262];
+} newDisk;
+       
+    OS.dcb.ddevic=0x70;
+    OS.dcb.dunit=1;
+    OS.dcb.dcomnd=0xE7;
+    OS.dcb.dstats=0x80;
+    OS.dcb.dbuf=&newDisk.rawData;
+    OS.dcb.dtimlo=0x0f;
+    OS.dcb.dbyt=42;
+    OS.dcb.daux=0; 
+    siov();

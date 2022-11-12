@@ -1,0 +1,56 @@
+$FA 	Get WiFi Status
+===================================================
+
+Description
+
+Return the WiFi Status, this is currently equivalent to sending a $53 'S', returns a single byte.
+
+Return values
+Offset 	Description
+0 	WiFi Status
+
+WiFi Status Values
+
+Value 	Description
+0 	WIFI is idle
+1 	No SSID Available
+2 	Scan Completed
+3 	Connected to network, and active
+4 	Last connect failed
+5 	WiFi Connection Lost
+6 	WiFi explicitly disconnected
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$FA
+DSTATS 	$40
+DBUF 	Pointer to 1 byte for status buffer.
+DTIMLO 	$0F
+DBYT 	1
+DAUX1 	0
+DAUX2 	0
+
+Examples
+CC65
+
+unsigned char wifiStatus;
+
+/**
+ * Get WiFi Network Status
+ */
+unsigned char config_get_wifi_status(void)
+{
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xFA; // Return wifi status
+  OS.dcb.dstats=0x40; // Peripheral->Computer
+  OS.dcb.dbuf=&wifiStatus;
+  OS.dcb.dtimlo=0x0F; // 15 second timeout
+  OS.dcb.dbyt=1;
+  OS.dcb.daux1=0;
+  siov();
+
+  return OS.dcb.dstats;
+}

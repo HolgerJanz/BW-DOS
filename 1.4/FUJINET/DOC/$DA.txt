@@ -1,0 +1,40 @@
+$DA 	Get Device Slot Filename
+===================================================
+
+Description
+
+Gets the filename for a given device slot.
+
+DAUX1 specifies the device slot to perform the operation on.
+
+DAUX1 value 0x1A selects the cassette tape slot.
+
+Parameters
+DCB 	Value
+DDEVIC 	$70
+DUNIT 	$01
+DCOMND 	$DA
+DSTATS 	$40
+DBUF 	256 byte buffer to hold full path
+DTIMLO 	$0F
+DBYT 	256
+DAUX1 	Slot $00-$07 for disks, $1A for tape
+
+Examples
+CC65
+
+/**
+ * Set filename for device slot
+ */
+void fuji_sio_get_filename_for_device_slot(unsigned char slot, const char* filename)
+{
+  OS.dcb.ddevic=0x70;
+  OS.dcb.dunit=1;
+  OS.dcb.dcomnd=0xDA;
+  OS.dcb.dstats=0x40;
+  OS.dcb.dbuf=filename;
+  OS.dcb.dtimlo=0x0F;
+  OS.dcb.dbyt=256;
+  OS.dcb.daux1=slot;
+  siov();
+}
