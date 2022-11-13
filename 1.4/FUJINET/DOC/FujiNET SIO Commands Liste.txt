@@ -1,4 +1,4 @@
-Command	TEST	Description
+Command	TEST	Description 2022-11-13
 $B0 		DIAGNOSTIC: Alter SIO Timing for T0
 $B1 		DIAGNOSTIC: Alter SIO Timing for T1
 $B2 		DIAGNOSTIC: Alter SIO Timing for T2
