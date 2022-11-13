@@ -1,46 +1,51 @@
-Command	TEST	Description 2022-11-13
-$B0 		DIAGNOSTIC: Alter SIO Timing for T0
-$B1 		DIAGNOSTIC: Alter SIO Timing for T1
-$B2 		DIAGNOSTIC: Alter SIO Timing for T2
-$B3 		DIAGNOSTIC: Alter SIO Timing for T3
-$B4 		DIAGNOSTIC: Alter SIO Timing for T4
-$B5 		DIAGNOSTIC: Alter SIO Timing for T5
+Version 2022-11-13
+==================
+
+
+Command	TEST	Description
+---------------------------------------------------------------------------
+$B0		DIAGNOSTIC: Alter SIO Timing for T0
+$B1		DIAGNOSTIC: Alter SIO Timing for T1
+$B2		DIAGNOSTIC: Alter SIO Timing for T2
+$B3		DIAGNOSTIC: Alter SIO Timing for T3
+$B4		DIAGNOSTIC: Alter SIO Timing for T4
+$B5		DIAGNOSTIC: Alter SIO Timing for T5
 $D6	OK	Set Boot Mode
-$D7 	Hmm	Mount All
-$D8 		Copy File
-$D9 	OK	Enable/Disable CONFIG in D1:
-$DA 	OK	Get Device Slot Filename
-$DB 		Close App Key
-$DC 		Open App Key
-$DD 		Read App Key
-$DE 		Write App Key
-$DF 		Set External SIO Clock
-$E0 		Get Host Prefix
-$E1 		Set Host Prefix
-$E2 		Set Filename for Device Slot
+$D7	Hmm	Mount All
+$D8		Copy File
+$D9	OK	Enable/Disable CONFIG in D1:
+$DA	OK	Get Device Slot Filename
+$DB		Close App Key
+$DC		Open App Key
+$DD		Read App Key
+$DE		Write App Key
+$DF		Set External SIO Clock
+$E0		Get Host Prefix
+$E1		Set Host Prefix
+$E2		Set Filename for Device Slot
 $E3	=	Set HSIO Index
 $E4	=	Set Directory Position
-$E5 		Get Directory Position
+$E5		Get Directory Position
 $E6	*	Unmount Host
-$E7 		New Disk
+$E7		New Disk
 $E8	=	Get Adapter Config
-$E9 		Unmount Device Image
-$F0 		Enable UDPStream mode
+$E9		Unmount Device Image
+$F0		Enable UDPStream mode
 $F1	=	Write Device Slots
 $F2	=	Read Device Slots
-$F3 		Write Host Slots
-$F4 		Read Host Slots
-$F5 		Close Directory
-$F6 		Read Directory
-$F7 		Open Directory
-$F8 		Mount Device Image
-$F9 		Mount Host
-$FA 		Get WiFi Status
-$FB 		Set SSID and Connect
-$FC 		Get Scan Result
-$FD 		Scan Networks
+$F3		Write Host Slots
+$F4		Read Host Slots
+$F5		Close Directory
+$F6		Read Directory
+$F7		Open Directory
+$F8		Mount Device Image
+$F9		Mount Host
+$FA		Get WiFi Status
+$FB		Set SSID and Connect
+$FC		Get Scan Result
+$FD		Scan Networks
 $FE	=	Get SSID
-$FF 		Reset FujiNet
+$FF		Reset FujiNet
 
 Die mit "OK" funktionieren und das so, wie beschrieben.
 Die mit "=", da hat Thom die Beschreibungsdaten korrigiert:
