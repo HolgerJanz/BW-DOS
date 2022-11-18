@@ -46,7 +46,7 @@ _bufoff ldx $ffff
         dex
         jmp sslt
 badpara jsr _print
-        dta c'Usage: FCD <slot#1..8> [path]',b($9b,$00)
+        dta b($9b),c'Usage: FCD <slot#1..8> [path]',b($9b,$00)
         ldy #$9C ; Bad Parameter
         jmp SD_FAIL
 * set slot

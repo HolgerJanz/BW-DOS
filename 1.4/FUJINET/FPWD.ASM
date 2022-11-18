@@ -42,7 +42,7 @@ _bufoff ldx $ffff
         cmp #$9b
         beq sslt
 badpara jsr _print
-        dta c'Usage: FPWD <slot#1..8>',b($9b,$00)
+        dta b($9b),c'Usage: FPWD <slot#1..8>',b($9b,$00)
         ldy #$9C ; Bad Parameter
         jmp SD_FAIL
 * set slot
@@ -55,6 +55,9 @@ do_fcd  ldx <fpwd
         ldy >fpwd
         jsr do_sio
 * print host slot path
+        jsr prneol
+        lda #'/'
+        jsr _putc
         ldx #$00
         stx iter1
 nxtchar lda buffer,X

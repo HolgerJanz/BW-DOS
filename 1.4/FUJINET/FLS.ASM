@@ -46,7 +46,7 @@ _bufoff ldx $ffff
         dex
         jmp sslt
 badpara jsr _print
-        dta c'Usage: FLS <slot#1..8> [path[/pattern]]',b($9b,$00)
+        dta b($9b),c'Usage: FLS <slot#1..8> [path[/pattern]]',b($9b,$00)
         ldy #$9C ; Bad Parameter
         jmp SD_FAIL
 * set slot
@@ -82,6 +82,7 @@ mount   ldx <mounts
         ldy >opendir
         jsr do_sio
 * read directory
+        jmp prneol
 read    lda #$7F
         sta buffer
         sta buffer+1

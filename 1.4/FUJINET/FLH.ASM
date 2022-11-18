@@ -18,6 +18,8 @@ output  lda #$00
         sta iter2
         lda #'1'
         sta slt_num
+        lda #$9b
+        jsr _putc
 
 slt_lp  lda slt_num
         jsr _putc

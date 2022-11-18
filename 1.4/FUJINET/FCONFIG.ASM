@@ -16,7 +16,7 @@ nxtsiod lda siodata,X
 
 * configuration output
 output  jsr _print
-        dta c'           SSID: ',b($00)
+        dta b($9b),c'           SSID: ',b($00)
         ldx <fc_ssid
         ldy >fc_ssid
         lda #fn_ssid_ln

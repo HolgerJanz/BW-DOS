@@ -11,8 +11,10 @@ nxtsiod lda siodata,X
         dex
         bpl nxtsiod
         jsr SD_SIO
-        bpl nxtslt
+        bpl *+5
         jmp SD_FAIL
+        lda #$9b
+        jsr _putc
 
 nxtslt  jsr _print
         dta c'D'
