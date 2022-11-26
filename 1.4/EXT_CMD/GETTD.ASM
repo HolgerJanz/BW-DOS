@@ -27,14 +27,17 @@ nxtout  ldx itdtr
         bcc nxtout
 * print date time
         jsr _print
+        dta b($9b)
 td_out  dta c'dd-mm-yy hh:mm:ss',b($9b,$00)
         rts
+
 itdtr   dta b($00)      ; iter for DATER
 itprn   dta b($00)      ; iter for print
+
 GETTD   jmp (BW_GETTD)
 CONVDC  jmp (BW_CONVDC)
 
-        icl '_CHKBWD14.ICL'
+        icl '_CHKBW14.ICL'
         icl '_PRINT.ICL'
 
         end
