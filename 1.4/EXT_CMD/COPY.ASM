@@ -68,7 +68,9 @@ sd_found    lda DOSVEC
             dta b($9B,$00)
             jmp (DOSVEC)
 * get paths
-par_found   jsr close_123
+par_found   lda #$9b
+            jsr put_char
+            jsr close_123
 * set path1 and path1_fn
             lda #$00
             jsr get_path

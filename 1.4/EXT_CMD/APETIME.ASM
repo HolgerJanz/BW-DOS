@@ -1,9 +1,9 @@
-* Set Clock Using Fuji APE Clock
+* Set Clock Using APE Clock
         icl '_SYSEQU.ICL'
 
         blk dos $3000
         jsr _print
-        dta b($9b),c'APE Time 1.1 ',b($00)
+        dta b($9b),c'APE Time 1.2 ',b($00)
         jsr _chkbwdos14
 * clear DECIN
         lda #$00
@@ -69,7 +69,9 @@ siodata dta b($45,$01)  ; APETIME device and unit
         dta b($0f)      ; time out 15s
         dta b($00)      ; unused
         dta a($06)      ; buffer size
-itdtr   dta b($00)      ; AUX1 and iter for DATER
-itprn   dta b($00)      ; AUX2 and iter for print
+        dta b($EE)      ; AUX1
+        dta b($A0)      ; AUX2
+itdtr   dta b($00)      ; iter for DATER
+itprn   dta b($00)      ; iter for print
 
         end
