@@ -25,6 +25,7 @@ RAMSIZ      equ $2e4
 MEMTOP      equ $2e5
 MEMLO       equ $2e7
 SDMCTL      equ $22F
+CH          equ $2fc
 
 DDEVIC      equ $300
 DUNIT       equ $301
@@ -56,6 +57,8 @@ SD_LBUF     equ $3f
 SD_COMFNAM  equ $21
 
 AXLON       equ $CFFF
+
+CONSOL      equ $D01F
 
 PORTB       equ $D301
 

@@ -1,4 +1,5 @@
 * FujiNet FLS List Slot Path Content
+
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
@@ -32,6 +33,8 @@ _bufoff ldx $ffff
         jsr getlbuf
         cmp #' '
         beq *-5
+        cmp #$9b
+        beq prnuse
 * check for slot number
         cmp #'1'
         bcc badpara
@@ -45,10 +48,14 @@ _bufoff ldx $ffff
         bne badpara
         dex
         jmp sslt
-badpara jsr _print
-        dta b($9b),c'Usage: FLS <slot#1..8> [path[/pattern]]',b($9b,$00)
-        ldy #$9C ; Bad Parameter
+* Bad Parameter
+badpara jsr prnuse
+        ldy #$9C
         jmp SD_FAIL
+prnuse  jsr _print
+        dta b($9b),c'Usage: FLS slot# [path[/pattern]]',b($9b,$00)
+        rts
+
 * set slot
 sslt    dey
         tya
@@ -83,10 +90,7 @@ mount   ldx <mounts
         jsr do_sio
 * read directory
         jmp prneol
-read    lda #$7F
-        sta buffer
-        sta buffer+1
-        ldx <readdir
+read    ldx <readdir
         ldy >readdir
         jsr do_sio
 * $7F7F = last entry
@@ -108,6 +112,10 @@ nxtchar lda buffer,X
         bne nxtchar
 prneol  lda #$9b
         jsr _putc
+* check ESC key
+        lda #$1C ; ESC
+        cmp CH
+        beq close
         jmp read
 * close directory
 close   ldx <closdir

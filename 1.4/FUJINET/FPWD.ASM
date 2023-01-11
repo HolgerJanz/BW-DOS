@@ -32,6 +32,8 @@ _bufoff ldx $ffff
         jsr getlbuf
         cmp #' '
         beq *-5
+        cmp #$9b
+        beq prnuse
 * check for slot number
         cmp #'1'
         bcc badpara
@@ -41,10 +43,14 @@ _bufoff ldx $ffff
         jsr getlbuf
         cmp #$9b
         beq sslt
-badpara jsr _print
-        dta b($9b),c'Usage: FPWD <slot#1..8>',b($9b,$00)
-        ldy #$9C ; Bad Parameter
+* Bad Parameter
+badpara jsr prnuse
+        ldy #$9C
         jmp SD_FAIL
+prnuse  jsr _print
+        dta b($9b),c'Usage: FPWD slot#',b($9b,$00)
+        rts
+
 * set slot
 sslt    dey
         tya
@@ -56,8 +62,6 @@ do_fcd  ldx <fpwd
         jsr do_sio
 * print host slot path
         jsr prneol
-        lda #'/'
-        jsr _putc
         ldx #$00
         stx iter1
 nxtchar lda buffer,X

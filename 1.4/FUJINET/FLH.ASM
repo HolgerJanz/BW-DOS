@@ -13,14 +13,13 @@ nxtsiod lda siodata,X
         jsr SD_SIO
         bpl output
         jmp SD_FAIL
-
+* print host slots
 output  lda #$00
         sta iter2
         lda #'1'
         sta slt_num
         lda #$9b
         jsr _putc
-
 slt_lp  lda slt_num
         jsr _putc
         lda #':'
@@ -35,7 +34,6 @@ slt_lp  lda slt_num
         adc #fn_hslt_ln
         sta iter2
         bne slt_lp
-
         rts
 
 * print characters

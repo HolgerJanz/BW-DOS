@@ -10,7 +10,6 @@
 clr_buf sta buffer,X
         inx
         bne clr_buf
-* parse parameter
 * get BUFOFF
         clc
         lda DOSVEC
@@ -27,35 +26,46 @@ clr_buf sta buffer,X
         lda DOSVEC+1
         adc #$00
         sta getlbuf+2
-* parse
+* parse parameter
 _bufoff ldx $ffff
-        jsr getlbuf
-        cmp #' '
-        beq *-5
+        jsr trim
+        cmp #$9b
+        beq prnuse
 * check for slot number
         cmp #'1'
         bcc badpara
         cmp #'9'
         bcs badpara
-        tay
-        jsr getlbuf
-        cmp #' '
-        beq sslt
-        cmp #$9b
-        bne badpara
+* set slot number
+        and #$0F
+        sec
+        sbc #$01
+        sta fcdslt
+        jsr trim
+* if / first char then reset path
+        cmp #'/'
+        bne chkpth
+        txa
+        pha
+        jsr do_fcd
+        pla
+        tax
         dex
-        jmp sslt
-badpara jsr _print
-        dta b($9b),c'Usage: FCD <slot#1..8> [path]',b($9b,$00)
+        jmp spth
+* check path
+chkpth  dex
+        jmp spth
+
+* bad parameter print usage
+badpara jsr prnuse
         ldy #$9C ; Bad Parameter
         jmp SD_FAIL
-* set slot
-sslt    dey
-        tya
-        and #$0F
-        sta fcdslt
+prnuse  jsr _print
+        dta b($9b),c'Usage: FCD slot# [path]',b($9b,$00)
+        rts
+
 * set path in buffer for CD
-        ldy #$00
+spth    ldy #$00
 nxtlbuf jsr getlbuf
         cmp #$9b
         beq do_fcd
@@ -71,6 +81,12 @@ do_fcd  ldx <fcd
 * get next char from command line
 getlbuf lda $ffff,X
         inx
+        rts
+
+* trim spaces
+trim    jsr getlbuf
+        cmp #' '
+        beq *-5
         rts
 
 * set DCB and call SIO
