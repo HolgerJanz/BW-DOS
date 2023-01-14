@@ -21,6 +21,7 @@ RTCLOK      equ $12
 CRITIC      equ $42
 RAMTOP      equ $6a
 
+SHPDVS      equ $248
 RAMSIZ      equ $2e4
 MEMTOP      equ $2e5
 MEMLO       equ $2e7
@@ -81,6 +82,7 @@ SD_COMFNAM  equ $21
 
 AXLON       equ $CFFF
 
+PDVS        equ $D1FF
 PORTB       equ $D301
 
 DMACTL      equ $D400 
