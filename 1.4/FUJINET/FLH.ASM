@@ -1,18 +1,14 @@
-* FujiNet FLH List Hosts
+* FujiNet FLH list host slots
+
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
         blk dos $3000
         jsr _chksdos
-* read config via SIO
-        ldx #$0b
-nxtsiod lda siodata,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl output
-        jmp SD_FAIL
+* read host slots
+        ldx <siodata
+        ldy >siodata
+        jsr _dosio
 * print host slots
 output  lda #$00
         sta iter2
@@ -57,18 +53,18 @@ prneol  lda #$9b
 * DCB data for Fuji
 siodata dta b($70,$01)  ; FujiNet device and unit
         dta b($F4)      ; Command READ HOST SLOTS
-siostat dta b($40)      ; status
+        dta b($40)      ; status
         dta a(host_s)   ; host slots buffer
         dta b($10)      ; time out
         dta b($00)      ; unused
-siobsz  dta a(host_sl)  ; buffer size
+        dta a(host_sl)  ; buffer size
         dta b($00)      ; AUX1
         dta b($00)      ; AUX2
 
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
 
 * buffer for SIO GET HOST SLOTS ($100 aligned)
 host_sl equ fn_hslt_ln*8

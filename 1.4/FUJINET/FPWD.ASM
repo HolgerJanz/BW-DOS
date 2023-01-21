@@ -1,4 +1,5 @@
 * FujiNet FPWD Print Slot Path
+
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
@@ -11,27 +12,8 @@ clr_buf sta buffer,X
         inx
         bne clr_buf
 * parse parameter
-* get BUFOFF
-        clc
-        lda DOSVEC
-        adc #SD_BUFOFF
-        sta _bufoff+1
-        lda DOSVEC+1
-        adc #$00
-        sta _bufoff+2
-* get LBUF
-        clc
-        lda DOSVEC
-        adc #SD_LBUF
-        sta getlbuf+1
-        lda DOSVEC+1
-        adc #$00
-        sta getlbuf+2
-* parse
-_bufoff ldx $ffff
-        jsr getlbuf
-        cmp #' '
-        beq *-5
+        jsr _lbinit
+        jsr _lbtrim
         cmp #$9b
         beq prnuse
 * check for slot number
@@ -40,15 +22,16 @@ _bufoff ldx $ffff
         cmp #'9'
         bcs badpara
         tay
-        jsr getlbuf
+        jsr _lbget
         cmp #$9b
         beq sslt
 * Bad Parameter
 badpara jsr prnuse
         ldy #$9C
-        jmp SD_FAIL
+        jmp _fail
 prnuse  jsr _print
-        dta b($9b),c'Usage: FPWD slot#',b($9b,$00)
+        dta b($9b),c'Vers 19-01-2023',b($9b)
+        dta c'Usage: FPWD slot#',b($9b,$00)
         rts
 
 * set slot
@@ -59,7 +42,7 @@ sslt    dey
 * get host slot path
 do_fcd  ldx <fpwd
         ldy >fpwd
-        jsr do_sio
+        jsr _dosio
 * print host slot path
         jsr prneol
         ldx #$00
@@ -75,24 +58,6 @@ nxtchar lda buffer,X
 prneol  lda #$9b
         jmp _putc
 
-* get next char from command line
-getlbuf lda $ffff,X
-        inx
-        rts
-
-* set DCB and call SIO
-do_sio  stx nxtsiod+1
-        sty nxtsiod+2
-        ldx #$0b
-nxtsiod lda $FFFF,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl *+5
-        jmp SD_FAIL
-        rts
-
 * DCB data for Fuji GET SLOT PREFIX (PATH)
 fpwd    dta b($70,$01)  ; FujiNet device and unit
         dta b($E0)      ; Command GET SLOT PREFIX
@@ -104,10 +69,11 @@ fpwd    dta b($70,$01)  ; FujiNet device and unit
 fpwdslt dta b($00)      ; AUX1 slot number
         dta b($00)      ; AUX2
 
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
+        icl '_SDLBUF.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
 
 iter1   equ *
 * device slots buffer

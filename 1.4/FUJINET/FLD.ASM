@@ -1,4 +1,5 @@
 * FujiNet FLD List Devices
+
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
@@ -7,7 +8,7 @@
 * read config via SIO
         ldx <siorslt
         ldy >siorslt
-        jsr do_sio
+        jsr _dosio
 * print device slot
         lda #$9b
         jsr _putc
@@ -39,7 +40,7 @@ slt_mod dta c'z)'
 * get file name
         ldx <siogfnm
         ldy >siogfnm
-        jsr do_sio
+        jsr _dosio
 * print file name
         ldx #$00
         stx iter1
@@ -70,19 +71,6 @@ prneol  lda #$9b
         bcc nxtslt
         rts
 
-* set DCB and call SIO
-do_sio  stx nxtsiod+1
-        sty nxtsiod+2
-        ldx #$0b
-nxtsiod lda $FFFF,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl *+5
-        jmp SD_FAIL
-        rts
-
 * DCB data for Fuji
 siorslt dta b($70,$01)  ; FujiNet device and unit
         dta b($F2)      ; Command READ DEVICE SLOTS
@@ -105,10 +93,10 @@ siogfnm dta b($70,$01)  ; FujiNet device and unit
 fgnmslt dta b($00)      ; slot number
         dta b($00)      ; AUX2
 
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
 
 * device slots buffer
 dev_sl  equ fn_devs_ln*8

@@ -13,25 +13,8 @@
         dex
         bpl *-4
 *  parse parameter
-*  get BUFOFF
-        clc
-        lda DOSVEC
-        adc #SD_BUFOFF
-        sta _bufoff+1
-        lda DOSVEC+1
-        adc #$00
-        sta _bufoff+2
-*  get LBUF
-        clc
-        lda DOSVEC
-        adc #SD_LBUF
-        sta getlbuf+1
-        lda DOSVEC+1
-        adc #$00
-        sta getlbuf+2
-*  parse parameter
-_bufoff ldx $ffff
-        jsr trim
+        jsr _lbinit
+        jsr _lbtrim
         cmp #$9b
         bne *+5
         jmp prnhlp
@@ -41,17 +24,17 @@ _bufoff ldx $ffff
         cmp #'d'
         beq getdnum
         bne badpara
-getdnum jsr getlbuf
+getdnum jsr _lbget
         cmp #'1'
         bcc badpara
         cmp #'9'
         bcs badpara
         jsr getnum
         sta devslt
-        jsr getlbuf
+        jsr _lbget
         cmp #':'
         bne badpara
-        jsr trim
+        jsr _lbtrim
 *  no further parameter => unmount
         cmp #$9b
         bne *+5
@@ -63,7 +46,7 @@ getdnum jsr getlbuf
         bcs badpara
         jsr getnum
         sta hstslt
-        jsr trim
+        jsr _lbtrim
 *  check mount mode
         ldy #$01
         cmp #'R'
@@ -77,21 +60,21 @@ getdnum jsr getlbuf
         bne badpara
 mwrite  iny
 mread   sty mmode
-        jsr trim
+        jsr _lbtrim
 *  check file name
         ldy #$00
 fnamlp  cmp #$9b
         beq mount
         sta fname,Y
         iny
-        jsr getlbuf
+        jsr _lbget
         jmp fnamlp
 * error bad parameter
 badpara jsr prnhlp
         ldy #$9C ; Bad Parameter
-        jmp SD_FAIL
+        jmp _fail
 prnhlp  jsr _print
-        dta b($9b),c'Vers 04-01-2023',b($9b)
+        dta b($9b),c'Vers 19-01-2023',b($9b)
         dta c'Usage: FMOUNT D#: [slot# R|W file]',b($9b,$00)
         rts
         
@@ -110,7 +93,7 @@ mount   lda #$00
         dta c'mount host slot',b($9b,$00)
         ldx <siohmnt
         ldy >siohmnt
-        jsr do_sio
+        jsr _dosio
 *  set device slot
 *   calc address
         ldx devslt
@@ -147,7 +130,7 @@ sdsadr  sta devslts,X
         sta fnamsm
         ldx <siosfnm
         ldy >siosfnm
-        jsr do_sio
+        jsr _dosio
 *  mount device
         jsr _print
         dta c'mount device slot',b($9b,$00)
@@ -157,7 +140,7 @@ sdsadr  sta devslts,X
         sta dmntmod
         ldx <siodmnt
         ldy >siodmnt
-        jsr do_sio
+        jsr _dosio
         rts
 
 * unmont disk slot
@@ -170,7 +153,7 @@ unmount jsr rddslt
         sta unmntsl
         ldx <sioumnt
         ldy >sioumnt
-        jsr do_sio
+        jsr _dosio
 *  set slot unmounted
 *  calc slot addr
         ldx devslt
@@ -202,25 +185,14 @@ rddslt  jsr _print
         dta b($9b),c'read device slots',b($9b,$00)
         ldx <siordev
         ldy >siordev
-        jmp do_sio
+        jmp _dosio
 
 * write device slots
 wrdslt  jsr _print
         dta c'write device slots',b($9b,$00)
         ldx <siowdev
         ldy >siowdev
-        jmp do_sio
-
-* get next char from command line
-getlbuf lda $ffff,X
-        inx
-        rts
-
-* trim spaces
-trim    jsr getlbuf
-        cmp #' '
-        beq *-5
-        rts
+        jmp _dosio
 
 * get number ATASCII 1..8 => HEX 0..7
 getnum  and #$0F
@@ -228,23 +200,11 @@ getnum  and #$0F
         sbc #$01
         rts
 
-* set DCB and call SIO
-do_sio  stx nxtsiod+1
-        sty nxtsiod+2
-        ldx #$0b
-nxtsiod lda $FFFF,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl *+5
-        jmp SD_FAIL
-        rts
-
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
+        icl '_SDLBUF.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
 
 * DCB data for FujiNet
 * read device slots

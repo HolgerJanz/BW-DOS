@@ -1,21 +1,16 @@
-* FujiNet FCONFIG 
+* FujiNet FCONFIG read and print configuration
+
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
         blk dos $3000
         jsr _chksdos
 * read config via SIO
-        ldx #$0b
-nxtsiod lda siodata,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl output
-        jmp SD_FAIL
-
+        ldx <siocfg
+        ldy >siocfg
+        jsr _dosio
 * configuration output
-output  jsr _print
+        jsr _print
         dta b($9b),c'           SSID: ',b($00)
         ldx <fc_ssid
         ldy >fc_ssid
@@ -66,7 +61,7 @@ output  jsr _print
         jsr prnmac
 
         jsr _print
-        dta c'FCONFIG Version: 1.0 06-11-2022',b($9b,$00)
+        dta c'FCONFIG Version: 1.1 19-01-2023',b($9b,$00)
 
         jsr _print
         dta c'  Fuji Firmware: ',b($00)
@@ -78,13 +73,13 @@ output  jsr _print
         rts
 
 * DCB data for Fuji get adapter config
-siodata dta b($70,$01)  ; FujiNet device and unit
+siocfg  dta b($70,$01)  ; FujiNet device and unit
         dta b($E8)      ; Command GET ADAPTER CONFIG
-siostat dta b($40)      ; status
+        dta b($40)      ; status
         dta a(fconfig)  ; CONFIG buffer
         dta b($10)      ; time out
         dta b($00)      ; unused
-siobsz  dta a(fconf_e-fconfig) ; buffer size
+        dta a(fconf_e-fconfig) ; buffer size
         dta b($00)      ; AUX1
         dta b($00)      ; AUX2
 
@@ -107,12 +102,13 @@ prneol  lda #$9b
         jmp _putc
 
 * print IP address
+* address: X,Y
 prnip   stx nxtipp+1
         sty nxtipp+2
         ldx #$00
         stx iter1
 nxtipp  lda $ffff,X
-        jsr SD_PUTDEC
+        jsr _putdec
         inc iter1
         ldx iter1
         cpx #$04
@@ -123,6 +119,7 @@ nxtipp  lda $ffff,X
         jmp nxtipp
 
 * print MAC
+* address: X,Y
 prnmac  stx nxtmacp+1
         sty nxtmacp+2
         ldx #$00
@@ -144,10 +141,10 @@ nxtmacp lda $ffff,X
         ldx iter1
         jmp nxtmacp
 
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
         icl '_CONVH2A.ICL'
 
 * data declaration

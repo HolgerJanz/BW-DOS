@@ -12,27 +12,8 @@ clr_buf sta buffer,X
         inx
         bne clr_buf
 * parse parameter
-* get BUFOFF
-        clc
-        lda DOSVEC
-        adc #SD_BUFOFF
-        sta _bufoff+1
-        lda DOSVEC+1
-        adc #$00
-        sta _bufoff+2
-* get LBUF
-        clc
-        lda DOSVEC
-        adc #SD_LBUF
-        sta getlbuf+1
-        lda DOSVEC+1
-        adc #$00
-        sta getlbuf+2
-* parse
-_bufoff ldx $ffff
-        jsr getlbuf
-        cmp #' '
-        beq *-5
+        jsr _lbinit
+        jsr _lbtrim
         cmp #$9b
         beq prnuse
 * check for slot number
@@ -41,7 +22,7 @@ _bufoff ldx $ffff
         cmp #'9'
         bcs badpara
         tay
-        jsr getlbuf
+        jsr _lbget
         cmp #' '
         beq sslt
         cmp #$9b
@@ -51,9 +32,10 @@ _bufoff ldx $ffff
 * Bad Parameter
 badpara jsr prnuse
         ldy #$9C
-        jmp SD_FAIL
+        jmp _fail
 prnuse  jsr _print
-        dta b($9b),c'Usage: FLS slot# [path[/pattern]]',b($9b,$00)
+        dta b($9b),c'Vers 19-01-2023',b($9b)
+        dta c'Usage: FLS slot# [path[/pattern]]',b($9b,$00)
         rts
 
 * set slot
@@ -66,7 +48,7 @@ sslt    dey
         sta closslt
 * set path in buffer for open directory
         ldy #$00
-nxtlbuf jsr getlbuf
+nxtlbuf jsr _lbget
         cmp #$9b
         beq spatt
         sta buffer,Y
@@ -83,16 +65,16 @@ setnul  lda #$00
 * mount host slot
 mount   ldx <mounts
         ldy >mounts
-        jsr do_sio
+        jsr _dosio
 * open directory
         ldx <opendir
         ldy >opendir
-        jsr do_sio
+        jsr _dosio
 * read directory
         jmp prneol
 read    ldx <readdir
         ldy >readdir
-        jsr do_sio
+        jsr _dosio
 * $7F7F = last entry
         lda buffer
         cmp #$7F
@@ -120,25 +102,7 @@ prneol  lda #$9b
 * close directory
 close   ldx <closdir
         ldy >closdir
-        jsr do_sio
-        rts
-
-* get next char from command line
-getlbuf lda $ffff,X
-        inx
-        rts
-
-* set DCB and call SIO
-do_sio  stx nxtsiod+1
-        sty nxtsiod+2
-        ldx #$0b
-nxtsiod lda $FFFF,X
-        sta DDEVIC,X
-        dex
-        bpl nxtsiod
-        jsr SD_SIO
-        bpl *+5
-        jmp SD_FAIL
+        jsr _dosio
         rts
 
 * DCB data for Fuji MOUNT HOST SLOT
@@ -185,10 +149,11 @@ closdir dta b($70,$01)  ; FujiNet device and unit
 closslt dta b($00)      ; AUX1 slot number
         dta b($00)      ; AUX2
 
+        icl '_PRINT.ICL'
         icl '_CHKSDOS.ICL'
+        icl '_SDLBUF.ICL'
         icl '_SDFAIL.ICL'
         icl '_SDLSIO.ICL'
-        icl '_PRINT.ICL'
 
 iter1   equ *
 * device slots buffer

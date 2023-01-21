@@ -1,5 +1,5 @@
 * print error
-SD_FAIL     tya
+_fail       tya
             pha
             jsr _print
             dta b($9B)
@@ -7,7 +7,7 @@ SD_FAIL     tya
             dta b($00)
 * output error number in decimal
             pla
-            jsr SD_PUTDEC
+            jsr _putdec
             lda #$9B
             jsr _putc
 * stop batch
@@ -18,10 +18,12 @@ SD_FAIL     tya
             lda (DOSVEC),Y
             sta _fxdivio+2
             ldy #$01
-_fxdivio    jsr $ffff
+_fxdivio    jsr COLDSV
             jmp (DOSVEC)
 
-SD_PUTDEC   ldx #$02
+_putdec     ldx #$00
+            stx _chkprez
+            ldx #$02
 _dec_loop   ldy #$00
 _sbc_loop   cmp _decimal,X
             bcc _next_dec
@@ -32,6 +34,11 @@ _next_dec   pha
             txa
             pha
             tya
+* no leading zeros
+            ora _chkprez
+            sta _chkprez
+            beq *+8
+            tya
             ora #$30
             jsr _putc
             pla
@@ -39,7 +46,13 @@ _next_dec   pha
             pla
             dex
             bpl _dec_loop
+            lda _chkprez
+* write 0 if all digit are zero
+            bne *+7
+            lda #'0'
+            jsr _putc
             rts
 
 * array with decimals
+_chkprez    dta b($00)
 _decimal    dta b(1,10,100)
