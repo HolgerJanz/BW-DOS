@@ -77,7 +77,7 @@ prnhlp  jsr _print
         dta b($9b),c'Vers 19-01-2023',b($9b)
         dta c'Usage: FMOUNT D#: [slot# R|W file]',b($9b,$00)
         rts
-        
+
 * mount disk slot
 *  pad file name with null
 mount   lda #$00

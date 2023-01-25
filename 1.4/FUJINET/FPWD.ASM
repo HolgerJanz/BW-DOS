@@ -30,7 +30,7 @@ badpara jsr prnuse
         ldy #$9C
         jmp _fail
 prnuse  jsr _print
-        dta b($9b),c'Vers 19-01-2023',b($9b)
+        dta b($9b),c'Vers 24-01-2023',b($9b)
         dta c'Usage: FPWD slot#',b($9b,$00)
         rts
 
@@ -52,7 +52,6 @@ nxtchar lda buffer,X
         jsr _putc
         inc iter1
         ldx iter1
-        cpx #$00
         bne nxtchar
 * print EOL
 prneol  lda #$9b
