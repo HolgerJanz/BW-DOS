@@ -233,22 +233,22 @@ siowdev dta b($70,$01)  ; FujiNet device and unit
 sioumnt dta b($70,$01)  ; FujiNet device and unit
         dta b($E9)      ; Command UMOUNT DEVICE SLOT
         dta b($00)      ; status
-        dta a($0000)    ; device slots buffer
+        dta a($0000)    ; unused
         dta b($10)      ; time out
         dta b($00)      ; unused
-        dta a($0000)    ; 8 device slots
-unmntsl dta b($00)      ; AUX1
+        dta a($0000)    ; unused
+unmntsl dta b($00)      ; AUX1 device slot
         dta b($00)      ; AUX2
 
 * mount host slot
 siohmnt dta b($70,$01)  ; FujiNet device and unit
         dta b($F9)      ; Command MOUNT HOST SLOT
         dta b($00)      ; status
-        dta a($0000)    ; device slots buffer
+        dta a($0000)    ; unused
         dta b($10)      ; time out
         dta b($00)      ; unused
-        dta a($0000)    ; 8 device slots
-hmntslt dta b($00)      ; AUX1
+        dta a($0000)    ; unused
+hmntslt dta b($00)      ; AUX1 host slot
         dta b($00)      ; AUX2
 
 * set file name for device slot
