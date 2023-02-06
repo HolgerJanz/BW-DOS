@@ -26,6 +26,7 @@ RAMSIZ      equ $2e4
 MEMTOP      equ $2e5
 MEMLO       equ $2e7
 SDMCTL      equ $22F
+CH          equ $2FC
 
 DDEVIC      equ $300
 DUNIT       equ $301
@@ -61,10 +62,12 @@ BW_DECIN    equ $720 ; Input for BW_CONVDC
 BW_WRTCMD   equ $724 ; Writw command P without verify, W with verify
 BW_COMTAB   equ $726 ; Jump to command processor
 BW_CRNAME   equ $729 ; Jump to CRNAME
+BW_BUFOFF   equ $730 ; current offset in BW_LBUF
 BW_DATER    equ $733 ; date for GETTD and SETTD
 BW_TIMER    equ $736 ; time for GETTD and SETTD
 BW_XDIVIO   equ $72E ; address of XDIVIO
 BW_COMFNAM  equ $747 ; result from BW_CRNAME
+BW_LBUF     equ $765 ; command line buffer
 
 * dynamic SpartaDOS variables (relative to DOSVEC)
 * substract
@@ -86,6 +89,7 @@ PDVS        equ $D1FF
 PORTB       equ $D301
 
 DMACTL      equ $D400 
+WSYNC       equ $D40A
 NMIEN       equ $D40E
 
 CIOV        equ $E456
