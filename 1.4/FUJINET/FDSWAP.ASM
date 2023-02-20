@@ -1,11 +1,13 @@
 * FujiNet FDSWAP Swap Drives
 * 2023-02-01, ep
+* 2023-02-20, hj
 * based on a lot of works by Holger Janz
 * v0004
 
         icl '_SYSEQU.ICL'
         icl '_FNEQU.ICL'
 
+* zero page usage
 srcptr  equ $D4              ; FR0.0
 dstptr  equ $D6              ; FR0.2
 
@@ -70,6 +72,8 @@ p3      lda srcdrvid         ; src must not equal dst
         and #$0F
         sta dstdrvnr
 
+        jsr _print
+        dta b($9b),c'read device slots',b($9b,$00)
         ldx <siorslt         ; FN CMD F2: read device slots
         ldy >siorslt
         jsr _dosio
@@ -135,16 +139,23 @@ p52     lda dstdrvst
         bmi p53
         jmp exit
 
-p53     ldx srcdrvnr         ; FN CMD $FA: read source slot filename
+p53     lda srcdrvhs
+        cmp #$FF
+        beq p54
+
+        ldx srcdrvnr         ; FN CMD $FA: read source slot filename
         dex
         stx fgnmslt
         lda <src_fn
         sta fname
         lda >src_fn
         sta fname+1
-        ldx <siogfnm
-        ldy >siogfnm
-        jsr _dosio
+        jsr prnsrc
+        jsr getfnam
+
+p54     lda dstdrvhs
+        cmp #$FF
+        beq p55
 
         ldx dstdrvnr         ; FN CMD $FA: read destination slot filename
         dex
@@ -153,11 +164,10 @@ p53     ldx srcdrvnr         ; FN CMD $FA: read source slot filename
         sta fname
         lda >dst_fn
         sta fname+1
-        ldx <siogfnm
-        ldy >siogfnm
-        jsr _dosio
+        jsr prndst
+        jsr getfnam
 
-        ldy #37              ; swap contents in $F2 table
+p55     ldy #37              ; swap contents in $F2 table
 s1      lda (srcptr),y
         tax
         lda (dstptr),y
@@ -166,33 +176,24 @@ s1      lda (srcptr),y
         sta (dstptr),y
         dey
         bpl s1
+        jsr wrtdsls
 
 * Move SRC (?) TO DST (?)
 
+        jsr prndst
         lda srcdrvhs
         cmp #$FF
         bne x1
         ldx dstdrvnr         ; unmount dest if src was empty
         dex
         stx unmntsl
-        ldx <sioumnt
-        ldy >sioumnt
-        jsr _dosio           ; E9 perform unmount
-        ldx <siowdev
-        ldy >siowdev
-        jsr _dosio           ; F1 write device slots
+        jsr umtdslt
+;        jsr wrtdsls
         jmp x2
 
-x1      nop
-        lda srcdrvhs         ; F9 mount host slot
+x1      lda srcdrvhs         ; F9 mount host slot
         sta hmntslt
-        ldx <siohmnt
-        ldy >siohmnt
-        jsr _dosio
-
-        ldx <siowdev         ; F1 write device slot
-        ldy >siowdev
-        jsr _dosio
+        jsr mnthslt
 
         ldx dstdrvnr         ; E2 set file name for device slot
         dex
@@ -208,45 +209,32 @@ x1      nop
         sta fnamew
         lda >src_fn
         sta fnamew+1
-        ldx <siosfnm
-        ldy >siosfnm
-        jsr _dosio
+        jsr prndst
+        jsr setfnam
 
         ldx dstdrvnr         ; F8 mount device slot
         dex
         stx dmntslt
         lda srcdrvrw
         sta dmntmod
-        ldx <siodmnt
-        ldy >siodmnt
-        jsr _dosio
+        jsr prndst
+        jsr mntdslt
 
 * MOVE DST (?) TO SRC (?)
 
-x2      lda dstdrvhs
+x2      jsr prnsrc
+        lda dstdrvhs
         cmp #$FF
         bne x3
         ldx srcdrvnr         ; unmount src if dest was empty
         dex
         stx unmntsl
-        ldx <sioumnt
-        ldy >sioumnt
-        jsr _dosio           ; perform unmount
-        ldx <siowdev
-        ldy >siowdev
-        jsr _dosio           ; F1 write device slots
-        jmp x4
+        jsr umtdslt
+        jmp exit
 
-x3      nop
-        lda dstdrvhs         ; F9 mount host slot
+x3      lda dstdrvhs         ; F9 mount host slot
         sta hmntslt
-        ldx <siohmnt
-        ldy >siohmnt
-        jsr _dosio
-
-        ldx <siowdev         ; F1 write device slot
-        ldy >siowdev
-        jsr _dosio
+        jsr mnthslt
 
         ldx srcdrvnr         ; E2 set file name for device slot
         dex
@@ -262,20 +250,17 @@ x3      nop
         sta fnamew
         lda >dst_fn
         sta fnamew+1
-        ldx <siosfnm
-        ldy >siosfnm
-        jsr _dosio
+        jsr prnsrc
+        jsr setfnam
 
         ldx srcdrvnr         ; F8 mount device slot
         dex
         stx dmntslt
         lda dstdrvrw
         sta dmntmod
-        ldx <siodmnt
-        ldy >siodmnt
-        jsr _dosio
+        jsr prnsrc
+        jsr mntdslt
 
-x4      nop
 exit    rts                  ; PROGRAM NORMAL EXIT
 
 
@@ -298,6 +283,15 @@ calcptr sec                  ; A must contain drive number
         tax
         rts                  ; X,Y contain address
 
+devsptr dta a(0)
+        dta a(38)
+        dta a(76)
+        dta a(114)
+        dta a(152)
+        dta a(190)
+        dta a(228)
+        dta a(266)
+
 chknum  cmp #'1'
         bcc no_num
         cmp #'9'
@@ -318,6 +312,49 @@ dosio_a lda $FFFF,X
         lda DSTATS
         rts
 
+prnsrc  jsr _print
+        dta c'source',b($00)
+        rts
+
+prndst  jsr _print
+        dta c'destination',b($00)
+        rts
+
+wrtdsls jsr _print
+        dta c'write device slots',b($9b,$00)
+        ldx <siowdev         ; F1 write device slot
+        ldy >siowdev
+        jmp _dosio
+
+getfnam jsr _print
+        dta c' get file name',b($9b,$00)
+        ldx <siogfnm
+        ldy >siogfnm
+        jmp _dosio
+
+setfnam jsr _print
+        dta c' set file name',b($9b,$00)
+        ldx <siosfnm
+        ldy >siosfnm
+        jmp _dosio
+
+mnthslt jsr _print
+        dta c' mount host slot',b($9b,$00)
+        ldx <siohmnt
+        ldy >siohmnt
+        jmp _dosio
+
+umtdslt jsr _print
+        dta c' unmount device slot',b($9b,$00)
+        ldx <sioumnt
+        ldy >sioumnt
+        jmp _dosio           ; E9 perform unmount
+
+mntdslt jsr _print
+        dta c' mount device slots',b($9b,$00)
+        ldx <siodmnt
+        ldy >siodmnt
+        jmp _dosio
 
 * Get SIO Status (CMD $53)
 siorsta dta b($31,$FF)  ; SIO disk drive and drive number
@@ -419,7 +456,7 @@ prnman  jsr _print
         dta c'Checks for other existing drives',b($9b,$00)
 
 prnhlp  jsr _print
-        dta b($9b),c'Version 2023-02-01 (ep)',b($9b)
+        dta b($9b),c'Version 2023-02-20 (ep)',b($9b)
         dta c'Usage: FDSWAP Dx: Dy:',b($9b,$00)
         rts
 
@@ -432,66 +469,44 @@ srceqdst jsr _print
         rts
 
 nofnsrc jsr _print
-        dta b($9b),c'FN no source',b($9B,$00)
+        dta c'source is unmounted',b($9B,$00)
         rts
 
 fnsrc   jsr _print
-        dta b($9b),c'FN source okay',b($9B,$00)
+        dta c'source is mounted',b($9B,$00)
         rts
 
 nofndst jsr _print
-        dta b($9b),c'FN no destination',b($9B,$00)
+        dta c'destination is unmounted',b($9B,$00)
         rts
 
 fndst   jsr _print
-        dta b($9b),c'FN destination okay',b($9B,$00)
+        dta c'destination is mounted',b($9B,$00)
         rts
 
 extsrc  jsr _print
-        dta b($9b),c'External source drive online',b($9B,$00)
+        dta c'external source drive online',b($9B,$00)
         rts
 
 extdst  jsr _print
-        dta b($9b),c'External destination drive online',b($9B,$00)
+        dta c'external destination drive online',b($9B,$00)
         rts
 
-
-
 * Laufwerks-ID, Laufwerksnummer, hslot#, R/W, SIO-Status
-srcdrvid  dta b($00)
-srcdrvnr  dta b($00)
-srcdrvhs  dta b($00)
-srcdrvrw  dta b($00)
-srcdrvst  dta b($00)
+srcdrvid  equ *
+srcdrvnr  equ srcdrvid+1
+srcdrvhs  equ srcdrvnr+1
+srcdrvrw  equ srcdrvhs+1
+srcdrvst  equ srcdrvrw+1
 
-dstdrvid  dta b($00)
-dstdrvnr  dta b($00)
-dstdrvhs  dta b($00)
-dstdrvrw  dta b($00)
-dstdrvst  dta b($00)
+dstdrvid  equ srcdrvst+1
+dstdrvnr  equ dstdrvid+1
+dstdrvhs  equ dstdrvnr+1
+dstdrvrw  equ dstdrvhs+1
+dstdrvst  equ dstdrvrw+1
 
+dev_s     equ dstdrvst+1 ; 304 bytes
+src_fn    equ dev_s+304  ; 256 bytes
+dst_fn    equ src_fn+256 ; 256 bytes
 
-devsptr dta a(0)
-        dta a(38)
-        dta a(76)
-        dta a(114)
-        dta a(152)
-        dta a(190)
-        dta a(228)
-        dta a(266)
-
-dev_s   dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0) ; 304 bytes
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0)
-
-src_fn  dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0) ; 256 bytes
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-
-dst_fn  dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0) ; 256 bytes
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
-        dta f(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+          end
