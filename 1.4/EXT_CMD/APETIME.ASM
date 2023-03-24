@@ -52,7 +52,6 @@ nxtout  ldx itdtr
         jsr _print
 td_out  dta c'dd-mm-yy hh:mm:ss',b($9b,$00)
         rts
-
 * vector for CONVDC
 CONVDC  jmp (BW_CONVDC)
 * vector set date/time

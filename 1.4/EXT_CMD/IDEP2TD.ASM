@@ -16,7 +16,7 @@ IDESTD  equ $D84F
 
         blk dos $3000
         jsr _print
-        dta b($9b),c'IDE+2 TD 1.1 ',b($00)
+        dta b($9b),c'IDE+2 TD 1.2 ',b($00)
         jsr _chkbwdos14
 * clear DECIN
         lda #$00
@@ -43,7 +43,8 @@ loopid  sta PDVS
         cpx #'C'
         bne nextid
         beq initrtc
-nextid  asl
+nextid  inc pbi_nr
+        asl
         bne loopid
 * IDE+2 not found
         lda SHPDVS
@@ -124,6 +125,8 @@ nxtout  ldx itdtr
         bcc nxtout
 * print date time
         jsr _print
+        dta c'PBI#'
+pbi_nr  dta c'0 '
 td_out  dta c'dd-mm-yy hh:mm:ss',b($9b,$00)
         rts
 
