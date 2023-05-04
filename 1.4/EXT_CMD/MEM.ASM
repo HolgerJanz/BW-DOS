@@ -72,7 +72,7 @@ _add_OSRAM  adc #$00
             sta _free+3
             lda BW_DECOUT+7
             sta _free+4
-* RAM varaibles
+* RAM variables
             lda RAMTOP
             jsr convh2a
             sta _ramtop+0
@@ -140,12 +140,29 @@ _add_OSRAM  adc #$00
             ldx #$01
             jsr movh2a
 
-            lda <_chksum-_ramsiz+2
+            lda <_chksum2-_ramsiz+2
             sta $85
             ldx #$01
             jsr movh2a
 
-            lda <_chksum-_ramsiz
+            lda <_chksum2-_ramsiz
+            sta $85
+            ldx #$01
+            jsr movh2a
+
+            lda <CHKSUM1
+            sta $80
+            lda >CHKSUM1
+            sta $81
+            lda #$00
+            sta $82
+
+            lda <_chksum1-_ramsiz+2
+            sta $85
+            ldx #$01
+            jsr movh2a
+
+            lda <_chksum1-_ramsiz
             sta $85
             ldx #$01
             jsr movh2a
@@ -170,8 +187,9 @@ _revnum     dta c'xx DAT='
 _revdat     dta c'xxxxxx XLO='
 _xlxeop     dta c'xx',b($9b)
             dta c'  PN='
-_patnum     dta c'xxxxxxxxxx CHK='
-_chksum     dta c'xxxx'
+_patnum     dta c'xxxxxxxxxx CHK1='
+_chksum1    dta c'xxxx CHK2='
+_chksum2    dta c'xxxx'
             dta b($9b,$00)
 
             rts
@@ -224,7 +242,7 @@ convh2a     sed
 
 * _print subroutine
             icl '_PRINT.ICL'
-            icl '_CHKBWD14.ICL'
+            icl '_CHKBW14.ICL'
 
 * extended memory check
 

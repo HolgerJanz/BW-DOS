@@ -83,6 +83,8 @@ SD_TDOVER   equ $19
 SD_LBUF     equ $3f
 SD_COMFNAM  equ $21
 
+CHKSUM1     equ $c000
+
 AXLON       equ $CFFF
 
 PDVS        equ $D1FF
@@ -100,4 +102,4 @@ REVDAT      equ $ffee
 XLXEOP      equ $fff1
 PATNUM      equ $fff2
 REVNUM      equ $fff7
-CHKSUM      equ $fff8
+CHKSUM2     equ $fff8
