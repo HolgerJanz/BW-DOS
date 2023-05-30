@@ -118,10 +118,10 @@ MC_7        equ $E000
 
 * date and time initial value
 INI_DAY     equ 29
-INI_MONTH   equ 09
-INI_YEAR    equ 22
-INI_HOUR    equ 14
-INI_MINUTE  equ 41
+INI_MONTH   equ 05
+INI_YEAR    equ 23
+INI_HOUR    equ 17
+INI_MINUTE  equ 05
 INI_SECOND  equ 45
 
 * begin address of BW-DOS
@@ -165,7 +165,7 @@ ODATER      dta b(INI_DAY,INI_MONTH,INI_YEAR) ; +19
 OTIMER      dta b(INI_HOUR,INI_MINUTE,INI_SECOND) ; +22
 TDOVER      dta b($00)             ; +25
 TRUN        dta a(_RTS)            ; +26
-            dta a(CIO_BUF)         ; +28 ??? buffer address ???
+            dta a(SIO_BUF)         ; +28 3x256 Bytes SIO buffer
 SMEMLO      dta a(END_ADDR)        ; +30 start up MEMLO
 INCMND      dta b($00)             ; +32 Reset $00-CP $FF-Cart
 COMFNAM     dta c'D1:STARTUP.BAT'  ; +33 28 Bytes
@@ -228,13 +228,17 @@ TXT_DIRY    dta b($9B)
 TXT_DIRI    dta b($C4,$C9,$D2) ; DIR inverse
 TXT_DIRL    dta c'<DIR>'
 TXT_FREE    dta c'free sectors'
+* temp last alloc/delete sector
 L0DE5       dta b($00,$00)
 L0DE7       dta b($00,$00)
-L0DE9       dta b($80)
-            dta c'    '
+* bytes per sec of disk, $80=128 $00=256
+* D0: used for sec 1 always 128
+DSKSECSIZ   dta b($80) ;D0: for sec 1
+            dta b($20,$20,$20,$20) ;D1-4:
 L0DEE       dta c' '
 L0DEF       dta c' '
-L0DF0       dta c'  '
+L0DF0       dta c' '
+            dta b($20) ;DSKSECSIZ D8:
 INIFLAGS    dta b($FF,$FF)
 L0DF4       dta c'DOS       '
 L0DFE       dta c' !'
@@ -279,7 +283,7 @@ _e_found    inx
             jmp LBUF
 dos_iniv    dta a(DOS_INI)
 dos_text    dta b($9B)
-            dta c'BW-DOS 1.4 BEWESOFT 29-09-2022'
+            dta c'BW-DOS 1.4 BEWESOFT 29-05-2023'
             dta b($9B)
 dos_text_e  equ *
 
@@ -342,9 +346,9 @@ L0F49       equ DAT_DEF+$13E
             icl 'XBWCIO1.ICL'
             icl 'XBWCIO2.ICL'
 
-CIO_BUF     equ *
+SIO_BUF     equ *
 
-            blk dos CIO_BUF+$300
+            blk dos SIO_BUF+$300
 * code for low level file management system
             icl 'XBWFMS.ICL'
 

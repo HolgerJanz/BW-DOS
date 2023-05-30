@@ -606,13 +606,13 @@ L16EE       lda L0E40,Y
             bcc L16EE
 L16FD       rts
 
-L16FE       stx L1C2B+1
+SET_SIO_BUF stx L1C2B+1
             lda #$FF
             sta L0F49,X
             txa
             clc
-            adc >CIO_BUF
+            adc >SIO_BUF
             sta L0044
-            lda <CIO_BUF
+            lda <SIO_BUF
             sta L0043
             rts

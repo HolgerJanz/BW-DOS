@@ -168,14 +168,14 @@ L107D       lda #$99
             iny
             lda (L0043),Y
             ldy L0E39
-L1088       sta L0DE9,Y
+L1088       sta DSKSECSIZ,Y
 
             jsr MOVE_CALL
   dta b(MC_cpy+2),l(L0E56-DAT_BUF,L0E6D-DAT_BUF)
   dta h(MC_jsrE+L1114),l(L1114)
 
 L1093       ldy L0E39
-            lda L0DE9,Y
+            lda DSKSECSIZ,Y
             sta L0045
 L109B       ldy #$00
             jsr JSR_SIO
@@ -230,7 +230,7 @@ L10FD       dex
             jsr L110C
             bne L10FD
             bcc L10FD
-L1107       jsr L1B13
+L1107       jsr SIO_W_BUF
             bpl L10FB
 L110C       lda L0F40,X
             eor L0E39

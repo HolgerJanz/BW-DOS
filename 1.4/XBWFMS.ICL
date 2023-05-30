@@ -137,19 +137,20 @@ L1B0C       jsr MOVE_CALL
 
 L1B12       rts
 
-L1B13       lda L0F40,X
+* call SIO
+SIO_W_BUF   lda L0F40,X
             bpl L1B12
             and #$7F
             sta L0F40,X
             tay
-            jsr L16FE
+            jsr SET_SIO_BUF
             lda L0F46,X
             pha
             lda L0F43,X
             tax
             pla
             sec
-L1B2B       sty DUNIT
+SIO_RW      sty DUNIT
             stx DAUX1
             sta DAUX2
             dex
@@ -164,7 +165,7 @@ L1B3B       ldx #'R'
             asl @
 L1B45       stx DCOMND
             sta DSTATS
-            lda L0DE9,Y
+            lda DSKSECSIZ,Y
             sta DBYTLO
             asl @
             rol @
@@ -279,7 +280,7 @@ L1C00       jsr L110C
             bne L1C1C
             tay
             beq L1C5E
-L1C1C       jsr L16FE
+L1C1C       jsr SET_SIO_BUF
             plp
             bcs L1C34
 L1C22       ldy L0045
@@ -310,9 +311,9 @@ L1C51       inx
             cpx #$03
             bcc L1C3F
 L1C56       ldx #$00
-            jsr L1B13
+            jsr SIO_W_BUF
             ldx L1C56+1
-L1C5E       jsr L16FE
+L1C5E       jsr SET_SIO_BUF
             lda L0E39
             sta L0F40,X
             tay
@@ -323,8 +324,9 @@ L1C6D       lda #$00
             plp
             bcc L1C22
             ldx L1C68+1
+* read sector Y=unit, XA=sec
             clc
-            jmp L1B2B
+            jmp SIO_RW
 
 L1C7C       jsr MOVE_CALL
   dta b(MC_cpy+2,L0E3A-DAT_BUF,L0DE5-DAT_BUF)
@@ -336,14 +338,10 @@ L1C7C       jsr MOVE_CALL
             jsr MOVE_CALL
   dta h(MC_jsr+L1C2B),l(L1C2B)
   dta b(MC_cpy+2,L0E03-DAT_BUF,L0E61-DAT_BUF)
-  dta b(MC_cpyE+2,L0E58-DAT_BUF,L0E5F-DAT_BUF)
+* set last alloc to last deleted (L0DE5)
+  dta b(MC_cpyE+2,L0DE5-DAT_BUF,L0E5F-DAT_BUF)
 
-            ldy #$04
-L1C95       lsr L0E5F+1
-            ror L0E5F
-            dey
-            bne L1C95
-
+* increment disk seq number
             jsr ADC_1
             dta a(L0E5A)
 
