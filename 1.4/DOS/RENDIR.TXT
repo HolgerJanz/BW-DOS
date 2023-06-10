@@ -1,0 +1,10 @@
+}
+  RENDIR directory newname
+
+This command allows you to rename a
+directory to newname.
+
+This command was released for SpartaDOS
+by FTe.
+
+See REN for renaming files.

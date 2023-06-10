@@ -1,0 +1,7 @@
+}
+  COLD
+
+This command does a cold start. Before
+the cold start the hard copy and batch
+processing is finished. It is the same
+like power on/off.

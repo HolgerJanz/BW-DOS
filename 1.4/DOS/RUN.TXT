@@ -1,0 +1,14 @@
+}
+  RUN [address]
+
+This command will start a program at
+given adress. With no parameter it'll
+restart the last loaded program, or
+the last program started with this
+command. The address is always in
+hexadecimal. Example:
+
+  RUN E471
+
+This command calls self test vector of
+the OS (XL/XE only).

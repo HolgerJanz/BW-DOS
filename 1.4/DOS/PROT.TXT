@@ -1,0 +1,10 @@
+}
+  PROT file
+
+This command is protecting files from
+been deleted or changed. With
+wildcards you can protect a set of
+files. Command can also protect
+directories. Use commad UNPROT to
+remove protection from file or
+directory.

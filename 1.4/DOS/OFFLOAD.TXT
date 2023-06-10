@@ -1,0 +1,14 @@
+}
+  OFFLOAD file [offset] [/QL]
+
+This external command displays the
+structure of a DOS loadable file. The
+start and end address, and the file
+position of each segment (after the
+header) is displayed.
+
+With the /L parameter it also loadS
+the file into memory, and with /Q it
+askS you for each segment. When an
+offset is specified, it will be added
+to load address of each segment.

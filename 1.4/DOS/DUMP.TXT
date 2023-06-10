@@ -1,0 +1,19 @@
+}
+
+  DUMP file [position [length]] [/A]
+
+This external command displayS contents
+of specified file as hexadecimal and
+ATASCII listing. With the /A parameter
+non printable characters are changed to
+printable ones - use this for printing
+the listing (see the "PRINT" command).
+
+If a position is specified, the listing
+will start from this position. With the
+length parameter, only specified number
+of bytes are displayed.
+
+Press <CONTROL>+<1> to stop the listing
+and for continue, or <ESC> to abort
+this command.

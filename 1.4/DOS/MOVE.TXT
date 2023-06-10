@@ -1,0 +1,15 @@
+}
+  MOVE files [Dn:][path]
+
+This command allows you to move a file
+or subdirectory into another directory
+on the same disk quickly. The
+difference between COPY and MOVE is
+that MOVE removes the file from source
+directory, and is much faster. It also
+doesn't need any free sectors on the
+disk, because it only moves the
+filename into an other directory,
+without copying the file itself.
+
+Command requires 48k main memory.

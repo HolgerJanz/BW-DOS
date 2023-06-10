@@ -1,0 +1,15 @@
+}
+  MEMEDIT address
+
+This external command allows you to
+edit contents of memory. Use this only
+if you know exactly, what you are
+doing. It is possible to cause the
+system to be corrupt, or even to lock
+up with this command.
+
+It'll display position, the old value,
+and you can enter new value
+(hexadecimal), or just press <RETURN>
+to leave it unchanged. Press <ESC> to
+quit this command. 

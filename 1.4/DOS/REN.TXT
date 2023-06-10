@@ -1,0 +1,18 @@
+}
+  REN file filename
+
+This command allows you to rename a
+file specified by "file" parameter to
+new name "filename". You can use wild
+cards in both the names to rename a
+set of files, and to leave specified
+characters in the name unchanged.
+
+For example when you have files
+"TEST" and "BEST", after the command:
+
+  REN ?EST ????S
+
+you'll get files "TESTS" and "BESTS".
+
+See RENDIR for renaming directories.

@@ -1,0 +1,10 @@
+}
+  DIRS [Dn:][path>][filename]
+
+Lists specified files in drive Dn:,
+path, and specified pattern of file
+names. In contrast to DIR the commad
+DIRS uses the Atari DOS 2 style.
+If no file name pattern is specified
+then all files of the current
+directory are listed.

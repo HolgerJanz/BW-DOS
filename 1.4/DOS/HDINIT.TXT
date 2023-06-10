@@ -1,0 +1,14 @@
+}
+  HDINIT
+
+This external command writes an initial
+file system to a mounted hard disk. The
+hard disk must be mounted to drive 3 or
+4. All necessary parameter are ask via
+dialog by the command. <ESC> will abort
+the command at any time.
+
+Command requires 48k main memory.
+
+This command was developed by FTe for
+SpartaDOS 3.

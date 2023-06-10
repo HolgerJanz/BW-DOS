@@ -1,0 +1,8 @@
+}
+  BASIC [ON|OFF]
+
+Switches the internal Basic (XL/XE
+only) on or off. It works only with
+no other cartridge installed. Memory
+(Basic programm) is erased. See command
+CAR to start Basic.

@@ -1,0 +1,12 @@
+}
+  MDUMP address [length] [/A]
+
+This external command displays content
+of memory as hexadecimal and ATASCII
+listing. With the /A parameter non
+printable characters are changed to
+printable ones - use this while
+printing the listing (see the PRINT
+command).
+
+This command uses low memory.

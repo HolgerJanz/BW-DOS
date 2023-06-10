@@ -1,0 +1,6 @@
+}
+  PRINT [device:|file]
+
+Starts hard copy to device or file. If
+no parameter was provided an active
+hard copy is stoped.

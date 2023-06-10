@@ -1,0 +1,22 @@
+}
+  List of Commands
+
+Internal Commands
+  BASIC    CAR      CD       DEL
+  DIR      DIRS     MAN      LOAD
+  MD       PRINT    PROT     RD
+  REN      RUN      TYPE     UNPROT
+External Commands
+  APETIME  BLOAD    BOOT     CHKDSK
+  CHVOL    COLD     COMP     CUT
+  DUMP     EDIT     COPY     DATE
+  DISASS   FA       FDISK    FORMAT
+  GETTD    HDINIT   HEXEDIT  IF
+  MDUMP    MEM      MEMCLEAR MEMEDIT
+  MENU     MOVE     OFFLOAD  PAUSE
+  PERCOM   POKE     RENDIR   SAVE
+  SECOPY   SORTDIR  TIME     VERIFY
+  XEDIT
+Resident Commands (.SYS)
+  CLOCK    IDEP2TD  RAMDISK  RTIME8
+  S3TD     ULTD

@@ -50,12 +50,15 @@ SD_LSIO     equ $0A ; negative offset to SIO vector
 start       jsr pcheck  ; check for parameter 1
             bcs start_poke
 error_msg   jsr PRINT
-            dta c'POKE 1.1',b($9b)
-            dta c'Parameter Error use: POKE aaaa vv[vv]',b($9B)
+            dta b($9b),c'POKE 1.2',b($9b)
+            dta c'Parameter Error',b($9b)
+            dta c'Use: POKE aaaa vv[vv] ...',b($9B)
             dta b($ff)
             rts
 
-start_poke  jsr pget
+start_poke  lda #$00
+            sta flag_word
+            jsr pget
 _error_msg  beq error_msg
 
             ldx #$00            ; get address
@@ -141,7 +144,11 @@ poke_byte   equ *
 c_val1      lda #$00
 c_adr1      sta $ffff
 
-            rts
+            jsr pcheck  ; check for further parameter
+            bcc poke_end
+            jmp start_poke
+
+poke_end    rts
 
 flag_word   dta b($00)
 char1       dta b($00)

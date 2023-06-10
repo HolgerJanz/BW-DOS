@@ -1,0 +1,7 @@
+}
+  DIR [Dn:][path>][filename]
+
+Lists specified files in drive Dn:,
+path, and specified pattern of file
+names. If no file name pattern is
+specified then all files are listed.

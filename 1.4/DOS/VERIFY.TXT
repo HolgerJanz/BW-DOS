@@ -1,0 +1,12 @@
+}
+  VERIFY ON|OFF
+
+This external command switches the
+write with verify option ON or OFF. The
+default is OFF. With option ON every
+sector is read after writing and
+data are compared. This results in a
+very slow writing. It can be useful
+while using bad quality disks. 
+
+Command requires 48k main memory.

@@ -1,0 +1,5 @@
+}
+  CD [Dn:]path
+
+Sets the current working directory to
+drive Dn: and path.

@@ -1,0 +1,6 @@
+}
+  CAR
+
+Runs the cartridge or the internal
+Basic (XL/XE only). See also command
+BASIC.

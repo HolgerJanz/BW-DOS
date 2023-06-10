@@ -1,0 +1,21 @@
+}
+  COPY [Dn:][path>][filename]
+       [Dn:][path>][filename[/A]]
+
+This is the command for copying files.
+It copies file(s) specified by the
+first parameter to file(s) specified by
+the second one. Option /A appends to an
+already existing file. You can use any
+I/O device instead of Dn:.
+
+  COPY K: P:
+Copies the input from keyboard to
+printer.
+
+  COPY E: file
+Creates a new textfile.
+Press <CONTROL>+<3> to finish.
+
+  COPY file P:
+Sends file(s) to printer.

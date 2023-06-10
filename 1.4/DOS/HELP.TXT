@@ -1,0 +1,21 @@
+}
+  BW-DOS 1.4 BEWESOFT 09-06-2023
+
+SpartaDOS 3 compatible DOS
+Minimum 16kB (full function with 48kB)
+https://github.com/HolgerJanz/BW-DOS
+
+For this help:
+  MAN HELP
+
+For list of commands:
+  MAN COMMANDS
+
+For help of specific command:
+  MAN command e.g., MAN DIR
+
+For list of error codes:
+  MAN ERRORS
+
+To configure ramdisk and clock
+  -CONFIG

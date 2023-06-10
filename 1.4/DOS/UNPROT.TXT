@@ -1,0 +1,8 @@
+}
+  UNPROT file
+
+This command removes protection from
+files or directories. With wildcards
+you can unprotect a set of files and
+directories. To protect files or
+directories use command PROT.

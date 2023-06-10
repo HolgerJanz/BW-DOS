@@ -1,0 +1,6 @@
+}
+  LOAD file
+
+This command will simply load a DOS
+loadable file (program). Any init or
+run adress will be ignored.

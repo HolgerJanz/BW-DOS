@@ -1,0 +1,9 @@
+}
+  APETIME
+
+This command reads hardware real
+time clock and sets the BW-DOS clock.
+It works with the SIO clocks supporting
+the APE protocol like SIO2PC and
+FujiNet. Together with CLOCK.SYS it can
+be used for a clock set by SIO clock.

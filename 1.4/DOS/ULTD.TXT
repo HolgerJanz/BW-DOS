@@ -1,0 +1,9 @@
+}
+  ULTD.SYS
+
+This command installs a driver for a
+hardware real time clock. It works with
+the Ultimate 1MB extension designed by
+Sebastian Bartkowicz (Candle OSin) and
+with software by FJC (see
+https://atari8.co.uk/apt/toolkit/).

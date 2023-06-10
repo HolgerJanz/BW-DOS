@@ -1,0 +1,14 @@
+}
+  FDISK
+
+This external tool is an APT (Atari Partition
+Table) editor and has an intuitive
+GUI-style interface.
+
+Any host adapter whose firmware or
+soft-driver follows the APT
+specification will be compatible with
+the APT partition editor FDISK.
+
+This program is programmed by FJC.
+https://atari8.co.uk/apt/

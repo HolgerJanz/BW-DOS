@@ -1,0 +1,5 @@
+}
+  TYPE file
+
+This command shows contents of a file,
+for example text or batch files.

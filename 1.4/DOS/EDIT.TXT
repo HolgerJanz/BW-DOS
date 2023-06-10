@@ -1,0 +1,10 @@
+}
+  EDIT [file]
+
+The external command is a text editor.
+If no file is specified a new one is
+created and the name is specified at
+save. Press <HELP> for in program help.
+
+This program is programmed by FJC
+https://atari8.co.uk

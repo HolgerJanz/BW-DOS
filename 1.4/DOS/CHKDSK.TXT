@@ -1,0 +1,10 @@
+}
+  CHKDSK [Dn:]
+
+This command will display information
+about the disk. It contains: volume
+name, two internal numbers (sequential
+and random - used for disk
+identification), version number of file
+system, size of sectors, and total/free
+disk capacity in bytes.

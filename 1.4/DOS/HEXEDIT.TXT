@@ -1,0 +1,12 @@
+}
+  HEXEDIT file [position]
+
+This external command allows you to
+edit contents of a file. With a
+position specified, the editing will
+start from this position.
+It'll display position in the file,
+the old value, and you can enter new
+value (hexadecimal), or just press
+<RETURN> to leave it unchanged.
+Press <ESC> to quit this command.

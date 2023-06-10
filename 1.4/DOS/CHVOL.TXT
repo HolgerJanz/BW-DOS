@@ -1,0 +1,6 @@
+}
+  CHVOL [Dn:]name
+
+This command will change the volume
+name of disk Dn: or if not specified
+the current drive.

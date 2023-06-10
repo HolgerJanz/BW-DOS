@@ -1,0 +1,15 @@
+}
+  XEDIT [file]
+
+The external command is an editor
+for source code. It supports to
+edit two files at the same time and
+offers some more features for
+development.
+
+If no file is specified a new one is
+created and the name is specified at
+save. Press <HELP> for in program help.
+
+This program is programmed by FJC
+https://atari8.co.uk

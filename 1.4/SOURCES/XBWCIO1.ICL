@@ -14,9 +14,9 @@ JSR_SIO     lda L0F78-$20,Y
 
 * internal CIO code/vectortab
 * low
-*           REN,   DEL,   OPEN,  PROTECT
+*           REN,   DEL,   OPEN,  PROT
 L0F66 dta l(L1CD1V,L1CD1V,L1597V,L1CD1V) ; $20-$23
-*           UNPROTECT,POINT,NOTE,GETFLEN
+*           UNPROT,POINT, NOTE,  GETFLEN
       dta l(L1CD1V,L1432V,L16E9V,L16ECV) ; $24-$27
 *           LOAD,  SAVE,  MD,    RD
       dta l(L1E22V,L1590V,L158AV,L1D1AV) ; $28-$2B

@@ -1,0 +1,18 @@
+}
+  CLEANUP Dn: [/P]
+
+This program is a part of SpartaDOS
+Toolkit, which was released as
+ShareWare. With this program you can
+fix several problems on BW-DOS disks.
+
+Option P switches on the printer for
+report of results.
+
+The format of BW-DOS RamDisks may be
+reported as bad by the CLEANUP program.
+Unfortunately, this program contains a
+bug. To prevent problems, you should
+press <RESET> immediately after
+leaving CLEANUP (under both BW-DOS and
+SpartaDOS).

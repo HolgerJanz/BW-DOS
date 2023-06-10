@@ -1,0 +1,8 @@
+}
+  DEL files
+
+Erases files from disk. Directories
+cannot be erased (see command RD).
+Special characters * (no or many
+characters) and ? (one character)
+can be used for pattern.

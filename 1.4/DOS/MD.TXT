@@ -1,0 +1,7 @@
+}
+  MD [Dn:][path>]name
+
+This command will make a new directory.
+You cannot make a directory with the
+same name as a file in the same
+directory.

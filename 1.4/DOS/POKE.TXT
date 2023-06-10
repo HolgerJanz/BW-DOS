@@ -1,0 +1,20 @@
+}
+  POKE aaaa vv[vv] ...
+
+Writes byte vv or word vvvv to
+memory address aaaa. All parameters
+are hexadecimals. Can be used to change
+system variables.
+
+  POKE 02C6 00
+Writes value $00 to address $2C7 COLOR2
+(sets background color to black).
+
+  POKE 02E7 2050
+Writes value $50 to address $02e7 and
+value $20 to address $02e7+1 (sets
+MEMLO to address $2050).
+
+  POKE 02C6 00 02E7 2050
+A list of address and value can be
+specified.

@@ -24,6 +24,7 @@ WARMST      equ $08
 BOOT        equ $09
 DOSVEC      equ $0A
 DOSINI      equ $0C
+RTCLOK3     equ $14
 
 ICHIDZ      equ $20
 ICDNOZ      equ $21
@@ -71,6 +72,8 @@ CARTFG      equ $BFFD
 
 PORTB       equ $D301
 
+DMACTL      equ $D400
+
 CIOV        equ $E456
 SIOV        equ $E459
 SELFSV      equ $E471
@@ -117,10 +120,10 @@ MC_6        equ $C000
 MC_7        equ $E000
 
 * date and time initial value
-INI_DAY     equ 29
-INI_MONTH   equ 05
+INI_DAY     equ 10
+INI_MONTH   equ 06
 INI_YEAR    equ 23
-INI_HOUR    equ 17
+INI_HOUR    equ 08
 INI_MINUTE  equ 05
 INI_SECOND  equ 45
 
@@ -283,7 +286,7 @@ _e_found    inx
             jmp LBUF
 dos_iniv    dta a(DOS_INI)
 dos_text    dta b($9B)
-            dta c'BW-DOS 1.4 BEWESOFT 29-05-2023'
+            dta c'BW-DOS 1.4 BEWESOFT 10-06-2023'
             dta b($9B)
 dos_text_e  equ *
 

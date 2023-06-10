@@ -1,0 +1,17 @@
+}
+  IF/ELSE/ENDIF
+
+These commands may be used in a batch
+file only. It will ask the user, which
+block of commands should be executed.
+
+The syntax is:
+
+IF
+question
+commands
+ELSE
+commands
+ENDIF
+
+Command requires 48k main memory.

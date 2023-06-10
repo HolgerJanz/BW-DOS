@@ -1,0 +1,19 @@
+}
+  SORTDIR Dn:[path] [/NTSDX]
+
+This external command sorts the entries
+of a specified directory. There are the
+following sort options:
+  N : Sort by Filename (default)
+  T : Sort by File Type
+  S : Sort by File Size
+  D : Sort by Creation Date
+  X : Reverse Sort
+
+The sort order is the order the command
+DIR will display entries.
+
+Command requires 48k main memory.
+
+This command was developed by ICD for
+SpartaDOS 3.

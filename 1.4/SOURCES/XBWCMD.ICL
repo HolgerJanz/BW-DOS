@@ -227,16 +227,11 @@ L08B9       asl @
 INC_PC      stx L08E5+1
             sty L08E7+1
             tsx
-            inx
-            inx
-            inx
-            inc $100,X
-            lda $100,X
-            inx
-            tay
+            inc $103,X
+            ldy $103,X
             bne L08DC
-            inc $100,X
-L08DC       lda $100,X
+            inc $104,X
+L08DC       lda $104,X
             sta L08E2+2
 L08E2       lda $FF00,Y
 L08E5       ldx #$00
@@ -411,9 +406,9 @@ CMD_CAR_V   equ CMD_CAR-1
             inc CARTFG
             cmp CARTFG
             sta CARTFG
-            bne L0A92
+            bne ERR_CAR
             ldx CART
-            bne L0A92
+            bne ERR_CAR
             lda DWARM
             sta WARMST
             stx INCMND
@@ -424,12 +419,17 @@ CMD_CAR_V   equ CMD_CAR-1
 * toggle BASIC
 TOGGLE_BAS  sta BASICF
             php
-
+* close editor screen
             jsr DO_CIO_0
             dta b($0C)
 L0A3A       dta b($10,$08)
 L0A3C       dta b($40,$50)
-
+* prevent garbage screen
+            ldx RTCLOK3
+            cpx RTCLOK3
+            beq *-2
+            sta DMACTL
+* set PORTB
             lda PORTB
             ror @
             ror @
@@ -437,7 +437,9 @@ L0A3C       dta b($40,$50)
 L0A44       rol @
             rol @
             sta PORTB
-            ldx #$CE
+* check RAM, maybe external cartridge
+* TRIG3 cannot be used => OS A/B
+            ldx #$CF
 L0A4B       txa
             sec
             sbc #$10
@@ -447,16 +449,15 @@ L0A4B       txa
             sta (L0043),Y
             eor (L0043),Y
             bne L0A4B
-            sta MEMTOP
-            inx
             inx
             stx RAMSIZ
-            stx MEMTOP+1
             stx RAMTOP
+* reopen editor screen
             jsr DO_CIO
             dta b($80,$18,$03)
 L0A6D       dta a(ERROR2)
 L0A6F       dta a(0)
+* set status (take over from DO_CIO above)
 L0A71       ldx #$00
             stx DWARM
 L0A76       sta L0945+1
@@ -469,7 +470,7 @@ L0A76       sta L0945+1
 CMD_BASIC   lda COMFNAM+3
 CMD_BASIC_V equ CMD_BASIC-1
             cmp #'O'
-            bne L0A92
+            bne ERR_CAR
             lda COMFNAM+4
             cmp #'F'
             beq TOGGLE_BAS
@@ -477,7 +478,7 @@ CMD_BASIC_V equ CMD_BASIC-1
             eor #'N'
             beq TOGGLE_BAS
 * cartridge error
-L0A92       lda #$9C
+ERR_CAR     lda #$9C
 PRN_ERR_A   pha
             jmp PRN_ERR
 
