@@ -1,5 +1,5 @@
 }
-  BW-DOS 1.4 BEWESOFT 09-06-2023
+  BW-DOS 1.4 BEWESOFT 10-06-2023
 
 SpartaDOS 3 compatible DOS
 Minimum 16kB (full function with 48kB)
