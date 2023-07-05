@@ -37,8 +37,8 @@ L0F78 dta h($E000+L1CD1V,$E000+L1CD1V,$8000+L1597V,$E000+L1CD1V) ; $20-$23
       dta h(L128DV,L1296V) ; $30-$31
 
 * CIO D: routines
-SPECIAL     ldy ICCOMZ
-SPECIAL_V   equ SPECIAL-1
+DSPEC     ldy ICCOMZ
+DSPEC_V   equ DSPEC-1
             sta L10DB+1
             tya
             and #$F0
@@ -49,20 +49,20 @@ SPECIAL_V   equ SPECIAL-1
 L0F9B       ldy #$A8 ; not implemented
 L0F9D       rts
 
-OPEN        ldy #$22
-OPEN_V      equ OPEN-1
+DOPEN        ldy #$22
+DOPEN_V      equ DOPEN-1
             dta b(op_BIT_abs)
-CLOSE       ldy #$2D
-CLOSE_V     equ CLOSE-1
+DCLOSE       ldy #$2D
+DCLOSE_V     equ DCLOSE-1
             dta b(op_BIT_abs)
-GETBYTE     ldy #$30
-GETBYTE_V   equ GETBYTE-1
+DGET     ldy #$30
+DGET_V   equ DGET-1
             dta b(op_BIT_abs)
-PUTBYTE     ldy #$31
-PUTBYTE_V   equ PUTBYTE-1
+DPUT     ldy #$31
+DPUT_V   equ DPUT-1
             dta b(op_BIT_abs)
-GETSTAT     ldy #$29
-GETSTAT_V   equ GETSTAT-1
+DSTAT     ldy #$29
+DSTAT_V   equ DSTAT-1
 L0FAC       sta L10DB+1
 L0FAF       cld
             stx L0046
@@ -168,14 +168,14 @@ L107D       lda #$99
             iny
             lda (L0043),Y
             ldy L0E39
-L1088       sta DSKSECSIZ,Y
+L1088       sta SECSIZ,Y
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta b(MC_cpy+2),l(L0E56-DAT_BUF,L0E6D-DAT_BUF)
   dta h(MC_jsrE+L1114),l(L1114)
 
 L1093       ldy L0E39
-            lda DSKSECSIZ,Y
+            lda SECSIZ,Y
             sta L0045
 L109B       ldy #$00
             jsr JSR_SIO
@@ -194,7 +194,7 @@ L10BA       ldy #$01
             bne L10DB
 
 * Error code on stack
-RET_ERRS    jsr INC_PC
+RET_ERRS    jsr GETSTK
             tay
 * Error code in Y
 RET_ERRY    ldx #$00
@@ -273,7 +273,7 @@ L1149       lda L0E4D,Y
             rts
 
 * CHKDSK
-L1154       jsr MOVE_CALL
+L1154       jsr MOV_CAL
 L1154V      equ L1154-1
   dta h(MC_movE+ICBLLZ),l(ICBLLZ),h(MC_2+L1185+1),l(L1185+1)
 
@@ -320,14 +320,14 @@ L1197       lda #$39
 L11A2       jsr CLR_TXT_BUF
             dta b($91)
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta h(MC_jsr+SET_TO_9),l(SET_TO_9)
   dta h(MC_mov+DECOUT+5),l(DECOUT+5),h(MC_3+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12,TXT_FREE-DAT_BUF,L0DA1-DAT_BUF)
+  dta b(MC_cpyE+12,DLFREE-DAT_BUF,L0DA1-DAT_BUF)
 
             beq L1215
 
-L11B4       jsr MOVE_CALL
+L11B4       jsr MOV_CAL
   dta h(MC_mov+L0E5A),l(L0E5A),h(MC_2+DECIN),l(DECIN)
   dta h(MC_jsrE+CONV_16),l(CONV_16)
 
@@ -337,19 +337,19 @@ L11BD       ldx #$00
             jsr CLR_TXT_BUF
             dta b($94)
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta h(MC_mov+DECOUT+2),l(DECOUT+2),h(MC_6+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12,TXT_FREE-DAT_BUF,L0DA4-DAT_BUF)
+  dta b(MC_cpyE+12,DLFREE-DAT_BUF,L0DA4-DAT_BUF)
 
             beq L1215
 
 L11D1       jsr CLR_TXT_BUF
             dta b($12)
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta b(MC_cpyE+11,L0E27-DAT_BUF,L0D9F-DAT_BUF)
 
-L11DB       lda L0E21
+L11DB       lda DIRBUF
             lsr @
             bcc L11E6
             ldx #$2A
@@ -357,11 +357,11 @@ L11DB       lda L0E21
 L11E6       and #$10
             beq L11F0
 
-            jsr MOVE_CALL
-  dta b(MC_cpyE+3,TXT_DIRI-DAT_BUF,L0DA7-DAT_BUF)
+            jsr MOV_CAL
+  dta b(MC_cpyE+3,DLG3TX-DAT_BUF,L0DA7-DAT_BUF)
 
-L11F0       lda L0E21+3
-            ldx L0E21+4
+L11F0       lda DIRBUF+3
+            ldx DIRBUF+4
             ldy L0E26
             jsr L14FD
             cmp #$00
@@ -372,15 +372,15 @@ L11F0       lda L0E21+3
 L1204       stx DECIN
             sty DECIN+1
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta h(MC_jsr+CONV_16),l(CONV_16)
   dta h(MC_jsr+SET_TO_9),l(SET_TO_9)
   dta h(MC_movE+DECOUT+5),l(DECOUT+5),h(MC_3+L0DAB),l(L0DAB)
 
 L1215       beq L1274
 
-L1217       jsr MOVE_CALL
-  dta b(MC_cpy+11,L0D92-DAT_BUF,L0E0B-DAT_BUF)
+L1217       jsr MOV_CAL
+  dta b(MC_cpy+11,DIRNAM-DAT_BUF,SRCHNAM-DAT_BUF)
   dta h(MC_jsrE+L1DBF),l(L1DBF)
 
             bne L11B4
@@ -390,19 +390,19 @@ L1217       jsr MOVE_CALL
             jsr CLR_TXT_BUF
             dta b($24)
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta b(MC_cpy+8,L0E27-DAT_BUF,L0D9D-DAT_BUF)
   dta b(MC_cpy+3,L0E2F-DAT_BUF,L0DA6-DAT_BUF)
-  dta b(MC_cpy+5,TXT_DIRL-DAT_BUF,L0DAA-DAT_BUF)
-  dta b(MC_cpy+1,TXT_DASH-DAT_BUF,L0DB3-DAT_BUF)
-  dta b(MC_cpy+1,TXT_DASH-DAT_BUF,L0DB6-DAT_BUF)
-  dta b(MC_cpyE+1,TXT_PERI-DAT_BUF,L0DBC-DAT_BUF)
+  dta b(MC_cpy+5,DLG3DT-DAT_BUF,L0DAA-DAT_BUF)
+  dta b(MC_cpy+1,DASH-DAT_BUF,L0DB3-DAT_BUF)
+  dta b(MC_cpy+1,DASH-DAT_BUF,L0DB6-DAT_BUF)
+  dta b(MC_cpyE+1,PERIOD-DAT_BUF,L0DBC-DAT_BUF)
 
-            lda L0E21
+            lda DIRBUF
             and #$20
             bne L1253
 
-            jsr MOVE_CALL
+            jsr MOV_CAL
   dta h(MC_mov+L0E24),l(L0E24),h(MC_3+DECIN),l(DECIN)
   dta h(MC_jsr+CONVDC),l(CONVDC)
   dta h(MC_movE+DECOUT+1),l(DECOUT+1),h(MC_7+L0DA9),l(L0DA9)

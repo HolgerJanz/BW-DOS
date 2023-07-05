@@ -1,779 +1,794 @@
 * vector tab for commands called via RTS opcode
-CMD_TAB_L   dta l(CMD_CAR_V,CMD_RUN_V,CMD_PRINT_V,CMD_TYPE_V)
-            dta l(CMD_DIR_V,CMD_DIRS_V,CMD_BASIC_V,CMD_TYPE_V)
-CMD_TAB_H   dta h(CMD_CAR_V,CMD_RUN_V,CMD_PRINT_V,CMD_TYPE_V)
-            dta h(CMD_DIR_V,CMD_DIRS_V,CMD_BASIC_V,CMD_TYPE_V)
+CPACMDL dta l(CPCAR_V,CPRUN_V,CPPRT_V,CPTYP_V)
+        dta l(CPDIR_V,CPDIRS_V,CPBAS_V,CPTYP_V)
+CPACMDH dta h(CPCAR_V,CPRUN_V,CPPRT_V,CPTYP_V)
+        dta h(CPDIR_V,CPDIRS_V,CPBAS_V,CPTYP_V)
 
-CONV_A      sta DECIN
-            lda #$00
-            sta DECIN+1
-CONV_16     lda #$00
-            sta DECIN+2
-* convert digit to char
-CONVDC      ldx #$07
-L072C       stx L074B+1
-            ldx #$18
-            lda #$00
-L0733       asl DECIN
-            rol DECIN+1
-            rol DECIN+2
-            rol @
-            cmp #$0A
-            bcc L0746
-            sbc #$0A
-            inc DECIN
-L0746       dex
-            bne L0733
-            ora #$30
-L074B       ldx #$00
-L074D       sta DECOUT,X
-            dex
-            bmi L07A0
-            lda DECIN
-            ora DECIN+1
-            ora DECIN+2
-            bne L072C
-            lda #$20
-            bne L074D
-L0762       inc BUFOFF
-            dta b(op_BIT_abs)
+* convert hex to dec
+CONV_A  sta DECIN
+        lda #$00
+        sta DECIN+1
+CONV_16 lda #$00
+        sta DECIN+2
+CONVDC  ldx #$07
+COND0   stx CONDI+1
+        ldx #$18
+        lda #$00
+COND1   asl DECIN
+        rol DECIN+1
+        rol DECIN+2
+        rol @
+        cmp #$0A
+        bcc COND2
+        sbc #$0A
+        inc DECIN
+COND2   dex
+        bne COND1
+        ora #$30
+CONDI   ldx #$00
+COND3   sta DECOUT,X
+        dex
+        bmi RET3
+        lda DECIN
+        ora DECIN+1
+        ora DECIN+2
+        bne COND0
+        lda #$20
+        bne COND3
+
 * crunch name
-_CRNAME     lda #$20
-L0768       ldy BUFOFF
-            ldx LBUF,Y
-            cpx #$20
-            beq L0762
-            sta L07C7+1
-            lda #$00
-            sta L07BE+1
-            cpx #$9B
-            beq L0790
-            lda LBUF+1,Y
-            cmp #$9B
-            beq L0790
-            cmp #':'
-            beq L07A1
-L0789       lda LBUF+2,Y
-            cmp #':'
-L078E       beq L0795
-L0790       ldy <PROMPTD-LBUF
-            jsr L07BE
-L0795       ldy BUFOFF
-            jsr L07BE
-            sty BUFOFF
-L079E       cpx #$03
-L07A0       rts
+CRNM2   inc BUFOFF
+        dta b(op_BIT_abs)
+_CRNAME lda #$20
+CRNM00  ldy BUFOFF
+        ldx LBUF,Y
+        cpx #$20
+        beq CRNM2
+        sta CRODDE+1
+        lda #$00
+        sta CROUTI+1
+        cpx #$9B
+        beq CRNM3
+        lda LBUF+1,Y
+        cmp #$9B
+        beq CRNM3
+        cmp #':'
+        beq CRNM5
+        lda LBUF+2,Y
+        cmp #':'
+        beq CRNM4
+CRNM3   ldy <PROMPTD-LBUF
+        jsr CROUTI
+CRNM4   ldy BUFOFF
+        jsr CROUTI
+        sty BUFOFF
+CRNMX   cpx #$03
+RET3    rts
 
-L07A1       inc L07BE+1
-            jsr L0795
-            lda COMFNAM+1
-            sta COMFNAM
-L07AD       lda #$31
-            sta COMFNAM+1
-            bne L079E
-L07B4       sta COMFNAM,X
-            cpx #$1B
-            bcs L07BC
-            inx
-L07BC       iny
-            dta b(op_BIT_abs)
-L07BE       ldx #$00
-            lda LBUF,Y
-            cmp #$9B
-            beq L07CB 
-L07C7       cmp #$20
-            bne L07B4
-L07CB       lda #$9B
-            sta COMFNAM,X
-            stx L07BE+1
-            rts
+CRNM5   inc CROUTI+1
+        jsr CRNM4
+        lda COMFNAM+1
+        sta COMFNAM
+K31     lda #'1'
+        sta COMFNAM+1
+        bne CRNMX
+CRO1    sta COMFNAM,X
+        cpx #$1B
+        bcs CRO1B
+        inx
+CRO1B   iny
+        dta b(op_BIT_abs)
+CROUTI  ldx #$00
+        lda LBUF,Y
+        cmp #$9B
+        beq CRO3 
+CRODDE  cmp #$20
+        bne CRO1
+CRO3    lda #$9B
+        sta COMFNAM,X
+        stx CROUTI+1
+        rts
 
 * HATAB for D:
-HATAB_D     dta a(OPEN_V)
-            dta a(CLOSE_V)
-            dta a(GETBYTE_V)
-            dta a(PUTBYTE_V)
-            dta a(GETSTAT_V)
-            dta a(SPECIAL_V)
+DTABLE  dta a(DOPEN_V)
+        dta a(DCLOSE_V)
+        dta a(DGET_V)
+        dta a(DPUT_V)
+        dta a(DSTAT_V)
+        dta a(DSPEC_V)
 
-DOS_INI     cld
-            lda L0047
-            bne L07F2
-            dec L0047
-            bit INCMND
-            bpl L07F2
-            jsr JMP_DOSDINI
-JMP_COMTAB  jmp COMTAB
+RESET   cld
+        lda L0047
+        bne RESINI
+        dec L0047
+        bit INCMND
+        bpl RESINI
+        jsr RINIT
+CMTAD   jmp COMTAB
 
-L07F2       jsr MOVE_CALL
-  dta h(MC_mov+SMEMLO),l(SMEMLO),h(MC_2+MEMLO),l(MEMLO)
-  dta h(MC_mov+JMP_COMTAB+1),l(JMP_COMTAB+1),h(MC_2+DOSVEC),l(DOSVEC)
-  dta h(MC_movE+INIFLAGS),l(INIFLAGS),h(MC_2+ECHOFLG),l(ECHOFLG)
+RESINI  jsr MOV_CAL
+  dta h(MC_mov+TMEMLO),l(TMEMLO),h(MC_2+MEMLO),l(MEMLO)
+  dta h(MC_mov+CMTAD+1),l(CMTAD+1),h(MC_2+DOSVEC),l(DOSVEC)
+  dta h(MC_movE+KFFFF),l(KFFFF),h(MC_2+ECHOFLG),l(ECHOFLG)
 
-            txa
-L0802       sta L0E4C,X
-            cpx #$97
-            bcc L080C
-            dec L0E3F+1,X
-L080C       inx
-            bne L0802
-            tay
-            dta b(op_BIT_abs)
-L0811       ldy #$07
-L0813       iny
-            tya
-            sta L0E55,X
-            txa
-            clc
-L081A       adc #$1A
-            tax
-            cpy #$04
-            bcc L0813
-            beq L0811
-            ldy #$1E
-L0825       ldx HATABS,Y
-            bne L082B
-            tya
-L082B       cpx #'D'
-            beq L0837
-            dey
-            dey
-            dey
-            bpl L0825
-            tay
-            bmi L0843
-L0837       ldx #$FD
-L0839       lda HATABS_D-$FD,X
-L083C       sta HATABS,Y
-            iny
-            inx
-            bne L0839
-L0843       rts
+* MAZE - LAST1 FCBIOCB (NEVADI)
+*      - SEC1CHG
+*      - DCBs
+*      - FCBs = $FF
+*      - BUFDRIV - BUFTIME
 
-HATABS_D    dta c'D',a(HATAB_D)
+* X=0
+        txa
+RESI1   sta L0E4C,X
+        cpx #$97
+        bcc RESI1B
+        dec L0E3F+1,X
+RESI1B  inx
+        bne RESI1
+* DRIVE# DO DCB (A=0, X=0)
+        tay
+        dta b(op_BIT_abs)
+RESI3   ldy #$07
+RESI4   iny
+        tya
+        sta L0E55,X
+        txa
+        clc
+        adc #$1A
+        tax
+        cpy #$04
+        bcc RESI4
+        beq RESI3
+* A=5*26=130 (->MI)
+        ldy #$1E
+RESI5   ldx HATABS,Y
+        bne RESI6
+        tya
+RESI6   cpx #'D'
+        beq RESI7
+        dey
+        dey
+        dey
+        bpl RESI5
+        tay
+        bmi RET2
+RESI7   ldx #$FD
+RESI8   lda RESITAB-$FD,X
+        sta HATABS,Y
+        iny
+        inx
+        bne RESI8
+RET2    rts
 
-JMP_DOSDINI jmp (DOSINI)
+RESITAB dta c'D',a(DTABLE)
 
-* date time buffer
-DATTIMBUF   dta b(INI_DAY,INI_MONTH,INI_YEAR)
-            dta b(INI_HOUR,INI_MINUTE,INI_SECOND)
+RINIT   jmp (DOSINI)
+
+* default TD
+INTDATE dta b(INI_DAY,INI_MONTH,INI_YEAR)
+        dta b(INI_HOUR,INI_MINUTE,INI_SECOND)
 
 * set time date
-SETTD       jsr MOVE_CALL
-  dta h(MC_movE+DATER),l(DATER),h(MC_6+DATTIMBUF),l(DATTIMBUF)
-
+SETTD   jsr MOV_CAL
+  dta h(MC_movE+DATER),l(DATER),h(MC_6+INTDATE),l(INTDATE)
 * get time data
-GETTD       jsr MOVE_CALL
-  dta h(MC_movE+DATTIMBUF),l(DATTIMBUF),h(MC_6+DATER),l(DATER)
+GETTD   jsr MOV_CAL
+  dta h(MC_movE+INTDATE),l(INTDATE),h(MC_6+DATER),l(DATER)
+RET     rts
 
-_RTS        rts
-
-ADC_L       lda L1488+1
-            dta b(op_BIT_abs)
-ADC_1       lda #$01
-            ldx #op_ADC_imd
-            bne L086D
-SBC_1       lda #$01
-SBC_A       ldx #op_SBC_imd
-L086D       sta L088A+1
-            stx L088A
-            ldx #$FE
-L0875       jsr INC_PC
-            sta L0887+1-$FE,X
-            sta L088C+1-$FE,X
-            inx
-            bne L0875
-            lda L088A
-            asl @
-            dex
-L0886       inx
-L0887       lda $FFFF,X
-L088A       adc #$00
-L088C       sta $FFFF,X
-            stx L088A+1
-            txa
-            beq L0886
-            rts
+ADC_L   lda L1488+1
+        dta b(op_BIT_abs)
+ADC_1   lda #$01
+        ldx #op_ADC_imd
+        bne DIC2
+SBC_1   lda #$01
+SBC_A   ldx #op_SBC_imd
+DIC2    sta DIC6+1
+        stx DIC6
+        ldx #$FE
+DIC3    jsr GETSTK
+        sta DIC5+1-$FE,X
+        sta DIC7+1-$FE,X
+        inx
+        bne DIC3
+        lda DIC6
+        asl @
+        dex
+DIC4    inx
+DIC5    lda $FFFF,X
+DIC6    adc #$00
+DIC7    sta $FFFF,X
+        stx DIC6+1
+        txa
+        beq DIC4
+        rts
 
 * command RUN
-CMD_RUN     bne L089B
-CMD_RUN_V   equ CMD_RUN-1
-L0898       jmp (RUNLOC)
+CPRUN   bne CPR1
+CPRUN_V equ CPRUN-1
+CPRUN2  jmp (RUNLOC)
 
-L089B       jsr MOVE_CALL
-  dta h(MC_movE+L0E00),l(L0E00),h(MC_2+RUNLOC),l(RUNLOC)
+CPR1    jsr MOV_CAL
+  dta h(MC_movE+NULY),l(NULY),h(MC_2+RUNLOC),l(RUNLOC)
 
-L08A2       lda COMFNAM+3,X
-            inx
-            sec
-            sbc #$30
-            cmp #$0A
-            bcc L08B3
-            sbc #$07
-            cmp #$10
-            bcs L0898
-L08B3       asl @
-            asl @
-            asl @
-            asl @
-            ldy #$04
-L08B9       asl @
-            rol RUNLOC
-            rol RUNLOC+1
-            dey
-            bne L08B9
-            beq L08A2
+CPR2    lda COMFNAM+3,X
+        inx
+        sec
+        sbc #$30
+        cmp #$0A
+        bcc CPR3
+        sbc #$07
+        cmp #$10
+        bcs CPRUN2
+CPR3    asl @
+        asl @
+        asl @
+        asl @
+        ldy #$04
+CPR4    asl @
+        rol RUNLOC
+        rol RUNLOC+1
+        dey
+        bne CPR4
+        beq CPR2
 
-INC_PC      stx L08E5+1
-            sty L08E7+1
-            tsx
-            inc $103,X
-            ldy $103,X
-            bne L08DC
-            inc $104,X
-L08DC       lda $104,X
-            sta L08E2+2
-L08E2       lda $FF00,Y
-L08E5       ldx #$00
-L08E7       ldy #$00
-            rts
+* get parameter from stack
+GETSTK  stx GST4+1
+        sty GST5+1
+        tsx
+        inc $103,X
+        ldy $103,X
+        bne GST2
+        inc $104,X
+GST2    lda $104,X
+        sta GST3+2
+GST3    lda $FF00,Y
+GST4    ldx #$00
+GST5    ldy #$00
+        rts
 
-L08EA       jsr INC_PC
-            ldx #$03
-            dta b(op_BIT_abs)
-L08F0       ldx #$00
-            pha
-            and #$1F
-            sta L090D+2,X
-            pla
-            lsr @
-            lsr @
-            lsr @
-            lsr @
-            lsr @
-            sta L090A+1
-            jsr INC_PC
-            sta L090D+1,X
-            txa
-            beq L08EA
-L090A       ldx #$00
-L090C       dex
-L090D       lda $FFFF,X
-            sta $FFFF,X
-            txa
-            bne L090C
-            tya
-            bmi L0968
+UNIUC2  jsr GETSTK
+        ldx #$03
+        dta b(op_BIT_abs)
+UNIUC   ldx #$00
+        pha
+        and #$1F
+        sta UNIUCL+2,X
+        pla
+        lsr @
+        lsr @
+        lsr @
+        lsr @
+        lsr @
+        sta UNIUC1+1
+        jsr GETSTK
+        sta UNIUCL+1,X
+        txa
+        beq UNIUC2
+UNIUC1  ldx #$00
+UNIUC3  dex
+UNIUCL  lda $FFFF,X
+        sta $FFFF,X
+        txa
+        bne UNIUC3
+        tya
+        bmi UNIUCE
 
-MOVE_CALL   jsr L0A76
-L091C       jsr INC_PC
-            tay
-            asl @
-            asl @
-            php
-            tya
-            and #$1F
-            plp
-            bcs L08F0
-            bmi L0949
-            sta L0939+2
-            jsr INC_PC
-            sta L0939+1
-            tya
-            pha
-            jsr L0942
-L0939       jsr L0948
-            jsr L0A76
-            pla
-            bpl L091C
-L0942       lda #$00
-            pha
-L0945       lda #$00
-            plp
-L0948       rts
+MOV_CAL jsr UNISCH
+UNI1    jsr GETSTK
+        tay
+        asl @
+        asl @
+        php
+        tya
+        and #$1F
+        plp
+        bcs UNIUC
+        bmi UNIUCS
+        sta UNI1CL+2
+        jsr GETSTK
+        sta UNI1CL+1
+        tya
+        pha
+        jsr UNIOBN
+UNI1CL  jsr UNIRTS
+        jsr UNISCH
+        pla
+        bpl UNI1
+UNIOBN  lda #$00
+        pha
+UNIA    lda #$00
+        plp
+UNIRTS  rts
 
-L0949       sta L0945+1
-            sty L0964+1
-            jsr INC_PC
-            tax
-            jsr INC_PC
-            tay
-L0957       lda DAT_BUF,X
-            sta DAT_BUF,Y
-            inx
-            iny
-            dec L0945+1
-            bne L0957
-L0964       lda #$00
-            bpl MOVE_CALL
-L0968       ldx #$00
-            rts
+UNIUCS  sta UNIA+1
+        sty UNIUCS3+1
+        jsr GETSTK
+        tax
+        jsr GETSTK
+        tay
+UNIUCS2 lda DAT_BUF,X
+        sta DAT_BUF,Y
+        inx
+        iny
+        dec UNIA+1
+        bne UNIUCS2
+UNIUCS3 lda #$00
+        bpl MOV_CAL
+UNIUCE  ldx #$00
+        rts
 
 * prepare and call CIO
-DO_CIO      jsr INC_PC
-            dta b(op_BIT_abs)
-DO_CIO_0    lda #$C0
-            dta b(op_BIT_abs)
-DO_CIO_1    lda #$04
-DO_CIO_A    sta L0044
-            asl @
-            asl @
-            tax
-            tay
-            bcs L0989
-            jsr INC_PC
-            lsr @
-            sta IOCB0+ICAX1,X
-            lda #$00
-            ror @
-            sta IOCB0+ICAX2,X
-L0989       lda #$67
-            sta L0043
-L098D       jsr INC_PC
-            sta IOCB0+ICCOM,Y
-L0993       iny
-            asl L0043
-            bcc L0993
-            bne L098D
-            lda L0044
-            pha
-            lda #$20
-            jsr CIOV
-            pla
-            tax
-            tya
-            bpl L09C0
-            cmp #$88
-            beq L09C0
-            pha
-            txa
-            pha
-            and #$1C
-            beq L09BC
-            ora #$C0
-            jsr DO_CIO_A
-            dta b($0C)
-L09B8       dta a($0000)
-L09BA       dta a($0000)
-L09BC       pla
-            bpl PRN_ERR
-            pla
-L09C0       tay
-            rts
+CPCIO   jsr GETSTK
+        dta b(op_BIT_abs)
+CPC192  lda #$C0
+        dta b(op_BIT_abs)
+CPC4    lda #$04
+CPCIO1  sta L0044
+        asl @
+        asl @
+        tax
+        tay
+        bcs CPCIO2
+* AUXs
+        jsr GETSTK
+        lsr @
+        sta IOCB0+ICAX1,X
+        lda #$00
+        ror @
+        sta IOCB0+ICAX2,X
+CPCIO2  lda #$67
+        sta L0043
+CPCIO3  jsr GETSTK
+        sta IOCB0+ICCOM,Y
+CPCIO4  iny
+        asl L0043
+        bcc CPCIO4
+        bne CPCIO3
+        lda L0044
+        pha
+        lda #$20
+        jsr CIOV
+        pla
+        tax
+        tya
+        bpl CPCIOX
+        cmp #$88
+        beq CPCIOX
+* ERR
+        pha
+        txa
+        pha
+        and #$1C
+        beq CPCIO8
+        ora #$C0
+        jsr CPCIO1
+        dta b($0C)
+DIOAPUV dta a(0,0)
+CPCIO8  pla
+        bpl CPCER
+        pla
+CPCIOX  tay
+        rts
 
 * print error number
-PRN_ERR     jsr DO_CIO_0
-            dta b($0B)
-            dta a(ERROR1,6)
-            pla
-            jsr CONV_A
-            jsr DO_CIO_0
-            dta b($0B)
-            dta a(DECOUT+4,4)
-            jsr DO_CIO_0
-            dta b($0B)
-            dta a(ERROR1,1)
-            jsr L0B7C
+CPCER   jsr CPC192
+        dta b($0B)
+        dta a(ERRTX,6)
+        pla
+        jsr CONV_A
+        jsr CPC192
+        dta b($0B)
+        dta a(DECOUT+4,4)
+        jsr CPC192
+        dta b($0B)
+        dta a(ERRTX,1)
+        jsr XDIVIO1
 
-* DOS entry
-_COMTAB     cld
-            jsr L0B28
-            stx LMARGN
-            stx TDOVER
-            stx BUFOFF
-            dex
-L09EC       stx INCMND
-            txs
+* command processor
+CP      cld
+        jsr DIOREP
+* X=0
+        stx LMARGN
+        stx TDOVER
+        stx BUFOFF
+        dex
+        stx INCMND
+        txs
 * close IOCB1
-            jsr DO_CIO
-            dta b($C4,$0C)
-L09F5       dta a(L0AAD_V,L0ACA_V)
+        jsr CPCIO
+        dta b($C4,$0C)
+DIOANEW dta a(EGET_V,EPUT_V)
 * print prompt
-            jsr DO_CIO_0
-            dta b($0B)
-            dta a(PROMPT,4)
+        jsr CPC192
+        dta b($0B)
+        dta a(PROMPT,4)
 * get command line
-            jsr DO_CIO
-            dta b($40,$05)
-            dta a(LBUF,$40)
-
-            jsr PARSE_LINE
-            jmp _COMTAB
+        jsr CPCIO
+        dta b($40,$05)
+        dta a(LBUF,$40)
+* execute
+        jsr EXECUTE
+        jmp CP
 
 * Command CAR
-CMD_CAR     lda CARTFG
-CMD_CAR_V   equ CMD_CAR-1
-            inc CARTFG
-            cmp CARTFG
-            sta CARTFG
-            bne ERR_CAR
-            ldx CART
-            bne ERR_CAR
-            lda DWARM
-            sta WARMST
-            stx INCMND
-            dex
-            stx DWARM
-            jmp (CARTCS)
+CPCAR   lda CARTFG
+CPCAR_V equ CPCAR-1
+        inc CARTFG
+        cmp CARTFG
+        sta CARTFG
+        bne CPERR
+        ldx CART
+        bne CPERR
+        lda DWARM
+        sta WARMST
+        stx INCMND
+        dex
+        stx DWARM
+        jmp (CARTCS)
 
 * toggle BASIC
-TOGGLE_BAS  sta BASICF
-            php
+CPBAS2  sta BASICF
+        php
 * close editor screen
-            jsr DO_CIO_0
-            dta b($0C)
-L0A3A       dta b($10,$08)
-L0A3C       dta b($40,$50)
+        jsr CPC192
+        dta b($0C)
+DIO2T1  dta b($10,$08)
+DIO2T2  dta b($40,$50)
 * prevent garbage screen
-            ldx RTCLOK3
-            cpx RTCLOK3
-            beq *-2
-            sta DMACTL
+        ldx RTCLOK3
+        cpx RTCLOK3
+        beq *-2
+        sta DMACTL
 * set PORTB
-            lda PORTB
-            ror @
-            ror @
-            plp
-L0A44       rol @
-            rol @
-            sta PORTB
+        lda PORTB
+        ror @
+        ror @
+        plp
+        rol @
+        rol @
+        sta PORTB
 * check RAM, maybe external cartridge
 * TRIG3 cannot be used => OS A/B
-            ldx #$CF
-L0A4B       txa
-            sec
-            sbc #$10
-            tax
-            stx L0044
-            eor (L0043),Y
-            sta (L0043),Y
-            eor (L0043),Y
-            bne L0A4B
-            inx
-            stx RAMSIZ
-            stx RAMTOP
+        ldx #$CF
+CPBAS2B txa
+        sec
+        sbc #$10
+        tax
+        stx L0044
+        eor (L0043),Y
+        sta (L0043),Y
+        eor (L0043),Y
+        bne CPBAS2B
+        inx
+        stx RAMSIZ
+        stx RAMTOP
 * reopen editor screen
-            jsr DO_CIO
-            dta b($80,$18,$03)
-L0A6D       dta a(ERROR2)
-L0A6F       dta a(0)
-* set status (take over from DO_CIO above)
-L0A71       ldx #$00
-            stx DWARM
-L0A76       sta L0945+1
-            php
-            pla
-            sta L0942+1
-            rts
+        jsr CPCIO
+        dta b($80,$18,$03)
+        dta a(ENAME)
+DIOAPUT dta a(0)
+* set status (take over from CPCIO above)
+NULDW   ldx #$00
+        stx DWARM
+UNISCH  sta UNIA+1
+        php
+        pla
+        sta UNIOBN+1
+        rts
 
 * Command BASIC
-CMD_BASIC   lda COMFNAM+3
-CMD_BASIC_V equ CMD_BASIC-1
-            cmp #'O'
-            bne ERR_CAR
-            lda COMFNAM+4
-            cmp #'F'
-            beq TOGGLE_BAS
-            clc
-            eor #'N'
-            beq TOGGLE_BAS
+CPBAS   lda COMFNAM+3
+CPBAS_V equ CPBAS-1
+        cmp #'O'
+        bne CPERR
+        lda COMFNAM+4
+        cmp #'F'
+        beq CPBAS2
+        clc
+        eor #'N'
+        beq CPBAS2
 * cartridge error
-ERR_CAR     lda #$9C
-PRN_ERR_A   pha
-            jmp PRN_ERR
+CPERR   lda #$9C
+CPER2   pha
+        jmp CPCER
 
-HATABS_X    dta b($00,$00,$00,$00)
-HT_X_GET    dta b($00,$00)
-HT_X_PUT    dta b($00,$00)
-            dta b($00,$00,$00,$00)
+ETAB    dta a(0,0)
+EGETV   dta a(0)
+EPUTV   dta a(0)
+        dta a(0,0)
 
-L0AA4       jmp (L09B8)
-L0AA7       jmp (L09BA)
+EGETP   jmp (DIOAPUV)
+EPUTP   jmp (DIOAPUV+2)
 
-L0AAA       jsr L0B7C
-L0AAD       txa
-L0AAD_V     equ L0AAD-1
-            bne L0AA4
-            bit BATFLG
-            bpl L0ABD
-            jsr L0AA4
-            cpy #$00
-            bpl L0AD3
-            rts
+EGEE    jsr XDIVIO1
+EGET    txa
+EGET_V  equ EGET-1
+        bne EGETP
+        bit BATFLG
+        bpl EGE2
+        jsr EGETP
+        cpy #$00
+        bpl EPU2
+        rts
 
-L0ABD       ldy #$01
-            ldx #$05
-            jsr L0CC4
-            cpy #$00
-            bmi L0AAA
-            ldx #$00
-L0ACA       cpx #$00
-L0ACA_V     equ L0ACA-1
-            bne L0AA7
-            pha
-            jsr L0AA7
-            pla
-L0AD3       bit ECHOFLG
-            bmi L0AEA
-            pha
-            ldy #$00
-            ldx #$07
-            jsr L0CC4
-            cpy #$00 
-            bpl L0AE7
-            jsr L0B79
-L0AE7       pla
-L0AE8       ldy #$01
-L0AEA       ldx #$00
-            cpy #$00
-L0AEE       rts
+EGE2    ldy #$01
+        ldx #$05
+        jsr DIVHND
+        cpy #$00
+        bmi EGEE
+        ldx #$00
+EPUT    cpx #$00
+EPUT_V  equ EPUT-1
+        bne EPUTP
+        pha
+        jsr EPUTP
+        pla
+EPU2    bit ECHOFLG
+        bmi EPUTY
+        pha
+        ldy #$00
+        ldx #$07
+        jsr DIVHND
+        cpy #$00 
+        bpl EPUTX
+        jsr XDIVIO0
+EPUTX   pla
+DIO2X0  ldy #$01
+EPUTY   ldx #$00
+        cpy #$00
+DIO2EX  rts
 
-L0AEF       jsr MOVE_CALL
+* disable
+DIORDIS jsr MOV_CAL
 * $ff is updated at start with offset for E:
-L0AF2 dta h(MC_mov+L0B38+1),l(L0B38+1),h(MC_2+HATABS),b($FF)
-      dta h(MC_movE+L0A6D+2),l(L0A6D+2),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
+DIORA3 dta h(MC_mov+DIOR2+1),l(DIOR2+1),h(MC_2+HATABS),b($FF)
+       dta h(MC_movE+DIOAPUT),l(DIOAPUT),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
 
-L0AFA       beq L0AE8
-R_DIVIO     jsr R_XDIVIO
-L0AFF       ldy #$00
-            lda L0A3A,Y
-            sta L0B0D
-            lda L0BE9,Y
+DIO2X0EQ beq DIO2X0
+R_DIVIO  jsr R_XDIVIO
+DIO2    ldy #$00
+        lda DIO2T1,Y
+        sta DIO3
+        lda DIO2T3,Y
 
-            jsr DO_CIO_A
-L0B0D       dta b($08,$03)
-            dta a(COMFNAM,$1C)
+        jsr CPCIO1
+DIO3    dta b($08,$03)
+        dta a(COMFNAM,$1C)
 
-            bmi L0AEE
-            lda #$00
-L0B17       ldy L0AFF+1
-            ldx L0A3C,Y
-            ora IOCB0,X
-            sta ECHOFLG,Y
-            lda #$FF
-            sta IOCB0,X
-L0B28       lda HATABS+2
-            cmp >HATABS_X
-            beq L0B5A
+        bmi DIO2EX
+        lda #$00
+DIO3B   ldy DIO2+1
+        ldx DIO2T2,Y
+        ora IOCB0,X
+        sta ECHOFLG,Y
+        lda #$FF
+        sta IOCB0,X
+DIOREP  lda HATABS+2
+        cmp >ETAB
+        beq DIOR4
 
-            jsr MOVE_CALL
+        jsr MOV_CAL
 * $ff is updated at start with offset for E:
-L0B32 dta h(MC_movE+HATABS),b($FF),h(MC_2+L0B38+1),l(L0B38+1)
+DIORA1 dta h(MC_movE+HATABS),b($FF),h(MC_2+DIOR2+1),l(DIOR2+1)
 
-            ldx #$0B
-L0B38       lda $FFFF,X
-L0B3B       sta HATABS_X,X
-            dex
-            bpl L0B38
+        ldx #$0B
+DIOR2   lda $FFFF,X
+DIOR3   sta ETAB,X
+        dex
+        bpl DIOR2
 
-            jsr MOVE_CALL
-  dta h(MC_mov+HT_X_GET),l(HT_X_GET),h(MC_4+L09B8),l(L09B8)
-  dta h(MC_mov+HT_X_PUT),l(HT_X_PUT),h(MC_2+L0A6F),l(L0A6F)
-  dta h(MC_movE+L09F5),l(L09F5),h(MC_4+HT_X_GET),l(HT_X_GET)
+        jsr MOV_CAL
+  dta h(MC_mov+EGETV),l(EGETV),h(MC_4+DIOAPUV),l(DIOAPUV)
+  dta h(MC_mov+EPUTV),l(EPUTV),h(MC_2+DIOAPUT),l(DIOAPUT)
+  dta h(MC_movE+DIOANEW),l(DIOANEW),h(MC_4+EGETV),l(EGETV)
 
-            jsr ADC_1
-            dta a(L09B8)
+        jsr ADC_1
+        dta a(DIOAPUV)
 
-            jsr ADC_1
-            dta a(L09BA)
+        jsr ADC_1
+        dta a(DIOAPUV+2)
 
-L0B5A       lda ECHOFLG
-            and BATFLG
-            bmi L0AEF
+DIOR4   lda ECHOFLG
+        and BATFLG
+        bmi DIORDIS
 
-            jsr MOVE_CALL
+        jsr MOV_CAL
 * $ff is updated at start with offset for E:
-L0B65 dta h(MC_mov+L0B3B+1),l(L0B3B+1),h(MC_2+HATABS),b($FF)
-      dta h(MC_movE+HT_X_PUT),l(HT_X_PUT),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
+DIORA2  dta h(MC_mov+DIOR3+1),l(DIOR3+1),h(MC_2+HATABS),b($FF)
+        dta h(MC_movE+EPUTV),l(EPUTV),h(MC_2+IOCB0+ICPTL),l(IOCB0+ICPTL)
 
-            beq L0AFA
+        beq DIO2X0EQ
+
 * command PRINT
-CMD_PRINT   bne L0BA0
-CMD_PRINT_V equ CMD_PRINT-1
-            lda COMFNAM
-            cmp PROMPTD
-            bne L0BA0
-L0B79       ldy #$00
-            dta b(op_BIT_abs)
-L0B7C       ldy #$01
-R_XDIVIO    tya
-            and #$01
-            tay
-            sty L0AFF+1
-            lda ECHOFLG,Y
-            bmi L0B28
-            ldx #$03
-            jsr L0CC4
-            lda #$FF
-            bmi L0B17
-L0B93       lda #$20
-            jsr L0762
+CPPRT   bne DIVIO0
+CPPRT_V equ CPPRT-1
+        lda COMFNAM
+        cmp PROMPTD
+        bne DIVIO0
+XDIVIO0 ldy #$00
+        dta b(op_BIT_abs)
+XDIVIO1 ldy #$01
+R_XDIVIO tya
+        and #$01
+        tay
+        sty DIO2+1
+        lda ECHOFLG,Y
+        bmi DIOREP
+        ldx #$03
+        jsr DIVHND
+        lda #$FF
+        bmi DIO3B
+EXBAT   lda #$20
+        jsr CRNM2
 * extension *.bat
-            ldy <EXT_BAT-LBUF
-            jsr L07BE
-            ldy #$01
-            dta b(op_BIT_abs)
-L0BA0       ldy #$00
-L0BA2       jsr R_DIVIO
-            bpl L0BC1
-            jmp PRN_ERR_A
+        ldy <EXT_BAT-LBUF
+        jsr CROUTI
+        ldy #$01
+        dta b(op_BIT_abs)
+DIVIO0   ldy #$00
+L0BA2   jsr R_DIVIO
+        bpl EXEEX
+        jmp CPER2
 
-PARSE_LINE  lda LBUF
-            cmp #'-'
-            beq L0B93
-            cmp #';'
-            beq L0BC1
-            jsr _CRNAME
-            bne PARSE_CMD
+EXECUTE lda LBUF
+        cmp #'-'
+        beq EXBAT
+        cmp #';'
+        beq EXEEX
+        jsr _CRNAME
+        bne EXE2
 
-            jsr MOVE_CALL
+        jsr MOV_CAL
   dta h(MC_movE+COMFNAM),l(COMFNAM),h(MC_2+PROMPTD),l(PROMPTD)
 
-L0BC1       rts
+EXEEX   rts
 
-PARSE_CMD   jsr INT_CMD
+EXE2    jsr EXE2B
 * begin statement table
 *  called via CIO command:
-            dta c'RE',b($CE)       ; 32
-            dta c'DE',b($CC)       ; 33
-            dta b($9B)
-            dta c'PRO',b($D4)      ; 35
-            dta c'UNPRO',b($D4)    ; 36
-ERROR1      dta b($9B)
-ERROR2      dta c'Error',b($9B)
-            dta b($9B)
-L0BE9       dta b($90)
-            dta b($94)
-            dta c'M',b($C4)        ; 42
-            dta c'R',b($C4)        ; 43
-            dta c'C',b($C4)        ; 44
-            dta c'LOA',b($C4)
-*  called via CMD_TAB_H/L
-            dta c'CA',b($D2)
-            dta c'RU',b($CE)
-            dta c'PRIN',b($D4)
-            dta c'TYP',b($C5)
-            dta c'DI',b($D2)
-            dta c'DIR',b($D3)
-            dta c'BASI',b($C3)
-            dta c'MA',b($CE)
-            dta b($00)
+        dta c'RE',b($CE)       ; 32
+        dta c'DE',b($CC)       ; 33
+        dta b($9B)
+        dta c'PRO',b($D4)      ; 35
+        dta c'UNPRO',b($D4)    ; 36
+ERRTX   dta b($9B)
+ENAME   dta c'Error',b($9B)
+        dta b($9B)
+DIO2T3  dta b($90)
+        dta b($94)
+        dta c'M',b($C4)        ; 42
+        dta c'R',b($C4)        ; 43
+        dta c'C',b($C4)        ; 44
+        dta c'LOA',b($C4)
+*  called via CPACMDH/L
+        dta c'CA',b($D2)
+        dta c'RU',b($CE)
+        dta c'PRIN',b($D4)
+        dta c'TYP',b($C5)
+        dta c'DI',b($D2)
+        dta c'DIR',b($D3)
+        dta c'BASI',b($C3)
+        dta c'MA',b($CE)
+        dta b($00)
 
-            jsr L0A71
+        jsr NULDW
 * standard execute *.com
-            ldy <EXT_COM-LBUF
-            jsr L07BE
-            clc
-L0C23       lda #$04 
-            rol @
-            sta L0C2C
-            jsr DO_CIO_1
-L0C2C       dta b($08,$28)
-            dta a(COMFNAM,28)
-L0C32       rts
+        ldy <EXT_COM-LBUF
+        jsr CROUTI
+        clc
+EXELD   lda #$04 
+        rol @
+        sta EXELD2
+        jsr CPC4
+EXELD2  dta b($08,$28)
+        dta a(COMFNAM,28)
+EXE9RTS rts
 
-INT_CMD     ldx #$FF
-            stx L0043
-L0C37       ldx #$00
-            ldy #$00
-            inc L0043
-L0C3D       jsr INC_PC
-            pha
-            eor COMFNAM+3,Y
-            asl @
-            beq L0C48
-            dex
-L0C48       iny
-            pla
-            beq L0C32
-            bpl L0C3D
-            txa
-            bmi L0C37
-            lda COMFNAM+3,Y
-            cmp #$9B
-            bne L0C37
-            jsr L0768
-            pla
-            pla
-            lda L0043
-            cmp #$0D
-            beq L0C23
-            bcs L0C74
-            adc #$20
-            sta L0C6E
-            jsr DO_CIO_1
-            dta b($00)
-L0C6E       dta b($00)
-            dta a(COMFNAM,28)
-            rts
+EXE2B   ldx #$FF
+        stx L0043
+EXE3    ldx #$00
+        ldy #$00
+        inc L0043
+EXE4    jsr GETSTK
+        pha
+        eor COMFNAM+3,Y
+        asl @
+        beq EXE5
+        dex
+EXE5    iny
+        pla
+        beq EXE9RTS
+        bpl EXE4
+        txa
+        bmi EXE3
+        lda COMFNAM+3,Y
+        cmp #$9B
+        bne EXE3
+* A=$9B
+        jsr CRNM00
+        pla
+        pla
+        lda L0043
+        cmp #$0D
+        beq EXELD
+        bcs EXE8
+* C=0
+        adc #$20
+        sta EXE7B
+        jsr CPC4
+        dta b($00)
+EXE7B   dta b($00)
+        dta a(COMFNAM,28)
+        rts
 
-L0C74       tay
-            lda CMD_TAB_H-14,Y
-            pha
-            lda CMD_TAB_L-14,Y
-            pha
-            cpx #$03
-            rts
+EXE8    tay
+        lda CPACMDH-14,Y
+        pha
+        lda CPACMDL-14,Y
+        pha
+        cpx #$03
+        rts
 
 * commannd DIR/S
-CMD_DIR     lda #$0D
-CMD_DIR_V   equ CMD_DIR-1
-            dta b(op_BIT_abs)
-CMD_DIRS    lda #$0C
-CMD_DIRS_V  equ CMD_DIRS-1
-            pha
-            lda COMFNAM-1,X
-            cmp #$38
-            beq L0C97
-            and #$F9
-            cmp #$38
-            bne L0C97
+CPDIR   lda #$0D
+CPDIR_V equ CPDIR-1
+        dta b(op_BIT_abs)
+CPDIRS  lda #$0C
+CPDIRS_V equ CPDIRS-1
+        pha
+        lda COMFNAM-1,X
+        cmp #$38
+        beq CPDIRS2
+        and #$F9
+        cmp #$38
+        bne CPDIRS2
 * standard *.*
-            ldy <STD_PAT-LBUF
-L0C94       jsr L07BE
-L0C97       pla
-            dta b(op_BIT_abs)
+        ldy <STD_PAT-LBUF
+L0C94   jsr CROUTI
+CPDIRS2 pla
+        dta b(op_BIT_abs)
 
 * command TYPE
-CMD_TYPE    lda #$08
-CMD_TYPE_V  equ CMD_TYPE-1
-            sta L0CA0
-            jsr DO_CIO_1
-L0CA0       dta b($08,$03)
-            dta a(COMFNAM,28)
-L0CA6       jsr DO_CIO
-            dta b($44,$07)
-            dta a(LBUF)
-            dta a(64)
-            php
+CPTYP   lda #$08
+CPTYP_V equ CPTYP-1
+        sta CPD2
+        jsr CPC4
+CPD2    dta b($08,$03)
+        dta a(COMFNAM,28)
+CPD3    jsr CPCIO
+        dta b($44,$07)
+        dta a(LBUF)
+        dta a(64)
+        php
 
-            jsr MOVE_CALL
-  dta h(MC_movE+IOCB1+ICBLL),l(IOCB1+ICBLL),h(MC_2+L0CBE),l(L0CBE)
+        jsr MOV_CAL
+  dta h(MC_movE+IOCB1+ICBLL),l(IOCB1+ICBLL),h(MC_2+CPD3L),l(CPD3L)
 
-            jsr DO_CIO
-            dta b($40,$0B)
-            dta a(LBUF)
-L0CBE       dta a(64)
+        jsr CPCIO
+        dta b($40,$0B)
+        dta a(LBUF)
+CPD3L   dta a(64)
 
-            plp
-            bpl L0CA6
-            rts
+        plp
+        bpl CPD3
+        rts
 
-L0CC4       sta L0045
-            txa
-            pha
-            ldx ECHOFLG,Y
-            lda HATABS+1,X
-            sta L0043
-            lda HATABS+2,X
-            sta L0044
-            ldx L0A3C,Y
-            pla
-            tay
-            lda (L0043),Y
-            pha
-            dey
-            lda (L0043),Y
-            pha
-            lda L0045
-            rts
+DIVHND  sta L0045
+        txa
+        pha
+        ldx ECHOFLG,Y
+        lda HATABS+1,X
+        sta L0043
+        lda HATABS+2,X
+        sta L0044
+        ldx DIO2T2,Y
+        pla
+        tay
+        lda (L0043),Y
+        pha
+        dey
+        lda (L0043),Y
+        pha
+        lda L0045
+        rts
