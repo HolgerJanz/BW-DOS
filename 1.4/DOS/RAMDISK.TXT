@@ -1,5 +1,5 @@
 }
-  RAMDISK (n[E][F] [file])|OFF
+  RAMDISK.SYS (n[E][F] [file])|OFF
 
 This resident command sets up an
 emulated disk drive using extended RAM
@@ -14,7 +14,7 @@ not use 130XE compatible banks.
 OFF removes the driver, if it was the
 last driver loaded.
 
-The configuration file can be use to
+The configuration file can be used to
 specify values for PORTB to be used for
 the Ramdisk.
 
