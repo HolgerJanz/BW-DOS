@@ -6,7 +6,7 @@ emulated disk drive using extended RAM
 (up to 1MB).
 
 The "n" parameter is the number of the
-Ramdisk drive.
+ramdisk drive.
 The "F" option will cause the RamDisk
 to be formatted.
 The "E" option will cause that it will
@@ -16,6 +16,6 @@ last driver loaded.
 
 The configuration file can be used to
 specify values for PORTB to be used for
-the Ramdisk.
+the ramdisk.
 
 Command requires 48k main memory.

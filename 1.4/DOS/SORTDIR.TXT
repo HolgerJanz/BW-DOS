@@ -15,5 +15,5 @@ DIR will display entries.
 
 Command requires 48k main memory.
 
-This command was developed by ICD for
-SpartaDOS 3.
+This command was developed for
+SpartaDOS (copyright by ICD/FTe).

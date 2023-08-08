@@ -4,7 +4,7 @@
 This command allows you to rename a
 directory to newname.
 
-This command was released for SpartaDOS
-by FTe.
+This command was developed for
+SpartaDOS (copyright by ICD/FTe).
 
 See REN for renaming files.

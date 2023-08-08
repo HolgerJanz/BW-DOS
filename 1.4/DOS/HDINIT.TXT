@@ -10,5 +10,5 @@ the command at any time.
 
 Command requires 48k main memory.
 
-This command was developed by FTe for
-SpartaDOS 3.
+This command was developed for
+SpartaDOS (copyright by ICD/FTe).

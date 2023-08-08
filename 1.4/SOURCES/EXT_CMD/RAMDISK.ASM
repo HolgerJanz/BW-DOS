@@ -1,1114 +1,1014 @@
 *************************************
-*       RAM-DISK FOR BW-DOS         *
+*      BW-DOS 1.4 RAMDISK           *
 * Original: Jiri Bernasek           *
 * MADS version: dmsc on GitHub      *
 *               see dmsc/bwdos-mads *
 *************************************
 
-SRCHADR EQU 128
-SIOADR  EQU 130
-DNUMB   EQU 132
-XFLAG   EQU 133
-FFLAG   EQU 134
-NBANKS  EQU 135
-LDFLG   EQU 136
-MAXSECT EQU 137
-MAPS    EQU 139
-MSAVE   EQU 140
-MIX     EQU 141
-MKONEC  EQU 142
-TEMP1   EQU 144
+SRCHADR equ $80
+SIOADR  equ $82
+DNUMB   equ $84
+XFLAG   equ $85
+FFLAG   equ $86
+NBANKS  equ $87
+LDFLG   equ $88
+MAXSECT equ $89
+MAPS    equ $8B
+MSAVE   equ $8C
+MIX     equ $8D
+MKONEC  equ $8E
+TEMP1   equ $90
 
-BUFF    EQU $500
-SWTAB   EQU $480
+BUFF    equ $500
+SWTAB   equ $480
 
-LDA_zp  EQU $A5
-STA_zp  EQU $85
-STAX_zp EQU $95
-LDX_zp  EQU $A6
-STX_zp  EQU $86
-ROR_zp  EQU $66
+BIT_abs equ $2C
 
-        BLK DOS $3700
+        icl '_SYSEQU.ICL'
 
-        JSR _chkbwdos
+        blk DOS $3100
 
-        LDA 10
-        CLC
-        ADC #3
-        STA GETNAME+1
-        LDA 11
-        ADC #0
-        STA GETNAME+2
+        jsr _print
+        dta B(155)
+        dta C'BW-DOS 1.4 RAMDISK 08-08-2023'
+        dta B(155,0)
 
-        LDA 10
-        SEC
-        SBC #10
-        STA SIOADR
-        LDA 11
-        SBC #0
-        STA SIOADR+1
+        jsr _chkbwdos14
 
-        JSR _print
-        DTA B(155)
-        DTA C'BW-DOS RAMDISK 1.5D'
-        DTA B(155,0)
+        lda <BW_LSIO
+        sta SIOADR
+        lda >BW_LSIO
+        sta SIOADR+1
 
-        JSR GETNAME
+* first parameter
+        jsr BW_CRNAME
 
-        LDY #36
-        LDA (10),Y
+* check for OFF
+        ldy #SD_COMFNAM+3
+        lda (DOSVEC),Y
+        cmp #'O'
+        bne START4
+        iny
+        lda #'F'
+        cmp (DOSVEC),Y
+        bne STRTHLP
+        iny
+        cmp (DOSVEC),Y
+        bne STRTHLP
+        iny
+        lda (DOSVEC),Y
+        cmp #$9B
+        bne STRTHLP
 
-        CMP #'O'
-        BNE START4
-
-        INY
-        LDA #'F'
-        CMP (10),Y
-        BNE STRTHLP
-        INY
-        CMP (10),Y
-        BNE STRTHLP
-
-        INY
-        LDA (10),Y
-        CMP #$9B
-        BNE STRTHLP
-
-        JMP REMOVE
+        jmp REMOVE
 
 * HELP
-STRTHLP JSR _print
-        DTA C'Use: RAMDISK drive#[F][E] [conf_file]'
-        DTA B(155)
-        DTA C'RAMDISK OFF'
-        DTA B(155,0)
-        JMP (10)
+STRTHLP jsr _print
+        dta C'Use:'
+        dta B(155)
+        dta C'  RAMDISK.SYS (drive#[F][E] [file])|OFF'
+        dta B(155,0)
+        jmp (DOSVEC)
 
-START4  LDA #0
-        STA XFLAG
-        STA FFLAG
+START4  lda #0
+        sta XFLAG
+        sta FFLAG
 
-STRT4A  STA DNUMB
-        STA STDRIV
+STRT4A  sta DNUMB
+        sta STDRIV
 
-STRT4B  LDA (10),Y
-        INY
-        CMP #$9B
-        BEQ START5
+STRT4B  lda (DOSVEC),Y
+        iny
+        cmp #$9B
+        beq START5
 
-        CMP #'N' ;Ignored for compatibility
-        BEQ STRT4B
+        cmp #'F'
+        bne STRT4C
+        sta FFLAG
+        beq STRT4B
 
-        CMP #'F'
-        BNE STRT4C
-        STA FFLAG
-        BEQ STRT4B
+STRT4C  cmp #'E'
+        bne STRT4D
+        sta XFLAG
+        beq STRT4B
 
-STRT4C  CMP #'E'
-        BNE STRT4D
-        STA XFLAG
-        BEQ STRT4B
+STRT4D  eor #'0'
+        beq STRTHLP
+        cmp #5
+        bcc STRT4A
+        cmp #8
+        beq STRT4A
+        bne STRTHLP
 
-STRT4D  EOR #'0'
-        BEQ STRTHLP
-        CMP #10
-        BCS STRTHLP
-        BCC STRT4A
+START5  lda DNUMB
+        beq STRTHLP
 
-START5  LDA DNUMB
-        BEQ STRTHLP
+* second parameter
+        jsr BW_CRNAME
 
-* Check for CONFIG file
-        JSR GETNAME
+* check for CONFIG file
+        ldy #SD_COMFNAM+3
+        lda (DOSVEC),Y
+        cmp #$9B
+        beq ST5A
+        jmp CONFIG1
 
-        LDY #36
-        LDA (10),Y
-        CMP #$9B
-        BEQ ST5A
+* no config file, create default table
+ST5A    ldx #63
+        lda #1
+        clc
+ST5B    sta SWTAB+1,X
+        dex
+        bmi ST5C
+        adc #4
+        sta TEMP1
+        and #$10
+        adc TEMP1
+        bcc ST5B
+        adc #1
+        bne ST5B
+ST5C    stx SWTAB
 
-        JMP CONFIG1
+* check for extended memory
+        jsr RAMTEST
 
-* No CONFIG file, create default table
-ST5A    LDX #63
+        lda NBANKS
+        beq ST5NO
 
-        LDA #1
-        CLC
+        ldx XFLAG
+        beq START6J
 
-ST5B    STA SWTAB+1,X
-        DEX
-        BMI ST5C
-        ADC #4
-        STA TEMP1
-        AND #$10
-        ADC TEMP1
-        BCC ST5B
-        ADC #1
-        BNE ST5B
+* if option E then substract 4
+        sec
+        sbc #4
+        sta NBANKS
+        beq ST5MALO
+        bcs START6J
 
-ST5C    STX SWTAB
+ST5MALO jsr _print
+        dta C'Only 130XE banks available'
+        dta B(155,0)
+ST5AB   jsr _print
+        dta C'Operation aborted'
+        dta B(155,0)
+        jmp (DOSVEC)
 
-        JSR RAMTEST
+START6J jmp START6
 
-        LDA NBANKS
-        BEQ ST5NO
+ST5NO   jsr _print
+        dta C'No extra memory available'
+        dta B(155,0)
+        jmp ST5AB
 
-        LDX XFLAG
-        BEQ START6J
+CLOSE1  lda #12
+CIO1    ldx #$10
+        sta $342,X
+        jmp CIOV
 
-        SEC
-        SBC #4
-        STA NBANKS
-        BEQ ST5MALO
-        BCS START6J
+* load config file
+CONFIG1 lda #$FF
+        ldx #64
+CONF1B  sta SWTAB,X
+        dex
+        bpl CONF1B
 
-ST5MALO JSR _print
-        DTA B(155)
-        DTA C'Only 130XE banks available!'
-        DTA B(155,0)
+        inx
+        stx LDFLG ;#0
 
-ST5AB   JSR _print
-        DTA C'Operation aborted.'
-        DTA B(155,253,0)
+        jsr CLOSE1
 
-        JMP (10)
+* open config file
+        lda <BW_COMFNAM
+        sta $344+$10
+        lda >BW_COMFNAM
+        sta $345+$10
+        lda #4
+        sta $34A+$10
+        lda #0
+        sta $34B+$10
+        lda #3
+        jsr CIO1
+        bpl CONFIG2
 
-START6J JMP START6
+CONFERR jsr CLOSE1
+        jsr _print
+        dta C'Cannot read'
+        dta B(0)
+CFGE2   jsr _print
+        dta C' configuration file'
+        dta B(155,0)
+        jmp ST5AB
 
-ST5NO   JSR _print
-        DTA B(155)
-        DTA C'No extra memory available!'
-        DTA B(155,0)
-        JMP ST5AB
+* read config file
+CONFIG2 lda #0
+        sta $348+$10
+        sta $349+$10
+        lda #7
+        jsr CIO1
+        bmi CONFIG3
+* check max length of conf file
+        inc LDFLG
+        ldx LDFLG
+        cpx #65
+        bcs CONFBAD
+        sta SWTAB,X
+        bcc CONFIG2
 
-CLOSE1  LDA #12
-CIO1    LDX #$10
-        STA $342,X
-        JMP $E456
+CONFBAD jsr CLOSE1
+        jsr _print
+        dta C'Invalid'
+        dta B(0)
+        jmp CFGE2
 
-CONFIG1 LDA #$FF
-        LDX #64
+CONFIG3 cpy #136
+        bne CONFERR
 
-CONF1B  STA SWTAB,X
-        DEX
-        BPL CONF1B
+        jsr CLOSE1
 
-        INX
-        STX LDFLG ;#0
+* check for empty config file
+        lda LDFLG
+        beq CONFBAD
 
-        JSR CLOSE1
+        jsr RAMTEST
 
-* Open CONFIG file
-        LDA 10
-        CLC
-        ADC #33
-        STA $344+$10
-        LDA 11
-        ADC #0
-        STA $345+$10
+* check length against bank count
+        lda LDFLG
+        cmp NBANKS
+        bne CONFBAD
 
-        LDA #4
-        STA $34A+$10
-        LDA #0
-        STA $34B+$10
-
-        LDA #3
-        JSR CIO1
-        BPL CONFIG2
-
-CONFERR JSR CLOSE1
-
-        JSR _print
-        DTA B(155)
-        DTA C'Cannot read'
-        DTA B(0)
-
-CFGE2   JSR _print
-        DTA C' configuration file!'
-        DTA B(155,0)
-
-        JMP ST5AB
-
-CONFIG2 LDA #0
-        STA $348+$10
-        STA $349+$10
-
-        LDA #7
-        JSR CIO1
-        BMI CONFIG3
-
-CONF2B  INC LDFLG
-        LDX LDFLG
-        CPX #65
-        BCS CONFBAD
-
-        STA SWTAB,X
-        BCC CONFIG2
-
-CONFBAD JSR CLOSE1
-
-        JSR _print
-        DTA B(155)
-        DTA C'Invalid'
-        DTA B(0)
-
-        JMP CFGE2
-
-CONFIG3 CPY #136
-        BNE CONFERR
-
-        JSR CLOSE1
-
-        LDA LDFLG
-        BEQ CONFBAD
-
-        JSR RAMTEST
-
-        LDA LDFLG
-        CMP NBANKS
-        BNE CONFBAD
-
-* Memory test OK
+* memory test OK,
 * NBANKS and RBTAB hold extended RAM info
-START6  JSR SRCHRUT
-        BCC STRT6B
+START6  jsr SRCHRUT
+        bcc STRT6B
 
 * Resident handler already installed, we need to get old SIO
 * address using original code bank, in case banks need to change.
-        JSR DISINT
-        PHA
-        LDY <[R03-RESID]+1  ;Get code bank from low memory handler
-        LDA (SRCHADR),Y
-        STA $D301
+        jsr DISINT
+        pha
+        ldy <[R03-RESID]+1  ;Get code bank from low memory handler
+        lda (SRCHADR),Y
+        sta PORTB
 
-        LDY #1
-STRT6A  LDA JSIO+1+RESO,Y
-        STA JSIO+1,Y
-        DEY
-        BPL STRT6A
-        PLA
-        JSR ENINT
-        BNE START7
+        ldy #1
+STRT6A  lda JSIO+1+RESO,Y
+        sta JSIO+1,Y
+        dey
+        bpl STRT6A
+        pla
+        jsr ENINT
+        bne START7
 
 * Install resident part
-STRT6B  LDA 743
-        STA SRCHADR
-        CLC
-        ADC <RESLEN
-        STA 743
-        STA R01+1
+STRT6B  lda MEMLO
+        sta SRCHADR
+        clc
+        adc <RESLEN
+        sta MEMLO
+        sta R01+1
 
-        LDA 744
-        STA SRCHADR+1
-        ADC #0
-        STA 744
-        STA R02+1
+        lda MEMLO+1
+        sta SRCHADR+1
+        adc #0
+        sta MEMLO+1
+        sta R02+1
 
 * Setup SIO and RESET handler
-        LDY #1
-STRT6D  LDA (SIOADR),Y
-        STA JSIO+1,Y
-        LDA 12,Y
-        STA RESID+1,Y
-        LDX SRCHADR,Y
-        STX 12,Y
-        DEY
-        BPL STRT6D
+        ldy #1
+STRT6D  lda (SIOADR),Y
+        sta JSIO+1,Y
+        lda 12,Y
+        sta RESID+1,Y
+        ldx SRCHADR,Y
+        stx 12,Y
+        dey
+        bpl STRT6D
 
-        INY
-        LDA <RDSIO-RESID
-        CLC
-        ADC SRCHADR
-        STA (SIOADR),Y
-        TYA
-        INY
-        ADC SRCHADR+1
-        STA (SIOADR),Y
+        iny
+        lda <RDSIO-RESID
+        clc
+        adc SRCHADR
+        sta (SIOADR),Y
+        tya
+        iny
+        adc SRCHADR+1
+        sta (SIOADR),Y
 
 * Copy low-memory handler
-        LDY <RESLEN
-STRT6C  DEY
-        LDA RESID,Y
-        STA (SRCHADR),Y
-        TYA
-        BNE STRT6C
+        ldy <RESLEN
+STRT6C  dey
+        lda RESID,Y
+        sta (SRCHADR),Y
+        tya
+        bne STRT6C
 
 * Resident handler installed,
 * configure and install code in extended RAM
-START7  LDA DNUMB
-        STA RR1+1
+START7  lda DNUMB
+        sta RR1+1
 
 * Setup MAXSECT
-        LDA NBANKS
-        LSR @
-        STA MAXSECT+1
-        LDA #0
-        ROR @
-        STA MAXSECT
+        lda NBANKS
+        lsr @
+        sta MAXSECT+1
+        lda #0
+        ror @
+        sta MAXSECT
 
-        JSR DECMAXS
-        JSR DECMAXS
+        jsr DECMAXS
+        jsr DECMAXS
 
-        LDA MAXSECT
-        STA RR5+1
-        LDA MAXSECT+1
-        STA RR6+1
+        lda MAXSECT
+        sta RR5+1
+        lda MAXSECT+1
+        sta RR6+1
 
-        JSR DECMAXS
+        jsr DECMAXS
 
 * Setup code bank
-        JSR DISINT
-        PHA
+        jsr DISINT
+        pha
 
-        LDA RBTAB
-        LDY <R03-RESID+1
-        STA (SRCHADR),Y
-        STA R04+1
-        STA R05+1
+        lda RBTAB
+        ldy <R03-RESID+1
+        sta (SRCHADR),Y
+        sta R04+1
+        sta R05+1
 
-        STA $D301
+        sta PORTB
 
-        LDX >RES2LEN-1
-        LDY <RES2LEN-1
+        ldx >RES2LEN-1
+        ldy <RES2LEN-1
 
-STRT7C  DEY
-        LDA RES2+[[RES2LEN-1]&$FF00],Y
-        STA $4000+[[RES2LEN-1]&$FF00],Y
+STRT7C  dey
+STRT7C1 lda RES2+[[RES2LEN-1]&$FF00],Y
+STRT7C2 sta $4000+[[RES2LEN-1]&$FF00],Y
+        cpy #0
+        bne STRT7C
+        dec STRT7C1+2
+        dec STRT7C2+2
+        dex
+        bpl STRT7C
 
-        CPY #0
-        BNE STRT7C
-        DEC STRT7C+3
-        DEC STRT7C+6
-        DEX
-        BPL STRT7C
-
-        PLA
-        JSR ENINT
+        pla
+        jsr ENINT
 
 * FORMATOVANI
 
-        LDA FFLAG
-        BNE FORM1
+        lda FFLAG
+        bne FORM1
 
-        LDA #1
-        LDX #'R'
-        LDY #64
-        JSR RWRD
+        lda #1
+        ldx #'R'
+        ldy #64
+        jsr RWRD
 
-        LDA BUFF+11
-        CMP MAXSECT
-        BNE FORM1
-        LDA BUFF+12
-        CMP MAXSECT+1
-        BNE FORM1
+        lda BUFF+11
+        cmp MAXSECT
+        bne FORM1
+        lda BUFF+12
+        cmp MAXSECT+1
+        bne FORM1
 
-        LDA #$80
-        CMP BUFF+7
-        BNE FORM1
-        CMP BUFF+31
-        BNE FORM1
+        lda #$80
+        cmp BUFF+7
+        bne FORM1
+        cmp BUFF+31
+        bne FORM1
 
-        LDA BUFF+32
-        CMP #$22
-        BNE FORM1
-        JMP FORMEND
+        lda BUFF+32
+        cmp #$22
+        bne FORM1
+        jmp FORMEND
+
+FORM1   jsr _print
+        dta C'Format RAM-Disk'
+        dta B(155)
+        dta B(0)
 
 * #MAPS
-
-FORM1   LDA MAXSECT+1
-        LSR @
-        LSR @
-        TAX
-        INX
-        STX MAPS
+        lda MAXSECT+1
+        lsr @
+        lsr @
+        tax
+        inx
+        stx MAPS
 * DIR
-        JSR CLBUF
+        jsr CLBUF
 
-        LDX MAPS
-        INX
-        INX
-        TXA
-        INX
-        STX BUFF+4
+        ldx MAPS
+        inx
+        inx
+        txa
+        inx
+        stx BUFF+4
 
-        JSR WRRD
+        jsr WRRD
 
-        JSR CLBUF
+        jsr CLBUF
 
-        LDX #13
-FORM1B  LDA VZDIR,X
-        STA BUFF+3,X
-        DEX
-        BPL FORM1B
+        ldx #13
+FORM1B  lda VZDIR,X
+        sta BUFF+3,X
+        dex
+        bpl FORM1B
 
-        LDA MAPS
-        CLC
-        ADC #3
-        JSR WRRD
+        lda MAPS
+        clc
+        adc #3
+        jsr WRRD
 
 * BITMAPS
-        JSR CLBUF
+        jsr CLBUF
 
-        LDA MAXSECT
-        STA MKONEC
-        LDA MAXSECT+1
-        LSR @
-        ROR MKONEC
-        LSR @
-        ROR MKONEC
-        LSR MKONEC
+        lda MAXSECT
+        sta MKONEC
+        lda MAXSECT+1
+        lsr @
+        ror MKONEC
+        lsr @
+        ror MKONEC
+        lsr MKONEC
 
-        LDX #2
-        STX MSAVE
-        DEX
-        STX MIX
+        ldx #2
+        stx MSAVE
+        dex
+        stx MIX
 
 * X=1
-        LDA MAPS
-        ASL @
-        TAY
-        LDA MPSTB,Y
-        STA BUFF-1,X
-        LDA MPSTB+1,Y
+        lda MAPS
+        asl @
+        tay
+        lda MPSTB,Y
+        sta BUFF-1,X
+        lda MPSTB+1,Y
 
-        DTA B($2C) ;BIT
+        dta B(BIT_abs)
 
-FORM1C  LDA #$FF
-        STA BUFF,X
+FORM1C  lda #$FF
+        sta BUFF,X
 
-        LDA MIX
-        CMP MAPS
-        BEQ FORM1D
+        lda MIX
+        cmp MAPS
+        beq FORM1D
 
-FORM1CB INX
-        BPL FORM1C
+FORM1CB inx
+        bpl FORM1C
 
-        LDA MSAVE
-        JSR WRRD
+        lda MSAVE
+        jsr WRRD
 
-        JSR CLBUF
+        jsr CLBUF
 
-        INC MIX
-        INC MSAVE
+        inc MIX
+        inc MSAVE
 
-        LDX #0
-        BEQ FORM1C
+        ldx #0
+        beq FORM1C
 
-FORM1D  CPX MKONEC
-        BNE FORM1CB
+FORM1D  cpx MKONEC
+        bne FORM1CB
 
-        LDA #$FC
-        STA BUFF,X
+        lda #$FC
+        sta BUFF,X
 
-        LDA MSAVE
-        JSR WRRD
+        lda MSAVE
+        jsr WRRD
 
-* BOOT SECTOR
+* BOOT secTOR
 
-        JSR CLBUF
+        jsr CLBUF
 
-        LDX #32
+        ldx #32
 
-FORM1E  LDA VZBOOT,X
-        STA BUFF,X
-        DEX
-        BPL FORM1E
+FORM1E  lda VZBOOT,X
+        sta BUFF,X
+        dex
+        bpl FORM1E
 
-        LDA MAPS
-        STA BUFF+15
-        CLC
-        ADC #2
-        STA BUFF+9
+        lda MAPS
+        sta BUFF+15
+        clc
+        adc #2
+        sta BUFF+9
 
-        LDA MAXSECT
-        STA BUFF+11
-        SEC
-        SBC MAPS
-        TAY
-        LDA MAXSECT+1
-        STA BUFF+12
-        SBC #0
-        TAX
+        lda MAXSECT
+        sta BUFF+11
+        sec
+        sbc MAPS
+        tay
+        lda MAXSECT+1
+        sta BUFF+12
+        sbc #0
+        tax
 
-        TYA
-        SEC
-        SBC #4
-        STA BUFF+13
-        TXA
-        SBC #0
-        STA BUFF+14
+        tya
+        sec
+        sbc #4
+        sta BUFF+13
+        txa
+        sbc #0
+        sta BUFF+14
 
-        LDA $D20A
-        STA BUFF+39
+        lda RANDOM
+        sta BUFF+39
 
-        LDA #1
-        JSR WRRD
+        lda #1
+        jsr WRRD
 
-        JSR _print
-        DTA C'RAM-Disk formatted.'
-        DTA B(155)
-        DTA B(0)
+FORMEND lda DNUMB
+        ora #$30
+        sta PRDNUM
+        jsr _print
+        dta C'RAM-Disk D'
+PRDNUM  dta C'0: '
+        dta B(0)
 
-FORMEND LDA DNUMB
-        ORA #$30
-        STA PRDNUM
-        JSR _print
-        DTA C'RAM-Disk is D'
-PRDNUM  DTA C'0'
-        DTA C': (Size: '
-        DTA B(0)
+* print size
+        lda #0
+        sta BW_DECIN+1
+        lda NBANKS
+        ldx #3
+PRTSZ1  asl @
+        rol BW_DECIN+1
+        dex
+        bpl PRTSZ1
+        sta BW_DECIN
 
-* PRINT SIZE
+        jsr CONVDC
 
-        LDA #0
-        STA MAXSECT+1
+        ldx #$03
+PRTSZ2  lda BW_DECOUT+4,X
+        sta PRNUM,X
+        dex
+        bpl PRTSZ2
 
-        LDA NBANKS
-        LDX #3
+        jsr _print
+PRNUM   dta C'0000'
+        dta C'kB'
+        dta B(155,0)
 
-PRTSZ1  ASL @
-        ROL MAXSECT+1
-        DEX
-        BPL PRTSZ1
+        jmp (DOSVEC)
 
-        STA MAXSECT
+* ====================================
+* subroutines
 
-* Divide by 10
-        LDX #3
-DIV0    STX DIVI+1
+CONVDC  jmp (BW_CONVDC)
 
-        LDX #16
-        LDA #0
-        CLV
+MPSTB   dta A($FF0F,$FF07,$FF03,$FF01)
+        dta A($FF00,$7F00,$3F00,$1F00)
+        dta A($0F00)
 
-DIV1    CMP #5
-        BCC DIV2
-        SBC #$85
-        SEC
+VZBOOT  dta C'S'
+        dta B(3,0,48,$E0,7)
+        jmp $3080
+        dta A(0,0,0)
+        dta B(0,2,0,32,0,4,0)
+        dta C'RAM-DISK'
+        dta B(0,128,$22)
 
-DIV2    ROL MAXSECT
-        ROL MAXSECT+1
-        ROL @
-        DEX
-        BNE DIV1
+VZDIR   dta B(23,0,0)
+        dta C'MAIN       '
 
-        ORA #$30
-DIVI    LDX #0
-        STA PRNUM,X
-        DEX
-        BVS DIV0
+CLBUF   ldx #127
+        lda #0
 
-        JSR _print
-PRNUM   DTA C'    '
-        DTA C' kB)'
-        DTA B(155,0)
+CLBF2   sta BUFF,X
+        dex
+        bpl CLBF2
 
-        JMP (10)
+        rts
 
-MPSTB   DTA A($FF0F,$FF07,$FF03,$FF01)
-        DTA A($FF00,$7F00,$3F00,$1F00)
-        DTA A($0F00)
+WRRD    ldx #'W'
+        ldy #128
 
-VZBOOT  DTA C'S'
-        DTA B(3,0,48,$E0,7)
-        JMP $3080
-        DTA A(0,0,0)
-        DTA B(0,2,0,32,0,4,0)
-        DTA C'RAM-DISK'
-        DTA B(0,128,$22)
+RWRD    stx STCMD
+        sty STSTAT
+        sta STAUX
 
-VZDIR   DTA B(23,0,0)
-        DTA C'MAIN       '
+        ldx #11
+RWRD2   lda STAB,X
+        sta $300,X
+        dex
+        bpl RWRD2
 
-CLBUF   LDX #127
-        LDA #0
+        jsr BW_SIO
+        bpl _RTS
+        tya
+        jmp (BW_FAIL)
+_RTS    rts
 
-CLBF2   STA BUFF,X
-        DEX
-        BPL CLBF2
+STAB    dta B($31)
+STDRIV  dta B(0)
+STCMD   dta B(0)
+STSTAT  dta B(0)
+        dta A(BUFF)
+        dta B(10,0)
+        dta A(128)
+STAUX   dta A(0)
 
-        RTS
+DECMAXS lda MAXSECT
+        bne STRT7B
+        dec MAXSECT+1
+STRT7B  dec MAXSECT
 
-WRRD    LDX #'W'
-        LDY #128
+        rts
 
-RWRD    STX STCMD
-        STY STSTAT
-        STA STAUX
+REMNOT  jsr _print
+        dta C'RAM-Disk not installed'
+        dta B(155,0)
 
-        LDX #11
-RWRD2   LDA STAB,X
-        STA $300,X
-        DEX
-        BPL RWRD2
+REMCANT jsr _print
+        dta C'Cannot remove'
+        dta B(155,0)
 
-        LDA 10
-        SEC
-        SBC #10
-        STA SIOJMP+1
-        LDA 11
-        SBC #0
-        STA SIOJMP+2
+        jmp (10)
 
-        JSR SIOJMP
-        BMI SIOERR
+REM2LST jsr _print
+        dta C'RAM-Disk is not the last handler'
+        dta B(155,0)
 
-        RTS
+        jmp REMCANT
 
-SIOJMP  JMP ($FFFF)
-
-STAB    DTA B($31)
-STDRIV  DTA B(0)
-STCMD   DTA B(0)
-STSTAT  DTA B(0)
-        DTA A(BUFF)
-        DTA B(7,0)
-        DTA A(128)
-STAUX   DTA A(0)
-
-SIOERR  JSR _print
-        DTA B(155,253)
-        DTA C'Internal Error!'
-        DTA B(155,0)
-
-        JMP (10)
-
-DECMAXS LDA MAXSECT
-        BNE STRT7B
-        DEC MAXSECT+1
-STRT7B  DEC MAXSECT
-
-        RTS
-
-REMNOT  JSR _print
-        DTA B(155)
-        DTA C'RAM-Disk not installed!'
-        DTA B(155,0)
-
-REMCANT JSR _print
-        DTA C'Cannot remove.'
-        DTA B(155,253,0)
-
-        JMP (10)
-
-REM2LST JSR _print
-        DTA B(155)
-        DTA C'RAM-Disk is not the last'
-        DTA B(155)
-        DTA C'handler installed!'
-        DTA B(155,0)
-
-        JMP REMCANT
-
-REMOVE  JSR SRCHRUT
-        BCC REMNOT
+REMOVE  jsr SRCHRUT
+        bcc REMNOT
 
 * Remove handler
-REMOV2  LDA 743
-        SEC
-        SBC SRCHADR
-        TAY
-        LDA 744
-        SBC SRCHADR+1
-        BNE REM2LST
+REMOV2  lda MEMLO
+        sec
+        sbc SRCHADR
+        tay
+        lda MEMLO+1
+        sbc SRCHADR+1
+        bne REM2LST
 
-        CPY <RESLEN
-        BNE REM2LST
+        cpy <RESLEN
+        bne REM2LST
 
 * Enable code bank to get old SIO
-        JSR DISINT
-        PHA
-        LDY <R03-RESID+1
-        LDA (SRCHADR),Y
-        STA $D301
+        jsr DISINT
+        pha
+        ldy <R03-RESID+1
+        lda (SRCHADR),Y
+        sta PORTB
 
-        LDY #1
+        ldy #1
 
-REM3    INY
-        LDA (SRCHADR),Y
-        DEY
-        STA 12,Y
+REM3    iny
+        lda (SRCHADR),Y
+        dey
+        sta 12,Y
 
-        LDA SRCHADR,Y
-        STA 743,Y
+        lda SRCHADR,Y
+        sta MEMLO,Y
 
-        LDA JSIO+1+RESO,Y
-        STA (SIOADR),Y
+        lda JSIO+1+RESO,Y
+        sta (SIOADR),Y
 
-        DEY
-        BPL REM3
+        dey
+        bpl REM3
 
 * Re-enable original bank and exit
-        PLA
-        JSR ENINT
-
-        JSR _print
-        DTA B(155)
-        DTA C'RAM-Disk removed.'
-        DTA B(155,0)
-
-        JMP (10)
-
-SRCHRUT LDA 743
-        SEC
-        SBC <RESLEN
-        STA SRCHADR
-        LDA 744
-        SBC #0
-        STA SRCHADR+1
-
-SRCHR1  LDY <R03-RESID
-
-SRCHR2  LDA (SRCHADR),Y
-        CMP RESID,Y
-        BNE SRCHNXT
-
-        DEY
-        CPY <TST1-RESID
-        BNE SRCHR2
-
-        RTS
-
-SRCHNXT LDA SRCHADR
-        BNE SNXT2
-        DEC SRCHADR+1
-SNXT2   DEC SRCHADR
-
-        LDA SRCHADR+1
-        CMP #$19
-        BCS SRCHR1
-
-        RTS
-
-RAMTEST LDX #63
-        LDA #$FF
-RT0A    STA RBTAB,X
-        DEX
-        BPL RT0A
-
-        JSR DISINT
-        PHA
-
-* SAVE OLD
-
-        LDX #64
-
-RT0     JSR RSWITCH
-
-        LDA $4080
-        STA BUFF,X
-        LDA $5032
-        STA BUFF+65,X
-        LDA $7FFE
-        STA BUFF+130,X
-
-        DEX
-        BPL RT0
-
-* SET NEW
-
-        LDX #64
-
-RT1     JSR RSWITCH
-
-        STX $4080
-        STX $5032
-        STX $7FFE
-
-        DEX
-        BPL RT1
-
-* TEST
-
-        LDY #0
-        LDX #64
-
-RT2     JSR RSWITCH
-        CPX $4080
-        BNE RT3
-        CPX $5032
-        BNE RT3
-        CPX $7FFE
-        BNE RT3
-
-        LDA SWTAB,X
-        STA RBTAB,Y
-        INY
-
-RT3     DEX
-        BNE RT2
-
-        STY NBANKS
-
-* RESTORE OLD
-
-        LDX #64
-
-RT4     JSR RSWITCH
-
-        LDA BUFF,X
-        STA $4080
-        LDA BUFF+65,X
-        STA $5032
-        LDA BUFF+130,X
-        STA $7FFE
-
-        DEX
-        BPL RT4
-
-* END
-        PLA
-
-ENINT   STA $D301
-        LDA #$40
-        STA 54286
-        CLI
-
-        RTS
-
-DISINT  LDA #0
-        STA 54286
-        SEI
-        LDA $D301
-        RTS
-
-RSWITCH LDA SWTAB,X
-        STA $D301
-
-_RTS    RTS
-
-        ICL '_CHKBWD.ICL'
-        ICL '_PRINT.ICL'
-
-GETNAME JMP _RTS
-
-
-
-
-* Resident handler in low memory
-RESID   JSR $FFFF
-
-R01     LDA #$22
-        STA 743
-R02     LDA #$22
-TST1    STA 744
-
-        RTS
-
-RDSIO   LDA $D301   ;Save original PORTB
-        LDY #0
-        STY 54286   ;Disable NMI
-        SEI         ;Disable IRQ
-R03     LDY #$FF
-        STY $D301   ;Disable ROM
-        JMP $4000
-
-RESLEN  EQU *-RESID
-
-
-
-
-
-* High memory part, process SIO call
-RES2    PHA
-        STA WBNK+1+RESO
-        LDA $300
-        CMP #$31
-        BNE STDSIO
-
-        LDA $301
-RR1     CMP #0
-        BEQ RDS2
-
-* Exit trough stub to standard SIO
-STDSIO  LDY <SIOST+10-RES2
-        JMP CSTUB+RESO
-
-
-
-
-
-* Setup read/write address and stub
-RDS2    LDX <COPYLEN-1
-RDS3    CPX #$11
-        BCC RDS3A
-        LDA $30,X   ;Save ZP locations >= $41
-        PHA
-RDS3A   LDA COPYST+RESO,X
-        STA $30,X
-        DEX
-        BPL RDS3
-
-* Asume a READ operation, writes to buffer
-        LDA $304
-*        STA WADR
-        DTA L(STA_zp,WADR)
-        LDA $305
-*        STA WADR+1
-        DTA L(STA_zp,WADR+1)
-
-* Setup length
-        LDA $302
-        LDY $308
-        LDX $309
-        BNE R2NAK
-
-        CMP #'S'
-        BEQ SSTAT
-
-* Read/Write
-R2RW    CPY #128
-        BNE R2NAK
-
-* Verify sector number
-        LDX $30B
-        LDY $30A
-        BNE RDS4
-        DEX
-RDS4    DEY
-
-RR5     CPY #0 ;MAXSECT
-        TXA
-RR6     SBC #0 ;MAXSECT+1
-        BCS R2NAK
-
-        TYA
-        ADC #3 ; Reserve 3 sectors at start of RAMDISK
-        BCC RR6B
-        INX
-RR6B    TAY
-        ORA #$80
-        LSR @
-*        STA RADR+1
-        DTA L(STA_zp,RADR+1)
-*        ROR RADR
-        DTA L(ROR_zp,RADR)
-
-        TYA
-        ASL @
-        TXA
-        ROL @
-        TAY ; Y = (SECTOR+1)/128 = BANK#
-        LDX RBTAB+RESO,Y
-
-        LDY #127    ;Copy length
-        LDA $302
-        CMP #'R'
-        BEQ SREAD
-        CMP #'W'
-        BEQ SWRITE
-        CMP #'P'
-        BEQ SWRITE
+        pla
+        jsr ENINT
+
+        jsr _print
+        dta C'RAM-Disk removed'
+        dta B(155,0)
+
+        jmp (10)
+
+* search resident handler
+* between MEMLO and startup MEMLO
+SRCHRUT lda MEMLO
+        sec
+        sbc <RESLEN-1
+        sta SRCHADR
+        lda MEMLO+1
+        sbc #0
+        sta SRCHADR+1
+
+* check search address is greater
+* than startup MEMLO
+SRCHNXT lda SRCHADR
+        bne SNXT2
+        dec SRCHADR+1
+SNXT2   dec SRCHADR
+
+        lda SRCHADR+1
+        cmp BW_SMEMLO+1
+        beq SRCHL
+        bcs SRCHR1
+        rts
+
+SRCHL   lda SRCHADR
+        cmp BW_SMEMLO
+        bcs SRCHR1
+        rts
+
+* serach handler pattern
+SRCHR1  ldy <R03-RESID
+SRCHR2  lda (SRCHADR),Y
+        cmp RESID,Y
+        bne SRCHNXT
+        dey
+        cpy <TST1-RESID
+        bne SRCHR2
+        rts
+
+* Check Extended Memory
+RAMTEST ldx #63
+        lda #$FF
+RT0A    sta RBTAB,X
+        dex
+        bpl RT0A
+
+* set main memory for main banking check
+        lda #$00
+        sta $3000 ; would collide with $7000
+
+        jsr DISINT
+        pha
+
+* save
+        ldx #64
+RT0     jsr RSWITCH
+        lda $7000
+        sta BUFF,X
+        dex
+        bpl RT0
+
+* set
+        ldx #64
+RT1     jsr RSWITCH
+        stx $7000
+        dex
+        bpl RT1
+
+* check extended
+        ldy #0
+        ldx #64
+RT2     jsr RSWITCH
+        cpx $7000
+        bne RT3
+        lda SWTAB,X
+        sta RBTAB,Y
+        iny
+RT3     dex
+        bne RT2
+
+* check main banking => sub 4 banks
+        lda $3000
+        beq RT31
+        tya
+        beq RT31
+        sec
+        sbc #$03
+        pha
+* skip 3 highest banks,
+* one is already skipped
+        tax
+        ldy #$00
+RT32    lda RBTAB+3,Y
+        sta RBTAB,Y
+        iny
+        dex
+        bne RT32
+        pla
+        tay
+* save bank count
+RT31    sty NBANKS
+
+* restore
+        ldx #64
+RT4     jsr RSWITCH
+        lda BUFF,X
+        sta $7000
+        dex
+        bpl RT4
+
+* finished
+        pla
+ENINT   sta PORTB
+        lda #$40
+        sta NMIEN
+        cli
+        rts
+
+DISINT  lda #0
+        sta NMIEN
+        sei
+        lda PORTB
+        rts
+
+RSWITCH lda SWTAB,X
+        sta PORTB
+        rts
+
+        icl '_CHKBW14.ICL'
+        icl '_PRINT.ICL'
+
+* ====================================
+* resident handler in low memory
+RESID   jsr $FFFF
+R01     lda #$22
+        sta MEMLO
+R02     lda #$22
+TST1    sta MEMLO+1
+        rts
+
+RDSIO   lda PORTB   ;Save original PORTB
+        ldy #0
+        sty NMIEN   ;Disable NMI
+        sei         ;Disable IRQ
+R03     ldy #$FF
+        sty PORTB   ;Disable ROM
+        jmp $4000+[RD4SIO-RES2]
+
+RESLEN  equ *-RESID
+
+* ====================================
+* high memory part
+RES2    equ *
+
+* Exit jumping to standard SIO
+SIOST   sta PORTB
+        cli
+        stx NMIEN
+JSIO    jmp $FFFF
+
+* Exit with Y=status
+EXTST   sta PORTB
+        cli
+        stx NMIEN
+        ldy DSTATS
+        rts
+
+* Copy from one bank to another
+COPYST  lda #$FF
+RBNK    equ *-1-COPYST+$30
+        sta PORTB   ; SRC BANK
+RADR    equ *+1-COPYST+$30
+        lda $4000,Y
+        stx PORTB   ; DST BANK
+WADR    equ *+1-COPYST+$30
+        sta $FF00,Y
+        dey
+        bpl COPYST
+R04     lda #$FF
+        sta PORTB   ; CODE BANK
+        rts
+COPYLEN equ *-COPYST
+
+* process SIO call
+RD4SIO  pha
+        sta WBNK+1+RESO
+        lda DDEVIC
+        cmp #$31
+        bne STDSIO
+
+        lda DUNIT
+RR1     cmp #0
+        beq RDS2
+
+* exit trough stub to standard SIO
+STDSIO  ldy <SIOST+10-RES2
+        jmp CSTUB+RESO
+
+* setup read/write address and stub
+RDS2    ldx <COPYLEN-1
+RDS3    cpx #$11
+        bcc RDS3A
+        lda $30,X   ;Save ZP locations >= $41
+        pha
+RDS3A   lda COPYST+RESO,X
+        sta $30,X
+        dex
+        bpl RDS3
+
+* asume a read operation, writes to buffer
+        lda DBUFA
+        sta WADR
+        lda DBUFA+1
+        sta WADR+1
+
+* setup length
+        lda DCMND
+        ldy DBYT
+        ldx DBYT+1
+        bne R2NAK
+
+        cmp #'S'
+        beq SSTAT
+
+* read/write
+R2RW    cpy #128
+        bne R2NAK
+
+* verify sector number
+        ldx DAUX2
+        ldy DAUX1
+        bne RDS4
+        dex
+RDS4    dey
+
+RR5     cpy #0 ;MAXSECT
+        txa
+RR6     sbc #0 ;MAXSECT+1
+        bcs R2NAK
+
+        tya
+        adc #3 ; Reserve 3 sectors at start of RAMDISK
+        bcc RR6B
+        inx
+RR6B    tay
+        ora #$80
+        lsr @
+        sta RADR+1
+        ror RADR
+
+        tya
+        asl @
+        txa
+        rol @
+        tay ; Y = (SECTOR+1)/128 = BANK#
+        ldx RBTAB+RESO,Y
+
+        ldy #127    ;Copy length
+        lda DCMND
+        cmp #'R'
+        beq SREAD
+        cmp #'W'
+        beq SWRITE
+        cmp #'P'
+        beq SWRITE
 
 * SIO error
-R2NAK   LDY #139
-        BNE R2XIT
+R2NAK   ldy #139
+        bne R2XIT
 
 * Write operation, should swap buffers
-SWRITE  LDA WBNK+1+RESO
-        STX WBNK+1+RESO
-*        STA RBNK
-        DTA L(STA_zp,RBNK)
-*        LDA RADR
-        DTA L(LDA_zp,RADR)
-*        LDX WADR
-        DTA L(LDX_zp,WADR)
-*        STA WADR
-        DTA L(STA_zp,WADR)
-*        STX RADR
-        DTA L(STX_zp,RADR)
-*        LDA RADR+1
-        DTA L(LDA_zp,RADR+1)
-*        LDX WADR+1
-        DTA L(LDX_zp,WADR+1)
-*        STA WADR+1
-        DTA L(STA_zp,WADR+1)
-*        STX RADR+1
-        DTA L(STX_zp,RADR+1)
+SWRITE  lda WBNK+1+RESO
+        stx WBNK+1+RESO
+        sta RBNK
+        lda RADR
+        ldx WADR
+        sta WADR
+        stx RADR
+        lda RADR+1
+        ldx WADR+1
+        sta WADR+1
+        stx RADR+1
 
-        LDA #$80
-        BNE R2CPY
+        lda #$80
+        bne R2CPY
 
 * STATUS - read from pre-defined area
-SSTAT   LDA <[RDSTAT+RESO]
-*        STA RADR
-        DTA L(STA_zp,RADR)
-        LDA >[RDSTAT+RESO]
-*        STA RADR+1
-        DTA L(STA_zp,RADR+1)
+SSTAT   lda <[RDSTAT+RESO]
+        sta RADR
+        lda >[RDSTAT+RESO]
+        sta RADR+1
 
-        CPY #4
-        BNE R2NAK
+        cpy #4
+        bne R2NAK
 
-R05     LDX #$FF
-        DEY
-        BEQ R2NAK
+R05     ldx #$FF
+        dey
+        beq R2NAK
 
-* SREAD   STX RBNK
-SREAD   DTA L(STX_zp,RBNK)
-        LDA #$40
-R2CPY   CMP $303
-        BNE R2NAK
-WBNK    LDX #$FF
-        JSR $30
-        LDY #1
+SREAD   stx RBNK
+        lda #$40
+R2CPY   cmp DSTATS
+        bne R2NAK
+WBNK    ldx #$FF
+        jsr $30
+        ldy #1
 
-R2XIT   STY $303
+R2XIT   sty DSTATS
 * Restore ZP
-        LDX <$100-[COPYLEN-$11]
-RZP     PLA
-*        STA $30+COPYLEN,X
-        DTA L(STAX_zp,$30+COPYLEN)
-        INX
-        BNE RZP
-        LDY <[EXTST+10-RES2]
+        ldx <$100-[COPYLEN-$11]
+RZP     pla
+        sta $30+COPYLEN,X
+        inx
+        bne RZP
+        ldy <[EXTST+10-RES2]
 * Fall through
 
 * Copy STUB to low memory and jump
-CSTUB   LDX #10
-CST1    LDA $4000,Y
-        STA $30,X
-        DEY
-        DEX
-        BPL CST1
-        PLA
-        LDX #$40
-        JMP $0030
+CSTUB   ldx #10
+CST1    lda $4000,Y
+        sta $30,X
+        dey
+        dex
+        bpl CST1
+        pla
+        ldx #$40
+        jmp $0030
 
-* Exit jumping to standard SIO
-SIOST   STA $D301
-        CLI
-        STX 54286
-JSIO    JMP $FFFF
+RDSTAT  dta B($10,$FF,$FF,$FF)
 
-* Exit with Y=status
-EXTST   STA $D301
-        CLI
-        STX 54286
-        LDY $303
-        RTS
+RBTAB   equ *
 
+RESO    equ $4000-RES2
+RES2LEN equ RBTAB+64-RES2
 
-* Copy from one bank to another
-COPYST  LDA #$FF
-RBNK    EQU *-1-COPYST+$30
-        STA $D301   ; SRC BANK
-RADR    EQU *+1-COPYST+$30
-        LDA $4000,Y
-        STX $D301   ; DST BANK
-WADR    EQU *+1-COPYST+$30
-        STA $FF00,Y
-        DEY
-        BPL COPYST
-R04     LDA #$FF
-        STA $D301   ; CODE BANK
-        RTS
-COPYLEN EQU *-COPYST
-
-
-RDSTAT  DTA B($10,$FF,$FF,$FF)
-
-RBTAB   EQU *
-
-RESO    EQU $4000-RES2
-RES2LEN EQU RBTAB+64-RES2
+        end

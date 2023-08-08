@@ -44,7 +44,7 @@ loopid  sta PDVS
         bne nextid
         beq initrtc
 nextid  inc pbi_nr
-        asl
+        asl @
         bne loopid
 * IDE+2 not found
         lda SHPDVS

@@ -50,7 +50,7 @@ vchar_cnt   cpx #$02
             lda (DOSVEC),Y      ; check for end after second char
             cmp #$9b
             bne parameterError
-            
+
             ldx clr_char        ; convert to hex
             ldy clr_char+1
             jsr conva2h
@@ -109,12 +109,12 @@ clear_loop  stx $ffff
             lda clear_loop+1
             cmp MEMTOP
             bcs clear_end
-            
+
 clear_inc   inc clear_loop+1    ; inc address
             bne clear_loop
             inc clear_loop+2
             jmp clear_loop
-            
+
 clear_end   jsr PRINT
             dta b($9b),c'Done',b($9b,$ff)
             rts

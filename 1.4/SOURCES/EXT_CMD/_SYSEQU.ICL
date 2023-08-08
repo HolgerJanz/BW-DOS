@@ -66,6 +66,7 @@ BW_BUFOFF   equ $730 ; current offset in BW_LBUF
 BW_DATER    equ $733 ; date for GETTD and SETTD
 BW_TIMER    equ $736 ; time for GETTD and SETTD
 BW_XDIVIO   equ $72E ; address of XDIVIO
+BW_SMEMLO   equ $744 ; startup MEMLO
 BW_COMFNAM  equ $747 ; result from BW_CRNAME
 BW_LBUF     equ $765 ; command line buffer
 
@@ -88,6 +89,9 @@ CHKSUM1     equ $c000
 AXLON       equ $CFFF
 
 PDVS        equ $D1FF
+
+RANDOM      equ $D20A
+
 PORTB       equ $D301
 
 DMACTL      equ $D400 
