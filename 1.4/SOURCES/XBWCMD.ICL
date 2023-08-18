@@ -111,7 +111,7 @@ RESINI  jsr MOV_CAL
   dta h(MC_mov+CMTAD+1),l(CMTAD+1),h(MC_2+DOSVEC),l(DOSVEC)
   dta h(MC_movE+KFFFF),l(KFFFF),h(MC_2+ECHOFLG),l(ECHOFLG)
 
-* MAZE - LAST1 FCBIOCB (NEVADI)
+* MAZE - LAST1 FCBIOCB (never mind)
 *      - SEC1CHG
 *      - DCBs
 *      - FCBs = $FF
@@ -119,19 +119,19 @@ RESINI  jsr MOV_CAL
 
 * X=0
         txa
-RESI1   sta L0E4C,X
+RESI1   sta FCBDIRP+1,X
         cpx #$97
         bcc RESI1B
-        dec L0E3F+1,X
+        dec FCBMAPX+1,X
 RESI1B  inx
         bne RESI1
-* DRIVE# DO DCB (A=0, X=0)
+* drive# do DCB (A=0, X=0)
         tay
         dta b(op_BIT_abs)
 RESI3   ldy #$07
 RESI4   iny
         tya
-        sta L0E55,X
+        sta DCBDRIV,X
         txa
         clc
         adc #$1A
@@ -176,7 +176,7 @@ GETTD   jsr MOV_CAL
   dta h(MC_movE+INTDATE),l(INTDATE),h(MC_6+DATER),l(DATER)
 RET     rts
 
-ADC_L   lda L1488+1
+ADC_L   lda LDSA7C+1
         dta b(op_BIT_abs)
 ADC_1   lda #$01
         ldx #op_ADC_imd

@@ -1,200 +1,202 @@
-
 * GETBYTE
-L128D       ldx L0E48
-L128DV      equ L128D-1
+GET         ldx FCBAUX1
+GETV        equ GET-1
             cpx #$16
-            beq L1283
+            beq DLG0
             lda #$00
             dta b(op_BIT_abs)
 * PUBYTE
-L1296       lda #$FF
-L1296V      equ L1296-1
-            sta L0048
+PUT         lda #$FF
+PUTV        equ PUT-1
+            sta RWFLG
             and #$0C
             eor #$07
             cmp ICCOMZ
-            bne L12DF
-L12A2       lda #$00
+            bne GP1
+RTAD        lda #$00
             cmp #$E4
-            bcc L12DF
+            bcc GP1
             ldy ICBLHZ
-            bne L12B1
+            bne PTA3
+* Y=0
             iny
             cpy ICBLLZ
-            bcs L12DF
+            bcs GP1
 
-L12B1       jsr MOV_CAL
-  dta h(MC_mov+ICBALZ),l(ICBALZ),h(MC_2+L1426+1),l(L1426+1)
+PTA3        jsr MOV_CAL
+  dta h(MC_mov+ICBALZ),l(ICBALZ),h(MC_2+LDSA7B+1),l(LDSA7B+1)
   dta h(MC_mov+ICBLLZ),l(ICBLLZ),h(MC_2+L0E51),l(L0E51)
-  dta h(MC_jsrE+L136A),l(L136A)
+  dta h(MC_jsrE+LDSA),l(LDSA)
 
             php
 
             jsr MOV_CAL
-  dta h(MC_mov+L1426+1),l(L1426+1),h(MC_2+ICBALZ),l(ICBALZ)
+  dta h(MC_mov+LDSA7B+1),l(LDSA7B+1),h(MC_2+ICBALZ),l(ICBALZ)
   dta h(MC_movE+L0E51),l(L0E51),h(MC_2+ICBLLZ),l(ICBLLZ)
 
             plp
-            bmi L12EE
+            bmi PTA4
 
             jsr SBC_1
             dta a(ICBALZ)
-
+* X=1
             lda (ICBALZ-1,X)
             inc ICBLLZ
-L12D6       sta L10DB+1
-L12D9       jsr L14BF
-            beq L12F0
+PTA1        sta CIODTA+1
+BLEX        jsr TESTEOF
+            beq STAT3
             rts
 
-L12DF       jsr MOV_CAL
-  dta h(MC_mov+L12D6+1),l(L12D6+1),h(MC_2+L1426+1),l(L1426+1)
+GP1         jsr MOV_CAL
+  dta h(MC_mov+PTA1+1),l(PTA1+1),h(MC_2+LDSA7B+1),l(LDSA7B+1)
   dta b(MC_cpyE+2,K0001-DAT_BUF,L0E51-DAT_BUF)
 
-L12E9       jsr L136A
-L12E9V      equ L12E9-1
-            bpl L12D9
-L12EE       lda #$8B
-L12F0       eor #$03
-            sta L10BA+1
+BLOCK       jsr LDSA
+BLOCKV      equ BLOCK-1
+            bpl BLEX
+* EOF
+PTA4        lda #$8B ; $88 eor $03
+STAT3       eor #$03
+            sta XOK+1
             rts
 
-L12F6       jsr L0F4C
+NXTDAT      jsr ZAJMAP
             iny
             iny
-            sty L0E3F
+            sty FCBMAPX
             cpy L0045
-            bne L1345
-            jsr L0F4C
+            bne SETP6
+* next map
+            jsr ZAJMAP
             ldy #$00
             lda (L0043),Y
             tax
             iny
             ora (L0043),Y
-            bne L1335
+            bne NEXTM2
             jsr L1B6C
             ldy #$02
-L1314       lda L0E3B,Y
+NEXTM3      lda L0E3B,Y
             sta (L0043),Y
             iny
             cpy #$04
-            bcc L1314
-            jsr L0F4C
+            bcc NEXTM3
+            jsr ZAJMAP
             ldy #$01
-L1323       lda VTOCSEC,Y
+NEXTM4      lda VTOCSEC,Y
             sta (L0043),Y
             dey
-            bpl L1323
+            bpl NEXTM4
 
             jsr MOV_CAL
   dta h(MC_jsr+L1C2B),l(L1C2B)
-  dta b(MC_cpyE+2,VTOCSEC-DAT_BUF,L0E3D-DAT_BUF)
+  dta b(MC_cpyE+2,VTOCSEC-DAT_BUF,FCBMAP-DAT_BUF)
 
-            beq L133D
-L1335       lda (L0043),Y
-            sta L0E3E
-            stx L0E3D
-L133D       jsr L0F4C
+            beq NEXTM1
+NEXTM2      lda (L0043),Y
+            sta FCBMAP+1
+            stx FCBMAP
+NEXTM1      jsr ZAJMAP
             ldy #$04
-            sty L0E3F
-L1345       lda (L0043),Y
-            sta L0E3A
+            sty FCBMAPX
+SETP6       lda (L0043),Y
+            sta FCBSECT
             iny
             lda (L0043),Y
             sta L0E3B
-            ora L0E3A
+            ora FCBSECT
             rts
 
-L1354       sec
+UPRAVLEN    sec
             ldx #$FD
-L1357       lda L0E45-$FD,X
-            sbc L0E40-$FD,X
+UPRLN2      lda FCBLEN-$FD,X
+            sbc FCBPOS-$FD,X
             inx
-            bne L1357
-            bcs L1369
+            bne UPRLN2
+            bcs UPRLN3
 
             jsr MOV_CAL
-  dta b(MC_cpyE+3,L0E40-DAT_BUF,L0E45-DAT_BUF)
+  dta b(MC_cpyE+3,FCBPOS-DAT_BUF,FCBLEN-DAT_BUF)
 
             clc
-L1369       rts
+UPRLN3      rts
 
-L136A       lda L0E48
+LDSA        lda FCBAUX1
             ldy #$83
-            bit L0048
-            bpl L1376
+            bit RWFLG
+            bpl LDSA0A
             lsr @
             ldy #$87
-L1376       and #$04
-            bne L13BF
-            jmp RET_ERRY
+LDSA0A      and #$04
+            bne LDSA0
+            jmp RETERRY
 
 * CLOSE
-L137D       lda L0E48
-L137DV      equ L137D-1
+CLOSE       lda FCBAUX1
+CLOSEV      equ CLOSE-1
             cmp #$16
-            bne L1387
-            lsr L0E53
-L1387       and #$08
-            beq L1369
+            bne CLOS1
+            lsr DLOPF
+CLOS1       and #$08
+            beq UPRLN3
 
             jsr MOV_CAL
-  dta b(MC_cpy+3,L0E45-DAT_BUF,RENNAM-DAT_BUF)
-  dta b(MC_cpy+2,L0E49-DAT_BUF,L0E43-DAT_BUF)
-  dta h(MC_jsr+L150C),l(L150C)
-  dta h(MC_jsr+L139E),l(L139E)
-  dta b(MC_cpyE+3,RENNAM-DAT_BUF,L0E24-DAT_BUF)
+  dta b(MC_cpy+3,FCBLEN-DAT_BUF,RENNAM-DAT_BUF)
+  dta b(MC_cpy+2,FCBDIR1-DAT_BUF,FCB1ST-DAT_BUF)
+  dta h(MC_jsr+OPNDRD),l(OPNDRD)
+  dta h(MC_jsr+LDDIR),l(LDDIR)
+  dta b(MC_cpyE+3,RENNAM-DAT_BUF,DIRBUF+3-DAT_BUF)
 
-L139B       lda #$FF
+SADIR       lda #$FF
             dta b(op_BIT_abs)
-L139E       lda #$00
+LDDIR       lda #$00
             pha
 
             jsr MOV_CAL
-  dta b(MC_cpy+2,L0E4B-DAT_BUF,L0DEE-DAT_BUF)
-  dta b(MC_cpy+1,NULY-DAT_BUF,L0DF0-DAT_BUF)
-  dta h(MC_jsrE+L143E),l(L143E)
+  dta b(MC_cpy+2,FCBDIRP-DAT_BUF,POSTMP-DAT_BUF)
+  dta b(MC_cpy+1,NULY-DAT_BUF,POSTMP+2-DAT_BUF)
+  dta h(MC_jsrE+SETPOS),l(SETPOS)
 
             pla
             dta b(op_BIT_abs)
-L13AE       lda #$00
+LDDIRN      lda #$00
             dta b(op_BIT_abs)
-L13B1       lda #$FF
-            sta L0048
+SADIRN      lda #$FF
+            sta RWFLG
 
             jsr MOV_CAL
-  dta h(MC_mov+L11DB+1),l(L11DB+1),h(MC_2+L1426+1),l(L1426+1)
+  dta h(MC_mov+DIRBAD+1),l(DIRBAD+1),h(MC_2+LDSA7B+1),l(LDSA7B+1)
   dta b(MC_cpyE+2,K0017-DAT_BUF,L0E51-DAT_BUF)
 
-L13BF       lda L0045
+LDSA0       lda L0045
             sec
-            sbc L0E3C
-            bne L13C9
+            sbc FCBIX
+            bne LDSA2
             lda #$FF
-L13C9       sta L1488+1
+LDSA2       sta LDSA7C+1
             lda L0E52
-            bne L13D9
+            bne LDSA4
             lda L0E51
-            beq L13F5
-            jsr L14F5
-L13D9       jsr L14BF
-            beq L13F4
-            jsr L14F5
-            lda L0E3A
+            beq LDSARET
+            jsr LDSAUPL
+LDSA4       jsr TESTEOF
+            beq LDSAEOF
+            jsr LDSAUPL
+            lda FCBSECT
             ora L0E3B
-            bne L140E
-            lda L0E48
+            bne LDSA6
+            lda FCBAUX1
             and #$08
-            bne L13F6
-L13F0       jsr RET_ERRS
+            bne LDSA5B
+STPER       jsr RETERRS
             dta b($A6)
-L13F4       dex
-L13F5       rts
+LDSAEOF     dex
+LDSARET     rts
 
-L13F6       jsr MOV_CAL
+LDSA5B      jsr MOV_CAL
   dta h(MC_jsr+L1B6C),l(L1B6C)
-  dta b(MC_cpy+2,VTOCSEC-DAT_BUF,L0E3A-DAT_BUF)
-  dta h(MC_jsrE+L0F4C),l(L0F4C)
+  dta b(MC_cpy+2,VTOCSEC-DAT_BUF,FCBSECT-DAT_BUF)
+  dta h(MC_jsrE+ZAJMAP),l(ZAJMAP)
 
             lda VTOCSEC
             sta (L0043),y
@@ -202,125 +204,131 @@ L13F6       jsr MOV_CAL
             lda VTOCSEC+1
             sta (L0043),Y
             jsr L1C2B
-L140E       ldx L0E3A
-L1411       lda L0E3B
+* jsr changed cannot be combined into a block under UNI
+* UNI destroys reg. Y at the entrance
+LDSA6       ldx FCBSECT
+            lda L0E3B
 
             jsr MOV_CAL
-  dta h(MC_jsr+L1BE9),l(L1BE9)
-  dta h(MC_movE+L1426+1),l(L1426+1),h(MC_2+L1481+1),l(L1481+1)
-
-            ldy L0E3C
-            bit L0048
-            bmi L1481
-L1424       lda (L0043),Y
-L1426       sta $FFFF,X
+  dta h(MC_jsr+ZAJIST),l(ZAJIST)
+  dta h(MC_movE+LDSA7B+1),l(LDSA7B+1),h(MC_2+LDSA8+1),l(LDSA8+1)
+* X=0
+            ldy FCBIX
+            bit RWFLG
+            bmi LDSA8
+LDSA7       lda (L0043),Y
+LDSA7B       sta $FFFF,X
             iny
             inx
-            cpx L1488+1
-            bne L1424
-            beq L148F
+            cpx LDSA7C+1
+            bne LDSA7
+            beq LDSA9
 
 * POINT
-L1432       ldy #$FD
-L1432V      equ L1432-1
-L1434       lda IOCB0+ICAX3,X
-            sta L0DEE-$FD,Y
+POINT       ldy #$FD
+POINTV      equ POINT-1
+POI2        lda IOCB0+ICAX3,X
+            sta POSTMP-$FD,Y
             inx
             iny
-            bne L1434
-L143E       lda L0DF0
-            bmi L13F0
+            bne POI2
+
+SETPOS      lda POSTMP+2
+            bmi STPER
 
             jsr MOV_CAL
-  dta b(MC_CPY+1,K0002-DAT_BUF,L0E3F-DAT_BUF)
-  dta b(MC_CPY+2,L0E43-DAT_BUF,L0E3D-DAT_BUF)
-  dta b(MC_CPY+3,L0DEE-DAT_BUF,L0E40-DAT_BUF)
-  dta h(MC_jsrE+L1354),l(L1354)
+  dta b(MC_CPY+1,K0002-DAT_BUF,FCBMAPX-DAT_BUF)
+  dta b(MC_CPY+2,FCB1ST-DAT_BUF,FCBMAP-DAT_BUF)
+  dta b(MC_CPY+3,POSTMP-DAT_BUF,FCBPOS-DAT_BUF)
+  dta h(MC_jsrE+UPRAVLEN),l(UPRAVLEN)
 
-            bcs L145A
-            lda L0E48
+            bcs SETP3B
+            lda FCBAUX1
             and #$08
-            beq L13F0
-L145A       lda L0DEE
-            ldx L0DEF
-            ldy L0DF0
+            beq STPER
+SETP3B      lda POSTMP
+            ldx POSTMP+1
+            ldy POSTMP+2
             jsr L14FD
-            sta L0E3C
-            stx L0DEE
-            sty L0DEF
-
-L146F       jsr L12F6
-            lda L0DEE
-            ora L0DEF
-            beq L14D9
+            sta FCBIX
+            stx POSTMP
+            sty POSTMP+1
+* forward
+SETP4       jsr NXTDAT
+            lda POSTMP
+            ora POSTMP+1
+            beq POSCXX
             jsr SBC_1
-            dta a(L0DEE)
-            bcs L146F
+            dta a(POSTMP)
+            bcs SETP4
 
-L1481       lda $FFFF,X
+LDSA8       lda $FFFF,X
             sta (L0043),Y
             iny
             inx
-L1488       cpx #$00
-            bne L1481
+LDSA7C      cpx #$00
+            bne LDSA8
             jsr L1C2B
-L148F       lda L1488+1
+LDSA9       lda LDSA7C+1
 
             jsr SBC_A
             dta a(L0E51)
 
             jsr ADC_L
-            dta a(L1426+1)
+            dta a(LDSA7B+1)
 
             jsr ADC_L
-            dta a(L0E40)
+            dta a(FCBPOS)
 
-            bcc L14A6
+            bcc LDSA11
             inc L0E42
-L14A6       jsr L1354
-L14A9       lda L0E3C
+LDSA11      jsr UPRAVLEN
+            lda FCBIX
             clc
-            adc L1488+1
+            adc LDSA7C+1
             cmp L0045
-            bne L14B9
-            jsr L12F6
+            bne LDSA12
+            jsr NXTDAT
             lda #$00
-L14B9       sta L0E3C
-            jmp L13BF
-L14BF       ldx #$FD
-            sec
-L14C2       lda L0D48,X
-            sbc L0D43,X
-            sta L0DEE-$FD,X
-            inx
-            bne L14C2
-            bit L0048
-            bmi L14D7
-            ora L0DEF
-            beq L14F1
-L14D7       lda #$FF
-L14D9       rts
+LDSA12      sta FCBIX
+            jmp LDSA0
 
-CLR_TXT_BUF jsr GETSTK
-            sta L1283+1
+TESTEOF     ldx #$FD
+            sec
+LDSA3       lda FCBLEN-$FD,X
+            sbc FCBPOS-$FD,X
+            sta POSTMP-$FD,X
+            inx
+            bne LDSA3
+            bit RWFLG
+            bmi LDSA3A
+            ora POSTMP+1
+            beq LDSA3B
+LDSA3A      lda #$FF
+POSCXX      rts
+
+DLCLRS      jsr GETSTK
+            sta DLG0+1
             asl @
             lsr @
             tax
             lda #$9B
             tay
-L14E6       sta DIBUF,X
+DLCL1       sta DIBUF-1,X
             lda #$20
             dex
-            bne L14E6
-            stx L1277+1
-L14F1       lda L0DEE
+            bne DLCL1
+            stx DLBX+1
+* RTS omitted - never mind
+LDSA3B      lda POSTMP
             rts
 
-L14F5       cmp L1488+1
-            bcs L14D9
-            sta L1488+1
+LDSAUPL     cmp LDSA7C+1
+            bcs POSCXX
+            sta LDSA7C+1
+* RTS omitted - never mind
 L14FD       bit L0045
-            bpl L150B
+            bpl POSCMPX
             asl @
             pha
             txa
@@ -331,282 +339,283 @@ L14FD       bit L0045
             tay
             pla
             lsr @
-L150B       rts
+POSCMPX     rts
 
-L150C       lda #$14
+OPNDRD      lda #$14
             dta b(op_BIT_abs)
-L150F       lda #$0C
-L1511       sta L0E48
+OPNINT1     lda #$0C
+OPNINT      sta FCBAUX1
             pha
 
             jsr MOV_CAL
-  dta b(MC_cpy+3,NULY-DAT_BUF,L0DEE-DAT_BUF)
-  dta h(MC_jsrE+L143E),l(L143E)
+  dta b(MC_cpy+3,NULY-DAT_BUF,POSTMP-DAT_BUF)
+  dta h(MC_jsrE+SETPOS),l(SETPOS)
 
             pla
             cmp #$10
-            bcc L152D
+            bcc OPNINT2
 
             jsr MOV_CAL
-  dta b(MC_cpy+1,K0017-DAT_BUF,L0E45-DAT_BUF)
-  dta h(MC_jsr+L13AE),l(L13AE)
-  dta b(MC_cpyE+3,L0E24-DAT_BUF,L0E45-DAT_BUF)
+  dta b(MC_cpy+1,K0017-DAT_BUF,FCBLEN-DAT_BUF)
+  dta h(MC_jsr+LDDIRN),l(LDDIRN)
+  dta b(MC_cpyE+3,DIRBUF+3-DAT_BUF,FCBLEN-DAT_BUF)
 
-L152D       rts
+OPNINT2      rts
 
-L152E       jsr MOV_CAL
-  dta b(MC_cpy+11,SRCHNAM-DAT_BUF,L0E27-DAT_BUF)
-  dta b(MC_cpy+3,NULY-DAT_BUF,L0E24-DAT_BUF)
+OPENT       jsr MOV_CAL
+  dta b(MC_cpy+11,SRCHNAM-DAT_BUF,DIRBUF+6-DAT_BUF)
+  dta b(MC_cpy+3,NULY-DAT_BUF,DIRBUF+3-DAT_BUF)
   dta h(MC_movE+DATER),l(DATER),h(MC_6+L0E32),l(L0E32)
 
             bit TDOVER
-            bpl L1547
+            bpl OPNT2
 
             jsr MOV_CAL
   dta h(MC_movE+ODATER),l(ODATER),h(MC_6+L0E32),l(L0E32)
 
-L1547       lda L0049
-            sta L0E48
+OPNT2       lda MYA1
+            sta FCBAUX1
             and #$20
             ora #$08
             sta DIRBUF
             rts
 
-L1554       bit L0E53
-            bmi L15C4
+OPNDL       bit DLOPF
+            bmi DLTOO
             lda #$16
-            sta L0049
+            sta MYA1
 
             jsr MOV_CAL
-  dta h(MC_jsr+L1600),l(L1600)
+  dta h(MC_jsr+OPN3),l(OPN3)
   dta b(MC_cpyE+11,SRCHNAM-DAT_BUF,DIRNAM-DAT_BUF)
 
-            stx L1283+1
+            stx DLG0+1
             lda ICAX2Z
-            sta L11BD+1
-            bpl L1585
+            sta DTYPE+1
+            bpl OPNDL2
 
-            jsr CLR_TXT_BUF
+            jsr DLCLRS
             dta b($2A)
 
-            sty L0DC5
+            sty DIBUF+40
 
             jsr MOV_CAL
-  dta b(MC_cpy+8,DIRVOL-DAT_BUF,L0D9D-DAT_BUF)
-  dta b(MC_cpy+8,L0E63-DAT_BUF,L0DA9-DAT_BUF)
-  dta b(MC_cpy+11,DLDIR-DAT_BUF,L0DB1-DAT_BUF)
-  dta b(MC_cpyE+8,L0E27-DAT_BUF,L0DBD-DAT_BUF)
+  dta b(MC_cpy+8,DIRVOL-DAT_BUF,DIBUF-DAT_BUF)
+  dta b(MC_cpy+8,DCBVOL-DAT_BUF,DIBUF+12-DAT_BUF)
+  dta b(MC_cpy+11,DLDIR-DAT_BUF,DIBUF+20-DAT_BUF)
+  dta b(MC_cpyE+8,DIRBUF+6-DAT_BUF,DIBUF+32-DAT_BUF)
 
-L1585       sec
-            ror L0E53
+OPNDL2      sec
+            ror DLOPF
             rts
 
 * MD
-L158A       lda #$28
-L158AV      equ L158A-1
+CREDIR      lda #$28
+CREDIRV     equ CREDIR-1
             ldx #$09
-            bne L15A0
+            bne OPEN00
 * SAVE
-L1590       lda ICAX1Z
-L1590V      equ L1590-1
+STAT        lda ICAX1Z
+STATV       equ STAT-1
             and #$F0
             ora #$04
             dta b(op_BIT_abs)
-L1597       lda $2A
-L1597V      equ L1597-1
+OPEN        lda $2A
+OPENV       equ OPEN-1
             and #$3F
             dta b(op_BIT_abs)
-L159C       lda #$14
-L159E       ldx #op_AND_abs
-L15A0       stx L1684
+OPEN014     lda #$14
+OPEN0       ldx #op_AND_abs
+OPEN00      stx OPNXT
             cmp #$06
-            beq L1554
+            beq OPNDL
             cmp #$20
-            bcc L15AD
+            bcc OPNER0
             and #$EF
-L15AD       sta L0049
+OPNER0      sta MYA1
             and #$0F
             lsr @
-            bcc L15B8
+            bcc OPNER0B
             cmp #$04
-            bne L15BB
-L15B8       lsr @
-L15B9       bcc L1600
+            bne OPNER1
+OPNER0B     lsr @
+            bcc OPN3
 
-L15BB       ldy #$A8
+OPNER1      ldy #$A8
             dta b(op_BIT_abs)
-L15BE       ldy #$A3
+NEWI3       ldy #$A3
             dta b(op_BIT_abs)
-L15C1       ldy #$A9
+OPNFUL      ldy #$A9
             dta b(op_BIT_abs)
-L15C4       ldy #$A1
-            jmp RET_ERRY
+DLTOO       ldy #$A1
+            jmp RETERRY
 
-L15C9       ldx #$0A
-L15CB       lda SRCHNAM,X
+NEWILD      ldx #$0A
+NEWI2       lda SRCHNAM,X
             cmp #'?'
-            beq L15BE
+            beq NEWI3
             dex
-            bpl L15CB
+            bpl NEWI2
             jmp (GETTDV)
 
-L15D8       lda #$00
+PTH         lda #$00
             bpl ERR_170
 
             jsr MOV_CAL
   dta b(MC_cpy+11,SRCHNAM-DAT_BUF,RENNAM-DAT_BUF)
   dta b(MC_cpy+11,DOSNAM-DAT_BUF,SRCHNAM-DAT_BUF)
-  dta b(MC_cpy+2,L0E56-DAT_BUF,L0E43-DAT_BUF)
-  dta h(MC_jsr+L150C),l(L150C)
+  dta b(MC_cpy+2,DCBMAIN-DAT_BUF,FCB1ST-DAT_BUF)
+  dta h(MC_jsr+OPNDRD),l(OPNDRD)
   dta h(MC_jsrE+L1DC5),l(L1DC5)
 
             bne ERR_170
 
             jsr MOV_CAL
   dta b(MC_cpy+11,RENNAM-DAT_BUF,SRCHNAM-DAT_BUF)
-  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
-  dta h(MC_jsr+L150C),l(L150C)
+  dta b(MC_cpy+2,DIRBUF+1-DAT_BUF,FCB1ST-DAT_BUF)
+  dta h(MC_jsr+OPNDRD),l(OPNDRD)
   dta h(MC_jsrE+L1DC2),l(L1DC2)
 
             bne ERR_170
-            jmp L16B2
+            jmp OPNJ2
 
-L1600       jsr L1AAE
+OPN3        jsr L1AAE
             php
             pla
             ror @
             ror @
-            ror L15D8+1
-            lda L0049
+            ror PTH+1
+            lda MYA1
             and #$10
-            bne L167D
-            jsr L150C
+            bne OPNJ2BJ
+            jsr OPNDRD
             jsr L1DBF
-            beq L167F
-L1618       lda L0049
+            beq OPNJE
+OPNPT0      lda MYA1
             cmp #$04
-            beq L15D8
+            beq PTH
             and #$08
-            bne L162C
+            bne OPN4B
 
-ERR_170     jsr RET_ERRS
+ERR_170     jsr RETERRS
             dta b($AA)
-
-L1626       jsr L15C9
+* bookmarks
+OPN4BE      jsr NEWILD
             jsr L1D4D
-L162C       bit L0E4C
-            bmi L15C1
+OPN4B       bit FCBDIRP+1
+            bmi OPNFUL
 
             jsr MOV_CAL
-  dta h(MC_jsr+L15C9),l(L15C9)
-  dta h(MC_jsr+L152E),l(L152E)
+  dta h(MC_jsr+NEWILD),l(NEWILD)
+  dta h(MC_jsr+OPENT),l(OPENT)
   dta h(MC_jsr+L1B6C),l(L1B6C)
-  dta b(MC_cpy+2,VTOCSEC-DAT_BUF,L0E22-DAT_BUF)
-  dta b(MC_cpy+1,K1C-DAT_BUF,L0E48-DAT_BUF)
-  dta h(MC_jsr+L139B),l(L139B)
-  dta b(MC_cpy+2,L0E4B-DAT_BUF,SRCHTMP-DAT_BUF)
-  dta b(MC_cpy+2,NULY-DAT_BUF,L0E4B-DAT_BUF)
-  dta h(MC_jsr+L139E),l(L139E)
-  dta b(MC_cpy+3,L0E45-DAT_BUF,L0E24-DAT_BUF)
-  dta h(MC_jsr+L139B),l(L139B)
-  dta b(MC_cpy+2,SRCHTMP-DAT_BUF,L0E4B-DAT_BUF)
-  dta h(MC_jsrE+L139E),l(L139e)
-
-            lda L0049
+  dta b(MC_cpy+2,VTOCSEC-DAT_BUF,DIRBUF+1-DAT_BUF)
+  dta b(MC_cpy+1,K1C-DAT_BUF,FCBAUX1-DAT_BUF)
+  dta h(MC_jsr+SADIR),l(SADIR)
+  dta b(MC_cpy+2,FCBDIRP-DAT_BUF,SRCHTMP-DAT_BUF)
+  dta b(MC_cpy+2,NULY-DAT_BUF,FCBDIRP-DAT_BUF)
+  dta h(MC_jsr+LDDIR),l(LDDIR)
+  dta b(MC_cpy+3,FCBLEN-DAT_BUF,DIRBUF+3-DAT_BUF)
+  dta h(MC_jsr+SADIR),l(SADIR)
+  dta b(MC_cpy+2,SRCHTMP-DAT_BUF,FCBDIRP-DAT_BUF)
+  dta h(MC_jsrE+LDDIR),l(LDDIR)
+* DIR?
+            lda MYA1
             and #$20
-            beq L1678
-L165A       beq L1618
+            beq OPN4D
+* between, never fulfilled
+OPNPT0J     beq OPNPT0
 
             jsr MOV_CAL
-  dta b(MC_cpy+2,L0E43-DAT_BUF,SRCHTMP-DAT_BUF)
-  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
-  dta h(MC_jsr+L150F),l(L150F)
-  dta h(MC_jsr+L152E),l(L152E)
-  dta b(MC_cpy+1,K0017-DAT_BUF,L0E24-DAT_BUF)
-  dta b(MC_cpy+2,SRCHTMP-DAT_BUF,L0E22-DAT_BUF)
-  dta h(MC_jsr+L13B1),l(L13B1)
-  dta b(MC_cpy+2,L0E22-DAT_BUF,L0E43-DAT_BUF)
-  dta h(MC_jsr+L150C),l(L150C)
-  dta h(MC_jsrE+L139E),l(L139E)
+  dta b(MC_cpy+2,FCB1ST-DAT_BUF,SRCHTMP-DAT_BUF)
+  dta b(MC_cpy+2,DIRBUF+1-DAT_BUF,FCB1ST-DAT_BUF)
+  dta h(MC_jsr+OPNINT1),l(OPNINT1)
+  dta h(MC_jsr+OPENT),l(OPENT)
+  dta b(MC_cpy+1,K0017-DAT_BUF,DIRBUF+3-DAT_BUF)
+  dta b(MC_cpy+2,SRCHTMP-DAT_BUF,DIRBUF+1-DAT_BUF)
+  dta h(MC_jsr+SADIRN),l(SADIRN)
+  dta b(MC_cpy+2,DIRBUF+1-DAT_BUF,FCB1ST-DAT_BUF)
+  dta h(MC_jsr+OPNDRD),l(OPNDRD)
+  dta h(MC_jsrE+LDDIR),l(LDDIR)
 
-L1678       jmp L16B2
+OPN4D       jmp OPNJ2
 
-L167B       bpl L1626
-L167D       bne L16BB
-L167F       lda L0049
+OPN4BEJ     bpl OPN4BE
+OPNJ2BJ     bne OPNJ2B
+OPNJE       lda MYA1
             eor DIRBUF
-L1684       and #$20
-            beq L1696
-            lda L0049
+OPNXT       and #$20
+            beq OPNJ1
+            lda MYA1
             and #$08
-            beq L165A
+            beq OPNPT0J
             ldy #$97
             dta b(op_BIT_abs)
-L1691       ldy #$A4
-            jmp RET_ERRY
-L1696       lda L0049
+OPNJP       ldy #$A4
+            jmp RETERRY
+OPNJ1       lda MYA1
             and #$08
-            beq L16B2
+            beq OPNJ2
             lda DIRBUF
             and #$21
             lsr @
-            bne L16B2
-            bcs L1691
-            lda L0049
+            bne OPNJ2
+            bcs OPNJP
+            lda MYA1
             cmp #$08
-            bne L16B2
-L16AC       lda #$00
-            bpl L167B
-            inc L0049
+            bne OPNJ2
+OPNJ1A      lda #$00
+            bpl OPN4BEJ
+            inc MYA1
 
-L16B2       jsr MOV_CAL
-  dta b(MC_cpy+2,L0E43-DAT_BUF,L0E49-DAT_BUF)
-  dta b(MC_cpyE+5,L0E22-DAT_BUF,L0E43-DAT_BUF)
+OPNJ2       jsr MOV_CAL
+  dta b(MC_cpy+2,FCB1ST-DAT_BUF,FCBDIR1-DAT_BUF)
+  dta b(MC_cpyE+5,DIRBUF+1-DAT_BUF,FCB1ST-DAT_BUF)
 
-L16BB       lda L0049
-            jsr L1511
-            lda L0049
+OPNJ2B      lda MYA1
+            jsr OPNINT
+            lda MYA1
             cmp #$10
-            bcc L16DB
-
+            bcc OPNJ3
+* DIR
             jsr MOV_CAL
-  dta b(MC_cpy+2,L0E43-DAT_BUF,L0E49-DAT_BUF)
-  dta b(MC_cpyE+2,NULY-DAT_BUF,L0E4B-DAT_BUF)
+  dta b(MC_cpy+2,FCB1ST-DAT_BUF,FCBDIR1-DAT_BUF)
+  dta b(MC_cpyE+2,NULY-DAT_BUF,FCBDIRP-DAT_BUF)
 
-            lda L0049
+            lda MYA1
             and #$07
-            bne L16DB
+            bne OPNJ3
 
             jsr MOV_CAL
-  dta b(MC_cpyE+3,L0E40-DAT_BUF,L0E45-DAT_BUF)
+  dta b(MC_cpyE+3,FCBPOS-DAT_BUF,FCBLEN-DAT_BUF)
 
-L16DB       lda L0049
+OPNJ3       lda MYA1
             lsr @
-            bcc L16FD
+            bcc OPNJ4
 
             jsr MOV_CAL
-  dta b(MC_cpyE+3,L0E45-DAT_BUF,L0DEE-DAT_BUF)
+  dta b(MC_cpyE+3,FCBLEN-DAT_BUF,POSTMP-DAT_BUF)
 
-            jmp L143E
+            jmp SETPOS
 
 * NOTE
-L16E9       ldy #$00
-L16E9V      equ L16E9-1
+NOTE        ldy #$00
+NOTEV       equ NOTE-1
             dta b(op_BIT_abs)
 * GETFLEN
-L16EC       ldy #$05
-L16ECV      equ L16EC-1
-L16EE       lda L0E40,Y
+GETLEN      ldy #$05
+GETLENV     equ GETLEN-1
+NOT2        lda FCBPOS,Y
             sta IOCB0+ICAX3,X
             iny
             inx
             txa
             and #$0F
             cmp #$03
-            bcc L16EE
-L16FD       rts
-
-SET_SIO_BUF stx L1C2B+1
+            bcc NOT2
+OPNJ4       rts
+* set SIO buffer
+ZAJADR      stx L1C2B+1
             lda #$FF
             sta L0F49,X
             txa

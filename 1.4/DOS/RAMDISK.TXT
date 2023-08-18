@@ -2,12 +2,12 @@
   RAMDISK.SYS (n[E][F] [file])|OFF
 
 This resident command sets up an
-emulated disk drive using extended RAM
-(up to 1MB).
+emulated disk drive using extended
+RAM, PORTB or Axlon up to 1MB.
 
 The "n" parameter is the number of the
 ramdisk drive.
-The "F" option will cause the RamDisk
+The "F" option will cause the ramdisk
 to be formatted.
 The "E" option will cause that it will
 not use 130XE compatible banks.
@@ -15,7 +15,5 @@ OFF removes the driver, if it was the
 last driver loaded.
 
 The configuration file can be used to
-specify values for PORTB to be used for
-the ramdisk.
-
-Command requires 48k main memory.
+specify values for PORTB or Axlon to
+be used for the ramdisk.

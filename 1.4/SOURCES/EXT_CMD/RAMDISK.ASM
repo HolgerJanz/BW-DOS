@@ -30,7 +30,7 @@ BIT_abs equ $2C
 
         jsr _print
         dta B(155)
-        dta C'BW-DOS 1.4 RAMDISK 08-08-2023'
+        dta C'BW-DOS 1.4 RAMDISK 16-08-2023'
         dta B(155,0)
 
         jsr _chkbwdos14
@@ -39,6 +39,10 @@ BIT_abs equ $2C
         sta SIOADR
         lda >BW_LSIO
         sta SIOADR+1
+
+* check extended and set PORTB or Axlon
+        jsr SWPORTB
+        jsr RAMTEST ; can switch to Axlon
 
 * first parameter
         jsr BW_CRNAME
@@ -62,7 +66,7 @@ BIT_abs equ $2C
 
         jmp REMOVE
 
-* HELP
+* help
 STRTHLP jsr _print
         dta C'Use:'
         dta B(155)
@@ -113,38 +117,22 @@ START5  lda DNUMB
         beq ST5A
         jmp CONFIG1
 
-* no config file, create default table
-ST5A    ldx #63
-        lda #1
-        clc
-ST5B    sta SWTAB+1,X
-        dex
-        bmi ST5C
-        adc #4
-        sta TEMP1
-        and #$10
-        adc TEMP1
-        bcc ST5B
-        adc #1
-        bne ST5B
-ST5C    stx SWTAB
-
 * check for extended memory
-        jsr RAMTEST
-
-        lda NBANKS
+ST5A    lda NBANKS
         beq ST5NO
-
+* no E option for Axlon
+        ldx BNKOFF
+        beq START6J
+* check option E for PRTB
         ldx XFLAG
         beq START6J
-
 * if option E then substract 4
         sec
         sbc #4
         sta NBANKS
         beq ST5MALO
         bcs START6J
-
+*  no extra banks left
 ST5MALO jsr _print
         dta C'Only 130XE banks available'
         dta B(155,0)
@@ -152,9 +140,9 @@ ST5AB   jsr _print
         dta C'Operation aborted'
         dta B(155,0)
         jmp (DOSVEC)
-
+* everything OK, start ini process
 START6J jmp START6
-
+* no extra memory at all
 ST5NO   jsr _print
         dta C'No extra memory available'
         dta B(155,0)
@@ -166,7 +154,7 @@ CIO1    ldx #$10
         jmp CIOV
 
 * load config file
-CONFIG1 lda #$FF
+CONFIG1 lda BNKOFF
         ldx #64
 CONF1B  sta SWTAB,X
         dex
@@ -247,7 +235,7 @@ START6  jsr SRCHRUT
         pha
         ldy <[R03-RESID]+1  ;Get code bank from low memory handler
         lda (SRCHADR),Y
-        sta PORTB
+        jsr SAPORTB
 
         ldy #1
 STRT6A  lda JSIO+1+RESO,Y
@@ -334,7 +322,7 @@ START7  lda DNUMB
         sta R04+1
         sta R05+1
 
-        sta PORTB
+        jsr SAPORTB
 
         ldx >RES2LEN-1
         ldy <RES2LEN-1
@@ -381,7 +369,7 @@ STRT7C2 sta $4000+[[RES2LEN-1]&$FF00],Y
         jmp FORMEND
 
 FORM1   jsr _print
-        dta C'Format RAM-Disk'
+        dta C'Format Ramdisk'
         dta B(155)
         dta B(0)
 
@@ -519,7 +507,7 @@ FORMEND lda DNUMB
         ora #$30
         sta PRDNUM
         jsr _print
-        dta C'RAM-Disk D'
+        dta C'Ramdisk D'
 PRDNUM  dta C'0: '
         dta B(0)
 
@@ -544,9 +532,17 @@ PRTSZ2  lda BW_DECOUT+4,X
 
         jsr _print
 PRNUM   dta C'0000'
-        dta C'kB'
+        dta C'kB '
+        dta b(0)
+        lda BNKOFF
+        bne PPORTB
+        jsr _print
+        dta c'Axlon'
         dta B(155,0)
-
+        jmp (DOSVEC)
+PPORTB  jsr _print
+        dta c'PORTB'
+        dta B(155,0)
         jmp (DOSVEC)
 
 * ====================================
@@ -563,7 +559,7 @@ VZBOOT  dta C'S'
         jmp $3080
         dta A(0,0,0)
         dta B(0,2,0,32,0,4,0)
-        dta C'RAM-DISK'
+        dta C'RAMDISK '
         dta B(0,128,$22)
 
 VZDIR   dta B(23,0,0)
@@ -614,7 +610,7 @@ STRT7B  dec MAXSECT
         rts
 
 REMNOT  jsr _print
-        dta C'RAM-Disk not installed'
+        dta C'Ramdisk not installed'
         dta B(155,0)
 
 REMCANT jsr _print
@@ -624,7 +620,7 @@ REMCANT jsr _print
         jmp (10)
 
 REM2LST jsr _print
-        dta C'RAM-Disk is not the last handler'
+        dta C'Ramdisk is not the last handler'
         dta B(155,0)
 
         jmp REMCANT
@@ -633,7 +629,7 @@ REMOVE  jsr SRCHRUT
         bcc REMNOT
 
 * Remove handler
-REMOV2  lda MEMLO
+        lda MEMLO
         sec
         sbc SRCHADR
         tay
@@ -649,7 +645,7 @@ REMOV2  lda MEMLO
         pha
         ldy <R03-RESID+1
         lda (SRCHADR),Y
-        sta PORTB
+        jsr SAPORTB
 
         ldy #1
 
@@ -672,10 +668,10 @@ REM3    iny
         jsr ENINT
 
         jsr _print
-        dta C'RAM-Disk removed'
+        dta C'Ramdisk removed'
         dta B(155,0)
 
-        jmp (10)
+        jmp (DOSVEC)
 
 * search resident handler
 * between MEMLO and startup MEMLO
@@ -686,25 +682,22 @@ SRCHRUT lda MEMLO
         lda MEMLO+1
         sbc #0
         sta SRCHADR+1
-
-* check search address is greater
-* than startup MEMLO
+* increase search address
 SRCHNXT lda SRCHADR
         bne SNXT2
         dec SRCHADR+1
 SNXT2   dec SRCHADR
-
+* check search address is greater
+* than startup MEMLO
         lda SRCHADR+1
         cmp BW_SMEMLO+1
         beq SRCHL
         bcs SRCHR1
         rts
-
 SRCHL   lda SRCHADR
         cmp BW_SMEMLO
         bcs SRCHR1
         rts
-
 * serach handler pattern
 SRCHR1  ldy <R03-RESID
 SRCHR2  lda (SRCHADR),Y
@@ -716,18 +709,18 @@ SRCHR2  lda (SRCHADR),Y
         rts
 
 * Check Extended Memory
-RAMTEST ldx #63
-        lda #$FF
+RAMTEST jsr DISINT
+        pha
+
+DACAPO  lda #$00
+        sta $3000 ; would collide with $7000
+
+* clear banking tab
+        ldx #63
+        lda BNKOFF
 RT0A    sta RBTAB,X
         dex
         bpl RT0A
-
-* set main memory for main banking check
-        lda #$00
-        sta $3000 ; would collide with $7000
-
-        jsr DISINT
-        pha
 
 * save
         ldx #64
@@ -786,23 +779,101 @@ RT4     jsr RSWITCH
         dex
         bpl RT4
 
+* if no PORTB banks, try Axlon
+        lda NBANKS
+        bne RTEND
+        lda BNKOFF
+        beq RTEND
+        jsr SWAXLON
+        jmp DACAPO
+
 * finished
-        pla
-ENINT   sta PORTB
+RTEND   pla
+ENINT   jsr SAPORTB
         lda #$40
         sta NMIEN
         cli
         rts
 
+* WAITVBL lda RTCLOK+2
+*        cmp RTCLOK+2
+*        beq *-2
+*        rts
+
+* DISINT  jsr WAITVBL
 DISINT  lda #0
+*        sta DMACTL
         sta NMIEN
         sei
-        lda PORTB
+PORTB0  lda PORTB
         rts
 
 RSWITCH lda SWTAB,X
-        sta PORTB
+        jsr SAPORTB
         rts
+
+SAPORTB sta PORTB
+        rts
+
+* create PORTB table
+SWPORTB ldx #63
+        lda #1
+        clc
+ST5B    sta SWTAB+1,X
+        dex
+        bmi ST5C
+        adc #4
+        sta TEMP1
+        and #$10
+        adc TEMP1
+        bcc ST5B
+        adc #1
+        bne ST5B
+ST5C    stx SWTAB
+        rts
+
+* switch to Axlon
+* set all write operations
+SWAXLON lda <AXLON
+        sta SAPORTB+1
+        sta PORTB1+1
+        sta SIOST+1
+        sta EXTST+1
+        sta PORTB2+1
+        sta PORTB3+1
+        sta PORTB4+1
+        lda >AXLON
+        sta SAPORTB+2
+        sta PORTB1+2
+        sta SIOST+2
+        sta EXTST+2
+        sta PORTB2+2
+        sta PORTB3+2
+        sta PORTB4+2
+* set all read operation
+* Axlon register is read only
+* => always retunr 0, banking off
+        ldx #$02
+NXTAXLR lda RDBNKR,X
+        sta PORTB0,X
+        sta RDSIO,X
+        dex
+        bpl NXTAXLR
+* built bank tab
+        ldx #64
+NXTAXLN txa
+        sta SWTAB,X
+        dex
+        bpl NXTAXLN
+* set flag
+        inc BNKOFF
+        rts
+
+BNKOFF  dta b($FF)
+
+* read Axlon register always 0, it is read only
+RDBNKR  lda #$00
+        nop
 
         icl '_CHKBW14.ICL'
         icl '_PRINT.ICL'
@@ -821,7 +892,7 @@ RDSIO   lda PORTB   ;Save original PORTB
         sty NMIEN   ;Disable NMI
         sei         ;Disable IRQ
 R03     ldy #$FF
-        sty PORTB   ;Disable ROM
+PORTB1  sty PORTB   ;Disable ROM
         jmp $4000+[RD4SIO-RES2]
 
 RESLEN  equ *-RESID
@@ -846,16 +917,16 @@ EXTST   sta PORTB
 * Copy from one bank to another
 COPYST  lda #$FF
 RBNK    equ *-1-COPYST+$30
-        sta PORTB   ; SRC BANK
+PORTB2  sta PORTB   ; SRC BANK
 RADR    equ *+1-COPYST+$30
         lda $4000,Y
-        stx PORTB   ; DST BANK
+PORTB3  stx PORTB   ; DST BANK
 WADR    equ *+1-COPYST+$30
         sta $FF00,Y
         dey
         bpl COPYST
 R04     lda #$FF
-        sta PORTB   ; CODE BANK
+PORTB4  sta PORTB   ; CODE BANK
         rts
 COPYLEN equ *-COPYST
 

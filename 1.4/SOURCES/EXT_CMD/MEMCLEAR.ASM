@@ -60,8 +60,8 @@ vchar_cnt   cpx #$02
             bcc startClear
 
 parameterError jsr print
-            dta c'MEMCLEAR 2022-02-20',b($9b)
-            dta c'Parameter Error use: MEMCLEAR [hh]',b($9b,$ff)
+            dta b($9b),c'MEMCLEAR 17-08-2023',b($9b)
+            dta c'Use: MEMCLEAR [hh]',b($9b,$ff)
             rts
 
 startClear  lda MEMLO+1
@@ -83,7 +83,7 @@ startClear  lda MEMLO+1
             sty adr_high+3
 
             jsr PRINT
-            dta c'Clear $' 
+            dta b($9b),c'Clear $' 
 adr_low     dta c'xxxx-$'
 adr_high    dta c'yyyy with $'
 clr_char    dta c'00? (Y)',b($ff)

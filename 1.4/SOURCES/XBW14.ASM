@@ -79,13 +79,13 @@ SIOV    equ $E459
 SELFSV  equ $E471
 
 * DOS zero page
-L0043   equ $0043
+L0043   equ $0043 ; B
 L0044   equ $0044
-L0045   equ $0045
-L0046   equ $0046
+L0045   equ $0045 ; MYLEN
+CIOIOCB equ $0046
 L0047   equ $0047
-L0048   equ $0048
-L0049   equ $0049
+RWFLG   equ $0048
+MYA1    equ $0049
 
 STACK   equ $0100
 
@@ -190,9 +190,6 @@ LBUF    jsr RESINI     ; +63 comman line buffer 64 Bytes
         dta c'                          '
         dta c'           '
 
-L0D43   equ LBUF+$0B
-L0D48   equ LBUF+$10
-
 PROMPT  dta b($9B)
 PROMPTD dta c'D1:'
         dta b($9B)
@@ -201,29 +198,15 @@ EXT_BAT dta c'.BAT'
 EXT_COM dta c'.COM'
         dta b($9B)
 STD_PAT dta c'*.*'
+
 DAT_BUF equ *
 DIRVOL  dta b($9B)
         dta c'Volume'
 PERIOD  dta c':'
-DIRNAM  dta c'          '
-
-DIBUF   dta c' '
-L0D9D   dta c'  '
-L0D9F   dta c'  '
-L0DA1   dta c'   '
-L0DA4   dta c'  '
-L0DA6   dta c' '
-L0DA7   dta c'  '
-L0DA9   dta c' '
-L0DAA   dta c' '
-L0DAB   dta c'  '
-        dta c'    '
-L0DB1   dta c'  '
-L0DB3   dta c'   '
-L0DB6   dta c'      '
-L0DBC   dta c' '
-L0DBD   dta c'        '
-L0DC5   dta c' '
+DIRNAM  dta c'           '      ; 11 Bytes
+DIBUF   dta c'                '
+        dta c'                '
+        dta c'         ' ; 41 Bytes
 
 DLDIR   dta b($9B)
         dta c'Directory:'
@@ -236,12 +219,10 @@ SRCHTMP dta b($00,$00)
 * bytes per sec of disk, $80=128 $00=256
 * D0: used for sec 1 always 128
 SECSIZ  dta b($80) ;D0: for sec 1
-        dta b($20,$20,$20,$20) ;D1-4:
-L0DEE   dta c' '
-L0DEF   dta c' '
-L0DF0   dta c' '
-        dta b($20) ;DSKSECSIZ D8:
-KFFFF   dta b($FF,$FF)
+        dta b($00,$00,$00,$00) ;D1-4:
+POSTMP  dta b($00,$00,$00)
+        dta b($00) ;DSKSECSIZ D8:
+KFFFF   dta a($FFFF)
 DOSNAM  dta c'DOS       '
 RDPUTST dta c' !'
 NULY    dta b($00,$00,$00)
@@ -292,50 +273,44 @@ T6BUF   equ *
 SRCHNAM equ DAT_DEF
 RENNAM  equ SRCHNAM+11
 DIRBUF  equ RENNAM+11
-L0E22   equ DAT_DEF+$17
-L0E24   equ DAT_DEF+$19
 L0E26   equ DAT_DEF+$1B
-L0E27   equ DAT_DEF+$1C
-L0E2F   equ DAT_DEF+$24
 L0E32   equ DAT_DEF+$27
-L0E38   equ DAT_DEF+$2D
-L0E39   equ DAT_DEF+$2E
-L0E3A   equ DAT_DEF+$2F
+FCBIOCB equ DAT_DEF+$2D
+FCBDRIV equ DAT_DEF+$2E
+FCBSECT equ DAT_DEF+$2F
 L0E3B   equ DAT_DEF+$30
-L0E3C   equ DAT_DEF+$31
-L0E3D   equ DAT_DEF+$32
-L0E3E   equ DAT_DEF+$33
-L0E3F   equ DAT_DEF+$34
-L0E40   equ DAT_DEF+$35
+FCBIX   equ DAT_DEF+$31
+FCBMAP  equ DAT_DEF+$32
+FCBMAPX equ DAT_DEF+$34
+FCBPOS  equ DAT_DEF+$35
 L0E41   equ DAT_DEF+$36
 L0E42   equ DAT_DEF+$37
-L0E43   equ DAT_DEF+$38
-L0E45   equ DAT_DEF+$3A
-L0E48   equ DAT_DEF+$3D
-L0E49   equ DAT_DEF+$3E
-L0E4B   equ DAT_DEF+$40
-L0E4C   equ DAT_DEF+$41
+FCB1ST  equ DAT_DEF+$38
+FCBLEN  equ DAT_DEF+$3A
+FCBAUX1 equ DAT_DEF+$3D
+FCBDIR1 equ DAT_DEF+$3E
+FCBDIRP equ DAT_DEF+$40
 L0E4D   equ DAT_DEF+$42
 L0E51   equ DAT_DEF+$46
 L0E52   equ DAT_DEF+$47
-L0E53   equ DAT_DEF+$48
-L0E55   equ DAT_DEF+$4A
-L0E56   equ DAT_DEF+$4B
+DLOPF   equ DAT_DEF+$48
+DCBDRIV equ DAT_DEF+$4A
+DCBMAIN equ DAT_DEF+$4B
 L0E58   equ DAT_DEF+$4D
-L0E5A   equ DAT_DEF+$4F
+DCBFREE equ DAT_DEF+$4F
 L0E5D   equ DAT_DEF+$52
 L0E5F   equ DAT_DEF+$54
 L0E61   equ DAT_DEF+$56
-L0E63   equ DAT_DEF+$58
+DCBVOL  equ DAT_DEF+$58
 L0E67   equ DAT_DEF+$5C
-L0E6B   equ DAT_DEF+$60
+DCBSEQ  equ DAT_DEF+$60
 L0E6D   equ DAT_DEF+$62
-L0ED7   equ DAT_DEF+$CC
+FCBS    equ DAT_DEF+$CC
 L0ED8   equ DAT_DEF+$CD
 
 L0F15   equ DAT_DEF+$10A
 L0F38   equ DAT_DEF+$12D
-L0F40   equ DAT_DEF+$135
+BUFDRIV equ DAT_DEF+$135
 L0F43   equ DAT_DEF+$138
 L0F46   equ DAT_DEF+$13B
 L0F49   equ DAT_DEF+$13E

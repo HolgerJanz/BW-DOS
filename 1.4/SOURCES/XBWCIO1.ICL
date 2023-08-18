@@ -1,439 +1,461 @@
-L0F4C       ldx L0E3D
-            lda L0E3E
-            jsr L1BE9
-            ldy L0E3F
-            rts
+ZAJMAP  ldx FCBMAP
+        lda FCBMAP+1
+        jsr ZAJIST
+        ldy FCBMAPX
+        rts
 
-JSR_SIO     lda L0F78-$20,Y
-            and #$1F
-            pha
-            lda L0F66-$20,Y
-            pha
-            ldx L0046
-            rts
+JSR_SIO lda XIOADH-$20,Y
+        and #$1F
+        pha
+        lda XIOADL-$20,Y
+        pha
+        ldx CIOIOCB
+        rts
 
 * internal CIO code/vectortab
 * low
 *           REN,   DEL,   OPEN,  PROT
-L0F66 dta l(L1CD1V,L1CD1V,L1597V,L1CD1V) ; $20-$23
+XIOADL dta l(L1CD1V,L1CD1V,OPENV,L1CD1V) ; $20-$23
 *           UNPROT,POINT, NOTE,  GETFLEN
-      dta l(L1CD1V,L1432V,L16E9V,L16ECV) ; $24-$27
+       dta l(L1CD1V,POINTV,NOTEV,GETLENV) ; $24-$27
 *           LOAD,  SAVE,  MD,    RD
-      dta l(L1E22V,L1590V,L158AV,L1D1AV) ; $28-$2B
+       dta l(L1E22V,STATV,CREDIRV,L1D1AV) ; $28-$2B
 *           CD,    CLOSE, ???,   CHKDSK
-      dta l(L1A95V,L137DV,L12E9V,L1154V) ; $2C-$2F
+       dta l(L1A95V,CLOSEV,BLOCKV,CHKDSKV) ; $2C-$2F
 *           GETBYTE,PUTBYTE
-      dta l(L128DV,L1296V)               ; $30-$31
+       dta l(GETV,PUTV)               ; $30-$31
 * high
 *           REN,         DEL,         OPEN,        PROTECT
-L0F78 dta h($E000+L1CD1V,$E000+L1CD1V,$8000+L1597V,$E000+L1CD1V) ; $20-$23
+XIOADH dta h($E000+L1CD1V,$E000+L1CD1V,$8000+OPENV,$E000+L1CD1V) ; $20-$23
 *           UNPROTECT,   POINT,       NOTE,        GETFLEN
-      dta h($E000+L1CD1V,$2000+L1432V,$2000+L16E9V,$2000+L16ECV) ; $24-$27
+       dta h($E000+L1CD1V,$2000+POINTV,$2000+NOTEV,$2000+GETLENV) ; $24-$27
 *           LOAD,        SAVE,        MD,          RD
-      dta h($2000+L1E22V,$C000+L1590V,$E000+L158AV,$E000+L1D1AV) ; $28-$2B
+       dta h($2000+L1E22V,$C000+STATV,$E000+CREDIRV,$E000+L1D1AV) ; $28-$2B
 *           CD,          CLOSE,       ???,   CHKDSK
-      dta h($E000+L1A95V,$4000+L137DV,L12E9V,$E000+L1154V) ; $2C-$2F
+       dta h($E000+L1A95V,$4000+CLOSEV,BLOCKV,$E000+CHKDSKV) ; $2C-$2F
 *           GETBYTE,PUTBYTE
-      dta h(L128DV,L1296V) ; $30-$31
+       dta h(GETV,PUTV) ; $30-$31
 
 * CIO D: routines
-DSPEC     ldy ICCOMZ
-DSPEC_V   equ DSPEC-1
-            sta L10DB+1
-            tya
-            and #$F0
-            cmp #$20
-            bne L0F9B
-            and L0F78-$20,Y
-            bne L0FAF
-L0F9B       ldy #$A8 ; not implemented
-L0F9D       rts
+DSPEC   ldy ICCOMZ
+DSPEC_V equ DSPEC-1
+        sta CIODTA+1
+        tya
+        and #$F0
+        cmp #$20
+        bne DSPER
+        and XIOADH-$20,Y
+        bne XIO01
+DSPER   ldy #$A8 ; not implemented
+        rts
 
-DOPEN        ldy #$22
-DOPEN_V      equ DOPEN-1
-            dta b(op_BIT_abs)
-DCLOSE       ldy #$2D
-DCLOSE_V     equ DCLOSE-1
-            dta b(op_BIT_abs)
-DGET     ldy #$30
-DGET_V   equ DGET-1
-            dta b(op_BIT_abs)
-DPUT     ldy #$31
-DPUT_V   equ DPUT-1
-            dta b(op_BIT_abs)
-DSTAT     ldy #$29
-DSTAT_V   equ DSTAT-1
-L0FAC       sta L10DB+1
-L0FAF       cld
-            stx L0046
-            lda #$01
-            sta L10BA+1
-            cpy #$28
-            bne L0FC4
-            jsr JSR_SIO
-            dta b(op_BIT_abs)
-L0FBF       ldy #$A1
-L0FC1       jmp L10DB
-L0FC4       tsx
-            stx RET_ERRY+1
-            inx
-            inx
-            lda STACK,X
-            sta L12A2+1
-            sty L109B+1
-            lda L0F78-$20,Y
-            and #$C0
-            sta L0FEB+1
-            ldx L0046
-            jsr L1121
-            bne L0FEB
-            bit L0FEB+1
-            bpl L1000
-            ldy #$81
-            bne L0FC1
-L0FEB       lda #$00
-            bpl L1023
-            ldx #$FF
-            jsr L1121
-            bne L0FBF
-            lda L0046
-            sta L0ED7,Y
-            lda ICDNOZ
-            sta L0ED8,Y
-L1000       sty L10CC+1
-            ldx #$EB
-L1005       lda L0ED7,Y
-            sta L0E38-$EB,X
-            iny
-            inx
-            bne L1005
-            ldy #$68
-L1011       lda L0E55,Y
-            cmp L0E39
-            beq L102F
-            tya
-            sec
-            sbc #$1A
-            tay
-            bcs L1011
-            jsr RET_ERRS
-            dta b($A0) ; drive number error
+DOPEN   ldy #$22
+DOPEN_V equ DOPEN-1
+        dta b(op_BIT_abs)
+DCLOSE  ldy #$2D
+DCLOSE_V equ DCLOSE-1
+        dta b(op_BIT_abs)
+DGET    ldy #$30
+DGET_V  equ DGET-1
+        dta b(op_BIT_abs)
+DPUT    ldy #$31
+DPUT_V  equ DPUT-1
+        dta b(op_BIT_abs)
+DSTAT   ldy #$29
+DSTAT_V equ DSTAT-1
 
-L1023       ldy #$85
-            lda L109B+1
-            cmp #$2D
-            bne L0FC1
-            jmp L10BA
-L102F       ldx #$E6
-L1031       lda L0E55-$E6,X
-            pha
-            lda L0E55,Y
-            sta L0E55-$E6,X
-            pla
-            sta L0E55,Y
-            iny
-            inx
-            bne L1031
-            bit L0FEB+1
-            bpl L1093
-            jsr L1BE5
-            ldy #$07
-            lda (L0043),Y
-            cmp #$80
-            bne L105B
-            lda #$1F
-            tay
-            iny
-            cmp (L0043),Y
-            bcc L105F
-L105B       jsr RET_ERRS
-            dta b($94)
-L105F       ldy #$16
-L1061       lda L0E4D,Y
-            cmp (L0043),Y
-            bne L107D
-            iny
-            cpy #$1E
-            bcc L1061
-            ldy #$26
-L106F       lda L0E45,Y
-            cmp (L0043),Y
-            bne L107D
-            iny
-            cpy #$28
-            bcc L106F
-            bcs L1093
-L107D       lda #$99
-            jsr L1131
-            iny
-            lda (L0043),Y
-            ldy L0E39
-L1088       sta SECSIZ,Y
+XIO     sta CIODTA+1
+XIO01   cld
+        stx CIOIOCB
+        lda #$01
+        sta XOK+1
+        cpy #$28
+        bne XIO2
+* load
+        jsr JSR_SIO
+        dta b(op_BIT_abs)
+XTOOOPN ldy #$A1
+XJCD    jmp CIODTA
 
-            jsr MOV_CAL
-  dta b(MC_cpy+2),l(L0E56-DAT_BUF,L0E6D-DAT_BUF)
-  dta h(MC_jsrE+L1114),l(L1114)
+XIO2    tsx
+        stx RETERRY+1
+        inx
+        inx
+        lda STACK,X
+        sta RTAD+1
+        sty XIO8+1
+* FCB
+        lda XIOADH-$20,Y
+        and #$C0
+        sta XIO4+1
+        ldx CIOIOCB
+        jsr XIOSRCH
+        bne XIO4
+        bit XIO4+1
+        bpl XIO5
+        ldy #$81
+        bne XJCD
 
-L1093       ldy L0E39
-            lda SECSIZ,Y
-            sta L0045
-L109B       ldy #$00
-            jsr JSR_SIO
-            bit L0FEB+1
-            bvc L10AB
-            jsr L10E2
-            stx L0E38
-L10AB       ldy L10CC+1
-            ldx #$EB
-L10B0       lda L0E38-$EB,X
-            sta L0ED7,Y
-            iny
-            inx
-            bne L10B0
-L10BA       ldy #$01
-            bne L10DB
+XIO4    lda #$00
+        bpl XNOTOP
+        ldx #$FF
+        jsr XIOSRCH
+        bne XTOOOPN
+        lda CIOIOCB
+        sta FCBS,Y
+        lda ICDNOZ
+        sta L0ED8,Y
+
+XIO5    sty XIOFCB+1
+        ldx #$EB
+
+XIO5B   lda FCBS,Y
+        sta FCBIOCB-$EB,X
+        iny
+        inx
+        bne XIO5B
+* DCB
+        ldy #$68
+XIO6    lda DCBDRIV,Y
+        cmp FCBDRIV
+        beq XIO7
+        tya
+        sec
+        sbc #$1A
+        tay
+        bcs XIO6
+* it must be open (otherwise the wrong drive
+* would not be entered again), so the error
+* cancels the FCB
+        jsr RETERRS
+        dta b($A0) ; drive number error
+
+XNOTOP  ldy #$85
+        lda XIO8+1
+        cmp #$2D
+        bne XJCD
+        jmp XOK
+
+XIO7    ldx #$E6
+XIO7B   lda DCBDRIV-$E6,X
+        pha
+        lda DCBDRIV,Y
+        sta DCBDRIV-$E6,X
+        pla
+        sta DCBDRIV,Y
+        iny
+        inx
+        bne XIO7B
+        bit XIO4+1
+        bpl XIO8A
+* open
+        jsr L1BE5
+        ldy #$07
+        lda (L0043),Y
+        cmp #$80
+        bne BGNOPNE
+        lda #$1F
+        tay
+        iny
+        cmp (L0043),Y
+        bcc BGO30
+BGNOPNE jsr RETERRS
+        dta b($94)
+
+BGO30   ldy #$16
+BGNOPN3 lda L0E4D,Y
+        cmp (L0043),Y
+        bne BGNOPN4
+        iny
+        cpy #$1E
+        bcc BGNOPN3
+
+        ldy #$26
+BGO31   lda FCBLEN,Y
+        cmp (L0043),Y
+        bne BGNOPN4
+        iny
+        cpy #$28
+        bcc BGO31
+        bcs XIO8A
+* other DSK
+BGNOPN4 lda #$99
+        jsr ENDCSUB
+        iny
+        lda (L0043),Y
+        ldy FCBDRIV
+        sta SECSIZ,Y
+
+        jsr MOV_CAL
+  dta b(MC_cpy+2),l(DCBMAIN-DAT_BUF,L0E6D-DAT_BUF)
+  dta h(MC_jsrE+DRIVNEP),l(DRIVNEP)
+
+XIO8A   ldy FCBDRIV
+        lda SECSIZ,Y
+        sta L0045
+XIO8    ldy #$00
+        jsr JSR_SIO
+        bit XIO4+1
+        bvc XIO9
+* end close
+        jsr ODKLID
+        stx FCBIOCB
+XIO9    ldy XIOFCB+1
+        ldx #$EB
+XIO9B   lda FCBIOCB-$EB,X
+        sta FCBS,Y
+        iny
+        inx
+        bne XIO9B
+XOK     ldy #$01
+        bne CIODTA
 
 * Error code on stack
-RET_ERRS    jsr GETSTK
-            tay
+RETERRS jsr GETSTK
+        tay
 * Error code in Y
-RET_ERRY    ldx #$00
-            txs
-            tya
-            pha
-            lda L0FEB+1
-            beq L10D3
-L10CC       ldy #$00
-            lda #$FF
-            sta L0ED7,Y
-L10D3       jsr L10E2
-            jsr L1114
-            pla
-            tay
-L10DB       lda #$00
-            ldx L0046
-            cpy #$00
-            rts
+RETERRY ldx #$00
+        txs
+        tya
+        pha
+* open/close ?
+        lda XIO4+1
+        beq ERR1B
+XIOFCB  ldy #$00
+        lda #$FF
+        sta FCBS,Y
+ERR1B   jsr ODKLID
+        jsr DRIVNEP
+        pla
+        tay
+CIODTA  lda #$00
+        ldx CIOIOCB
+        cpy #$00
+        rts
 
-L10E2       ldx L0E39
-            lda L0E4C,X
-            bpl L10FB
-            lsr L0E4C,X
-            jsr L1BE5
-            jsr L1C2B
-            inc L0E6B
-            lda #$B9
-            jsr L1131
-L10FB       ldx #$03
-L10FD       dex
-            bmi L1113
-            jsr L110C
-            bne L10FD
-            bcc L10FD
-L1107       jsr SIO_W_BUF
-            bpl L10FB
-L110C       lda L0F40,X
-            eor L0E39
-            asl @
-L1113       rts
+ODKLID  ldx FCBDRIV
+        lda FCBDIRP+1,X
+        bpl ENDCLO2
+        lsr FCBDIRP+1,X
+        jsr L1BE5
+        jsr L1C2B
+        inc DCBSEQ
+        lda #$B9
+        jsr ENDCSUB
+ENDCLO2 ldx #$03
+ENDCLO3 dex
+        bmi ENDCLX
+        jsr NASLI
+        bne ENDCLO3
+        bcc ENDCLO3
+        jsr SIO_W_BUF
+* always valid
+        bpl ENDCLO2
 
-L1114       ldx #$02
-L1116       jsr L110C
-            bne L111E
-            sta L0F40,X
-L111E       dex
-            bpl L1116
-L1121       ldy #$54
-L1123       txa
-            cmp L0ED7,Y
-            beq L1130
-            tya
-            sec
-            sbc #$15
-            tay
-            bcs L1123
-L1130       rts
+NASLI   lda BUFDRIV,X
+        eor FCBDRIV
+        asl @
+ENDCLX  rts
 
-L1131       sta L1149
-            sta L113B
-            ldy #$26
-L1139       lda (L0043),Y
-L113B       sta L0E45,Y
-            sta (L0043),Y
-            iny
-            cpy #$28
-            bcc L1139
-            ldy #$09
-L1147       lda (L0043),Y
-L1149       lda L0E4D,Y
-            sta (L0043),Y
-            iny
-            cpy #$1E
-            bcc L1147
-            rts
+DRIVNEP ldx #$02
+DRNP2   jsr NASLI
+        bne DRNP3
+        sta BUFDRIV,X
+DRNP3   dex
+        bpl DRNP2
+* RTS omitted - never mind
+XIOSRCH ldy #$54
+XIOS3   txa
+        cmp FCBS,Y
+        beq XIOS4
+        tya
+        sec
+        sbc #$15
+        tay
+        bcs XIOS3
+XIOS4   rts
+
+ENDCSUB sta ENDCL1X
+        sta BGO40BX
+        ldy #$26
+BGO40B  lda (L0043),Y
+BGO40BX sta FCBLEN,Y
+        sta (L0043),Y
+        iny
+        cpy #$28
+        bcc BGO40B
+        ldy #$09
+ENDCL1  lda (L0043),Y
+ENDCL1X lda L0E4D,Y
+        sta (L0043),Y
+        iny
+        cpy #$1E
+        bcc ENDCL1
+        rts
 
 * CHKDSK
-L1154       jsr MOV_CAL
-L1154V      equ L1154-1
-  dta h(MC_movE+ICBLLZ),l(ICBLLZ),h(MC_2+L1185+1),l(L1185+1)
+CHKDSK  jsr MOV_CAL
+CHKDSKV equ CHKDSK-1
+  dta h(MC_movE+ICBLLZ),l(ICBLLZ),h(MC_2+CHKP2+1),l(CHKP2+1)
+* X=0
+        ldy #$20
+        jsr CHKP
+        ldy #$1F
+        jsr CHKP
+        ldy #$0B
+CHKD2   jsr CHKP
+        cpy #$0F
+        bcc CHKD2
+        ldy #$16
+CHKD3   jsr CHKP
+        cpy #$1E
+        bcc CHKD3
+        ldy #$26
+        jsr CHKP
+        jsr CHKP
+        lda #$00
 
-            ldy #$20
-            jsr L1182
-            ldy #$1F
-            jsr L1182
-            ldy #$0B
-L1167       jsr L1182
-            cpy #$0F
-            bcc L1167
-            ldy #$16
-L1170       jsr L1182
-            cpy #$1E
-            bcc L1170
-            ldy #$26
-            jsr L1182
-            jsr L1182
-            lda #$00
+        dta b(op_BIT_abs)
+CHKP    lda (L0043),Y
 
-            dta b(op_BIT_abs)
-L1182       lda (L0043),Y
+        iny
+CHKP2   sta $FFFF,X
+        inx
+        rts
 
-            iny
-L1185       sta $FFFF,X
-            inx
-            rts
+NUMMOD  ldx #$FD
+NUMMD1  lda DECOUT+4
+        cmp #$20
+        bne NUMMD2
+        lda DECOUT+5-$FD,X
 
-SET_TO_9    ldx #$FD
-L118C       lda DECOUT+4
-            cmp #$20
-            bne L1197
-            lda DECOUT+5-$FD,X
+        dta b(op_BIT_abs)
+NUMMD2  lda #$39
 
-            dta b(op_BIT_abs)
-L1197       lda #$39
+        ora #$30
+        sta DECOUT+5-$FD,X
+        inx
+        bne NUMMD1
+        rts
 
-            ora #$30
-            sta DECOUT+5-$FD,X
-            inx
-            bne L118C
-            rts
+DLG01A  jsr DLCLRS
+        dta b($91)
 
-L11A2       jsr CLR_TXT_BUF
-            dta b($91)
+        jsr MOV_CAL
+  dta h(MC_jsr+NUMMOD),l(NUMMOD)
+  dta h(MC_mov+DECOUT+5),l(DECOUT+5),h(MC_3+DIBUF),l(DIBUF)
+  dta b(MC_cpyE+12,DLFREE-DAT_BUF,DIBUF+4-DAT_BUF)
 
-            jsr MOV_CAL
-  dta h(MC_jsr+SET_TO_9),l(SET_TO_9)
-  dta h(MC_mov+DECOUT+5),l(DECOUT+5),h(MC_3+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12,DLFREE-DAT_BUF,L0DA1-DAT_BUF)
+        beq DLG1EQ
 
-            beq L1215
-
-L11B4       jsr MOV_CAL
-  dta h(MC_mov+L0E5A),l(L0E5A),h(MC_2+DECIN),l(DECIN)
+DLG02   jsr MOV_CAL
+  dta h(MC_mov+DCBFREE),l(DCBFREE),h(MC_2+DECIN),l(DECIN)
   dta h(MC_jsrE+CONV_16),l(CONV_16)
 
-L11BD       ldx #$00
-            bpl L11A2
+DTYPE   ldx #$00
+        bpl DLG01A
 
-            jsr CLR_TXT_BUF
-            dta b($94)
+        jsr DLCLRS
+        dta b($94)
 
-            jsr MOV_CAL
-  dta h(MC_mov+DECOUT+2),l(DECOUT+2),h(MC_6+L0D9D),l(L0D9D)
-  dta b(MC_cpyE+12,DLFREE-DAT_BUF,L0DA4-DAT_BUF)
+        jsr MOV_CAL
+  dta h(MC_mov+DECOUT+2),l(DECOUT+2),h(MC_6+DIBUF),l(DIBUF)
+  dta b(MC_cpyE+12,DLFREE-DAT_BUF,DIBUF+7-DAT_BUF)
 
-            beq L1215
+        beq DLG1EQ
 
-L11D1       jsr CLR_TXT_BUF
-            dta b($12)
+DLG01BA jsr DLCLRS
+        dta b($12)
 
-            jsr MOV_CAL
-  dta b(MC_cpyE+11,L0E27-DAT_BUF,L0D9F-DAT_BUF)
+        jsr MOV_CAL
+  dta b(MC_cpyE+11,DIRBUF+6-DAT_BUF,DIBUF+2-DAT_BUF)
 
-L11DB       lda DIRBUF
-            lsr @
-            bcc L11E6
-            ldx #$2A
-            stx L0D9D
-L11E6       and #$10
-            beq L11F0
+DIRBAD  lda DIRBUF
+        lsr @
+        bcc DLG01B
+        ldx #$2A
+        stx DIBUF
+DLG01B  and #$10
+        beq DLG01C
 
-            jsr MOV_CAL
-  dta b(MC_cpyE+3,DLG3TX-DAT_BUF,L0DA7-DAT_BUF)
+        jsr MOV_CAL
+  dta b(MC_cpyE+3,DLG3TX-DAT_BUF,DIBUF+10-DAT_BUF)
 
-L11F0       lda DIRBUF+3
-            ldx DIRBUF+4
-            ldy L0E26
-            jsr L14FD
-            cmp #$00
-            beq L1204
-            inx
-            bne L1204
-            iny
-L1204       stx DECIN
-            sty DECIN+1
+DLG01C  lda DIRBUF+3
+        ldx DIRBUF+4
+        ldy L0E26
+        jsr L14FD
+        cmp #$00
+        beq DLG01D
+        inx
+        bne DLG01D
+        iny
+DLG01D  stx DECIN
+        sty DECIN+1
 
-            jsr MOV_CAL
+        jsr MOV_CAL
   dta h(MC_jsr+CONV_16),l(CONV_16)
-  dta h(MC_jsr+SET_TO_9),l(SET_TO_9)
-  dta h(MC_movE+DECOUT+5),l(DECOUT+5),h(MC_3+L0DAB),l(L0DAB)
+  dta h(MC_jsr+NUMMOD),l(NUMMOD)
+  dta h(MC_movE+DECOUT+5),l(DECOUT+5),h(MC_3+DIBUF+14),l(DIBUF+14)
 
-L1215       beq L1274
+DLG1EQ  beq DLG1
 
-L1217       jsr MOV_CAL
+DLG01   jsr MOV_CAL
   dta b(MC_cpy+11,DIRNAM-DAT_BUF,SRCHNAM-DAT_BUF)
   dta h(MC_jsrE+L1DBF),l(L1DBF)
 
-            bne L11B4
-            bit L11BD+1
-            bpl L11D1
+        bne DLG02
+        bit DTYPE+1
+        bpl DLG01BA
 
-            jsr CLR_TXT_BUF
-            dta b($24)
+        jsr DLCLRS
+        dta b($24)
 
-            jsr MOV_CAL
-  dta b(MC_cpy+8,L0E27-DAT_BUF,L0D9D-DAT_BUF)
-  dta b(MC_cpy+3,L0E2F-DAT_BUF,L0DA6-DAT_BUF)
-  dta b(MC_cpy+5,DLG3DT-DAT_BUF,L0DAA-DAT_BUF)
-  dta b(MC_cpy+1,DASH-DAT_BUF,L0DB3-DAT_BUF)
-  dta b(MC_cpy+1,DASH-DAT_BUF,L0DB6-DAT_BUF)
-  dta b(MC_cpyE+1,PERIOD-DAT_BUF,L0DBC-DAT_BUF)
+        jsr MOV_CAL
+  dta b(MC_cpy+8,DIRBUF+6-DAT_BUF,DIBUF-DAT_BUF)
+  dta b(MC_cpy+3,DIRBUF+14-DAT_BUF,DIBUF+9-DAT_BUF)
+  dta b(MC_cpy+5,DLG3DT-DAT_BUF,DIBUF+13-DAT_BUF)
+  dta b(MC_cpy+1,DASH-DAT_BUF,DIBUF+22-DAT_BUF)
+  dta b(MC_cpy+1,DASH-DAT_BUF,DIBUF+25-DAT_BUF)
+  dta b(MC_cpyE+1,PERIOD-DAT_BUF,DIBUF+31-DAT_BUF)
 
-            lda DIRBUF
-            and #$20
-            bne L1253
+        lda DIRBUF
+        and #$20
+        bne DLG03B
 
-            jsr MOV_CAL
-  dta h(MC_mov+L0E24),l(L0E24),h(MC_3+DECIN),l(DECIN)
+        jsr MOV_CAL
+  dta h(MC_mov+DIRBUF+3),l(DIRBUF+3),h(MC_3+DECIN),l(DECIN)
   dta h(MC_jsr+CONVDC),l(CONVDC)
-  dta h(MC_movE+DECOUT+1),l(DECOUT+1),h(MC_7+L0DA9),l(L0DA9)
+  dta h(MC_movE+DECOUT+1),l(DECOUT+1),h(MC_7+DIBUF+12),l(DIBUF+12)
 
-L1253       ldy #$FB
-L1255       txa
-            pha
-            lda L0E32-$FB,Y
-            jsr CONV_A
-            jsr SET_TO_9
-            pla
-            tax
-            lda DECOUT+6
-            sta L0DB1,X
-            lda DECOUT+7
-            sta L0DB1+1,X
-            inx
-            inx
-            inx
-            iny
-            bne L1255
+DLG03B  ldy #$FB
+* X=0
+DLG03C  txa
+        pha
+        lda L0E32-$FB,Y
+        jsr CONV_A
+        jsr NUMMOD
+        pla
+        tax
+        lda DECOUT+6
+        sta DIBUF+20,X
+        lda DECOUT+7
+        sta DIBUF+21,X
+        inx
+        inx
+        inx
+        iny
+        bne DLG03C
 
-L1274       dec L1283+1
-L1277       ldx #$00
-            lda L0D9D,X
-            inc L1277+1
-            sta L10DB+1
-            rts
+DLG1    dec DLG0+1
+DLBX    ldx #$00
+        lda DIBUF,X
+        inc DLBX+1
+        sta CIODTA+1
+        rts
 
-L1283       lda #$00
-            asl @
-            bne L1274
-            bcs L12EE
-            jmp L1217
+DLG0    lda #$00
+        asl @
+        bne DLG1
+        bcs PTA4
+        jmp DLG01
