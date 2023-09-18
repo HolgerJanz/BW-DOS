@@ -18,5 +18,5 @@ External Commands
   SECOPY   SORTDIR  TIME     VERIFY
   XEDIT
 Resident Commands (.SYS)
-  CLOCK    IDEP2TD  RAMDISK  RTIME8
-  S3TD     ULTD
+  CLOCK    HISIOK   IDEP2TD  RAMDISK
+  RTIME8   S3TD     ULTD

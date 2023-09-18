@@ -1,0 +1,16 @@
+}
+  HISIOK.SYS
+
+Highspeed SIO patch 1.33 XL/XE/MyIDE
+by Hias
+
+The patch modifies the OS ROM so that
+highspeed SIO capable disk drives and
+also emulators like AtariSIO, SIO2PC,
+APE, etc. will be accessed in full
+speed.
+
+It patches the currently active OS
+which needs the RAM under the OS ROM.
+
+https://github.com/HiassofT/highspeed-sio

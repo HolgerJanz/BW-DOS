@@ -3,8 +3,10 @@
             icl '_SYSEQU.ICL'
 
 * Start of code
-            blk dos $3400
-start       jsr _chkbwdos14
+            blk dos $3000
+* memory $3000 to check for alias of main memory
+* see RAMBO 256k
+RB256TEST   jsr _chkbwdos14
 * print RAM data
             jsr IRQ_OFF
             lda PORTB
@@ -55,9 +57,8 @@ _add_OSRAM  adc #$00
             sbc MEMLO+1
             sta BW_DECIN+1
 * add 1 because MEMLO and MEMTOP are included
-            clc
             inc BW_DECIN
-            bcc *+5
+            bne *+5
             inc BW_DECIN+1
             lda #$00
             sta BW_DECIN+2
@@ -112,7 +113,7 @@ _add_OSRAM  adc #$00
             ldx #$01
             jsr movh2a
 
-* print ROM data
+* ROM data
             lda <REVDAT
             sta $80
             lda >REVDAT
@@ -245,109 +246,33 @@ convh2a     sed
             icl '_CHKBW14.ICL'
 
 * extended memory check
-
-            blk dos $3000
-* memory addresses to check for alias of main memory
-* see RAMBO 256k
-RB256TEST   dta b($00) 
-* bit mask kind Rambo1 ($01), Rambo2 ($02), Compy ($03),  or Axlon($04) 
-USEDMASK    dta b($00)
 * calculated max bank count and size in kB
-BNKCNT      dta b($00,$00)
+BNKCNT      dta b($00)
+BKBCNT      dta b($00,$00)
 
-* use zero page for performance
-* buffer for bank switch masks $06
-BNKSWTBUF   equ $E0
-* buffer for bytes used for testing $06
-BNKSAVBUF   equ $F0
-* buffer for bytes used for Rambo 256
-BNK0R256BUF equ $FF
-
-* determine extended memory
-check_ext   lda #$00
-            sta BNKCNT
-            sta BNKCNT+1
-            sta USEDMASK
-
-            ldx #$06
-compyLoop   lda BNKSWTMSK,X
-            sta BNKSWTBUF,X
-            dex
-            bpl compyLoop
-            jsr CHKBNKS
-            cpx #$00
-            beq check_axl
-            stx BNKCNT
-            lda #$03
-            sta USEDMASK
-
-chk_rambo   ldx #$06
-rambo1Loop  lda BNKSWTMSKR1,X
-            sta BNKSWTBUF,X
-            dex
-            bpl rambo1Loop
-            jsr CHKBNKS
-            cpx BNKCNT
-            bmi check_r2
-            beq check_r2
-            stx BNKCNT    ; save higher cnt
-            lda #$01
-            sta USEDMASK  ; used mask Rambo1
-
-check_r2    ldx #$06
-rambo2Loop  lda BNKSWTMSKR2,X
-            sta BNKSWTBUF,X
-            dex
-            bpl rambo2Loop
-            jsr CHKBNKS
-            cpx BNKCNT
-            bmi prnt_ext
-            beq prnt_ext
-            stx BNKCNT    ; save higher cnt
-            lda #$02
-            sta USEDMASK  ; used mask Rambo2
-            bne prnt_ext
-
-check_axl   cpx #$00
-            bne prnt_ext
-            jsr CHKAXLON
-            cpx #$00
-            beq prnt_ext
-            stx BNKCNT
-            lda #$04
-            sta USEDMASK
-
-prnt_ext    lda USEDMASK
-
-            cmp #$00
-            bne prnt_um1
+check_ext   jsr SWPORTB
+            jsr CHKPORTB
+            lda BNKCNT
+            beq check_axlon
             jsr _print
-            dta c'  Ext None',b($9b,$00)
-            jmp prnt_end
+            dta c'  PORTB',b($00)
+            jsr prnt_nmbrs
+            jsr BW_CRNAME
+            beq check_axlon
+            jsr wrt_portb
 
-prnt_um1    cmp #$01
-            bne prnt_um2
-prnt_rambo  jsr _print
-            dta c'  Rambo',b($00)
-            jmp prnt_nmbrs
-
-prnt_um2    cmp #$02
-            beq prnt_rambo
-
-prnt_um3    cmp #$03
-            bne prnt_um4
+check_axlon jsr CHKAXLON
+            lda BNKCNT
+            beq check_end
             jsr _print
-            dta c'  Compy',b($00)
-            jmp prnt_nmbrs
-
-prnt_um4    cmp #$04
-            bne prnt_nmbrs
-            jsr _print
-            dta c'  Axlon',b($00)
-            jmp prnt_nmbrs
+            dta c'  AXLON',b($00)
+            jsr prnt_nmbrs
+check_end   rts
 
 prnt_nmbrs  lda #$00
             ldx BNKCNT
+            stx BKBCNT
+            sta BKBCNT+1
             stx BW_DECIN
             sta BW_DECIN+1
             sta BW_DECIN+2
@@ -360,18 +285,18 @@ prnt_nmbrs  lda #$00
             sta _extbanks+2
 
             ldx #$04
-prnt_size   lda BNKCNT
+prnt_size   lda BKBCNT
             asl @
-            sta BNKCNT
-            lda BNKCNT+1
+            sta BKBCNT
+            lda BKBCNT+1
             rol @
-            sta BNKCNT+1
+            sta BKBCNT+1
             dex
             bne prnt_size
 
-            lda BNKCNT
+            lda BKBCNT
             sta BW_DECIN
-            lda BNKCNT+1
+            lda BKBCNT+1
             sta BW_DECIN+1
             lda #$00
             sta BW_DECIN+2
@@ -389,166 +314,234 @@ prnt_size   lda BNKCNT
             dta c': '
 _extsize    dta c'xxxx kB Banks:'
 _extbanks   dta c'yyy'
-            dta b($9B,$00)
+            dta b($00)
+            lda RB256FLAG
+            beq prnt_end
+            jsr _print
+            dta c'+Main'
+            dta b($00)
+prnt_end    lda #$9b
+            jsr _putc
+            rts
 
-prnt_end    rts
-
-* check AXLON extended memory
-* bank count in register A
-CHKAXLON    jsr IRQ_OFF
-*                             =8 cycle
-* try to save and write banks            
-            ldy #$08        ; 2 cycle
-            lda #$FF        ; 2 cycle
-AXLSAVWRT   sta AXLON       ; 4 cycle
-            ldx $7000       ; 4 cycle
-            stx BNKSAVBUF,Y ; 4 cycle
-            sta $7000       ; 4 cycle
-            lsr @           ; 1 cycle
-            dey             ; 2 cycle
-            bpl AXLSAVWRT   ; 3 cycle
-*                            =22*8+4=180 cycle
-* check banks
-            ldx #$00        ; 2 cycle
-AXLBNKCHK   iny             ; 2 cycle
-            sta AXLON       ; 4 cycle
-            cmp $7000       ; 4 cycle
-            bne AXLBNKSTOP  ; 2 cycle
-            tax             ; 1 cycle
-            sec             ; 1 cycle
-            rol @           ; 1 cycle
-            cpy #$08        ; 3 cycle
-            bne AXLBNKCHK   ; 3 cycle
-AXLBNKSTOP  txa             ; 1 cycle
-            pha             ; 1 cycle
-*                            =21*8+4=176 cycle
-* restore banks
-            ldy #$00        ; 2 cycle
-            tya             ; 1 cylee
-AXLBNKRESTR sta AXLON       ; 4 cycle
-            ldx BNKSAVBUF,Y ; 4 cycle
-            stx $7000       ; 4 cycle
-            sec             ; 1 cycle
-            rol @           ; 1 cycle
-            iny             ; 2 cycle
-            cpy #$09        ; 3 cycle
-            bne AXLBNKRESTR ; 3 cycle
-*                            =22*8+3=179 cycle
-            jsr IRQ_ON
-* ca. 530 cycle in VB (max NTCS ca. 1000, PAL ca. 3000)
-* everything ok
+wrt_portb   jsr _print
+            dta c'  PORTB values saved in ',b($00)
+            ldx #$00
+            lda #9
+            sta $342
+            lda <BW_COMFNAM
+            sta $344
+            lda >BW_COMFNAM
+            sta $345
+            lda #$FF
+            sta $348
+            jsr CIOV
+            jsr close1
+* open file
+            lda <BW_COMFNAM
+            sta $344+$10
+            lda >BW_COMFNAM
+            sta $345+$10
+            lda #8
+            sta $34A+$10
+            lda #0
+            sta $34B+$10
+            lda #3
+            jsr cio1
+            bpl wrt_file
+            tya
+            pha
+            jsr close1
             pla
-            tax
+            jmp (BW_FAIL)
+* write data
+wrt_file    lda <RBTAB
+            sta $344+$10
+            lda >RBTAB
+            sta $345+$10
+            lda BNKCNT
+            sta $348+$10
+            lda #0
+            sta $349+$10
+            lda #11
+            jsr cio1
+            bpl cls_file
+            tya
+            pha
+            jsr close1
+            pla
+            jmp (BW_FAIL)
+cls_file    jmp close1
+
+close1      lda #12
+cio1        ldx #$10
+            sta $342,X
+            jmp CIOV
+
+TEMP1       equ $90
+BUFF        equ $500
+SWTAB       equ $480
+
+* create PORTB table
+SWPORTB     ldx #63
+            lda #1
+            clc
+ST5B        sta SWTAB+1,X
+            dex
+            bmi ST5C
+            adc #4
+            sta TEMP1
+            and #$10
+            adc TEMP1
+            bcc ST5B
+            adc #1
+            bne ST5B
+ST5C        stx SWTAB
             rts
 
 * check PORTB banks
 * bank count in register A
-CHKBNKS     lda PORTB
+CHKPORTB    lda #$00
+            sta RB256TEST
+            sta RB256FLAG ; would collide with $7000
+* clear banking tab
+            ldx #63
+            lda #$FF ; OFF
+RT0A        sta RBTAB,X
+            dex
+            bpl RT0A
+* store PORTB
+            lda PORTB
             pha
             jsr IRQ_OFF
-*                             = 16 cycle
-* try to save and write banks            
-            ldy #$06        ; 2 cycle
-BNKSAVWRT   ldx BNKSWTBUF,Y ; 4 cycle
-            stx PORTB       ; 4 cycle
-            lda $7000       ; 4 cycle
-            sta BNKSAVBUF,Y ; 4 cycle
-            stx $7000       ; 4 cycle
-            dey             ; 2 cycle
-            bpl BNKSAVWRT   ; 3 cycle
-*                            =25*6+2=152 cycle
-* check banks
-BNKCHK      iny             ; 2 cycle
-            lda BNKSWTBUF,Y ; 4 cycle
-            sta PORTB       ; 4 cycle
-            cmp $7000       ; 4 cycle
-            bne BNKSTOP     ; 2 cycle
-            cpy #$06        ; 3 cycle
-            bne BNKCHK      ; 3 cycle
-            iny             ; 2 cycle
-BNKSTOP     dey             ; 2 cycle
-            tya             ; 2 cycle
-* save bank bit count in X
-            tax             ; 2 cycle
-*                            =22*6+8=140 cycle
-* restore banks
-            ldy #$00        ; 2 cycle
-BNKRESTR    lda BNKSWTBUF,Y ; 4 cycle
-            sta PORTB       ; 4 cycle
-            lda BNKSAVBUF,Y ; 4 cycle
-            sta $7000       ; 4 cycle
-            iny             ; 2 cycle
-            cpy #$07        ; 3 cycle
-            bne BNKRESTR    ; 3 cycle
-*                            =24*6+2=146 cycle
-* check memory aliases (RAMBO 256k)
-            lda #$00        ; 2 cycle
-            sta RB256TEST   ; 4 cycle
-            lda BNK0R256    ; 4 cycle
-            sta PORTB       ; 4 cycle
-            lda $7000       ; 4 cycle
-            sta BNK0R256BUF ; 2 cycle
-            lda #$04        ; 2 cycle
-            sta $7000       ; 4 cycle
-*                            =26 cycle
-* calc bank numbers by bits
-            lda #$00        ; 2 cycle
-            cpx #$00        ; 3 cycle
-            beq BNKCHKEND   ; 3 cycle
-            lda #$01        ; 2 cycle
-SHIFTLOOP   asl @           ; 2 cycle
-            dex             ; 2 cycle
-            bne SHIFTLOOP   ; 3 cycle
-* substract main banks for Rambo 256k
-            sec             ; 1 cycle
-            sbc RB256TEST   ; 4 cycle
-            tax             ; 2 cycle
-* restore Rambo 256k test byte
-BNKCHKEND   lda BNK0R256    ; 4 cycle
-            sta PORTB       ; 4 cycle
-            lda BNK0R256BUF ; 4 cycle
-            sta $7000       ; 2 cycle
-*                             = 7*7+10+21=80
+* save
+            ldx #64
+RT0         lda SWTAB,X
+            sta PORTB
+            lda $7000
+            sta BUFF,X
+            dex
+            bpl RT0
+* set
+            ldx #64
+RT1         lda SWTAB,X
+            sta PORTB
+            stx $7000
+            dex
+            bpl RT1
+* check extended
+            ldy #0
+            ldx #64
+RT2         lda SWTAB,X
+            sta PORTB
+            cpx $7000
+            bne RT3
+            lda SWTAB,X
+            sta RBTAB,Y
+            iny
+RT3         dex
+            bne RT2
+* check main banking => sub 4 banks
+            lda RB256TEST
+            beq RT31
+            sta RB256FLAG
+            tya
+            beq RT31
+            sec
+            sbc #$03
+            pha
+* skip 3 highest banks,
+* one is already skipped
+            tax
+            ldy #$00
+RT32        lda RBTAB+3,Y
+            sta RBTAB,Y
+            iny
+            dex
+            bne RT32
+            pla
+            tay
+* save bank count
+RT31        sty BNKCNT
+* restore
+            ldx #64
+RT4         lda SWTAB,X
+            sta PORTB
+            lda BUFF,X
+            sta $7000
+            dex
+            bpl RT4
 * restore PIA PORT B
-            pla            ; 2 cycle
-            sta PORTB      ; 4 cycle
+            pla
+            sta PORTB
             jsr IRQ_ON
-*                           =24 cycle
-* ca. 590 cycle in VB (max NTCS ca. 1000, PAL ca. 3000)
-* everything ok
             rts
 
-IRQ_ON      lda #$E0       ; 2 cycle
-            sta NMIEN      ; 4 cycle
-            dec CRITIC     ; 6 cycle
-            cli            ; 2 cycle
+RB256FLAG   dta b(0)
+
+* check AXLON extended memory
+* bank count in register A
+CHKAXLON    lda #$00
+            sta RB256TEST
+            sta RB256FLAG ; reset for common output
+            jsr IRQ_OFF
+* save
+            ldx #$FF
+ART0        stx AXLON
+            lda $7000
+            sta BUFF,X
+            dex
+            cpx #$FF
+            bne ART0
+* set
+            ldx #$FF
+ART1        stx AXLON
+            stx $7000
+            dex
+            cpx #$FF
+            bne ART1
+* check extended
+            ldy #0
+            ldx #$FF
+ART2        stx AXLON
+            cpx $7000
+            bne ART3
+            iny
+ART3        dex
+            bne ART2
+* save bank count
+            sty BNKCNT
+* restore
+            ldx #$FF
+ART4        stx AXLON
+            lda BUFF,X
+            sta $7000
+            dex
+            cpx #$FF
+            bne ART4
+* restore axlon register to main
+            lda #$00
+            sta AXLON
+            jsr IRQ_ON
+            rts
+
+IRQ_ON      lda #$40
+            sta NMIEN
+            cli
+            dec CRITIC
             rts
 
 IRQ_OFF     inc CRITIC
 * wait for vertical blank interrupt
             lda RTCLOK+2
-WAITLOOP    cmp RTCLOK+2
-            beq WAITLOOP
+WAITLP      cmp RTCLOK+2
+            beq WAITLP
 * switch off interrupts
-            lda #$00         ; 2 cycle
-            sta NMIEN        ; 4 cycle
-            sei              ; 2 cycle
+            lda #$00
+            sta NMIEN
+            sei
             rts
 
-* Compy
-* 1110:1011 1110:0011 1010:0011 0010:0011 0010:0001 0010:0000
-BNKSWTMSK   dta b($F3,$EB,$E3,$A3,$23,$21,$20)
-
-* Rambo1
-* 1110:1011 1110:0011 1100:0011 1000:0011 1000:0001 0000:0001
-BNKSWTMSKR1 dta b($F3,$EB,$E3,$C3,$83,$81,$01)
-
-* Rambo2
-* 1110:1011 1110:0011 1100:0011 1000:0011 0000:0001 1000:0001
-BNKSWTMSKR2 dta b($F3,$EB,$E3,$C3,$83,$01,$81)
-
-* Rambo 256k bank 0 = first 16k of main memory
-* 1000:0011
-BNK0R256    dta b($83)
+RBTAB       equ *
 
             end

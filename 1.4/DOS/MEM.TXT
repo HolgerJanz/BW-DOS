@@ -1,20 +1,22 @@
 }
-  MEM
+  MEM [file]
 
 Returns information about RAM and
 OS ROM.
-
 RAM area $6a, $02e4-$02e8:
 RAMTOP, RAMSIZ, MEMTOP, and MEMLO.
 Extended memory info contains kind
-(RAMBO or Compy Shop compatible), size
-in kilo byte, and used PORTB bits.
+(PORTB or AXLON), size in kilobyte,
+and bank count plus main banking.
+The usable PORTB values are written
+to file if available.
 
-OS ROM area $ffee-$fff9 contains:
+OS ROM area contains:
   $ffee   DAT: Revision date day
   $ffef   DAT: Revision date month
   $fff0   DAT: Revision date year
   $fff1   XLO: Option byte
   $fff2-6 PN:  Part number
   $fff7   REV: Revision number
-  $fff8-9 CHK: Checksum (LSB/MSB)
+  $c000-1 CHK1: Checksum (LSB/MSB)
+  $fff8-9 CHK2: Checksum (LSB/MSB)

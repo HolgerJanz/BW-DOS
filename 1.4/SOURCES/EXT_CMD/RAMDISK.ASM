@@ -26,11 +26,11 @@ BIT_abs equ $2C
 
         icl '_SYSEQU.ICL'
 
-        blk DOS $3100
+        blk DOS $3000
 
         jsr _print
         dta B(155)
-        dta C'BW-DOS 1.4 RAMDISK 16-08-2023'
+        dta C'BW-DOS 1.4 RAMDISK 15-09-2023'
         dta B(155,0)
 
         jsr _chkbwdos14
@@ -52,25 +52,37 @@ BIT_abs equ $2C
         lda (DOSVEC),Y
         cmp #'O'
         bne START4
+
         iny
         lda #'F'
         cmp (DOSVEC),Y
         bne STRTHLP
+
         iny
         cmp (DOSVEC),Y
         bne STRTHLP
+
+        iny
+        lda (DOSVEC),Y
+        cmp #$9B
+        beq JREMOVE
+
+        cmp #'A'
+        bne STRTHLP
+
         iny
         lda (DOSVEC),Y
         cmp #$9B
         bne STRTHLP
+        jsr SWAXLON
 
-        jmp REMOVE
+JREMOVE jmp REMOVE
 
 * help
 STRTHLP jsr _print
         dta C'Use:'
         dta B(155)
-        dta C'  RAMDISK.SYS (drive#[F][E] [file])|OFF'
+        dta C' RAMDISK.SYS (n[F][E][A] [file])|OFF[A]'
         dta B(155,0)
         jmp (DOSVEC)
 
@@ -92,9 +104,21 @@ STRT4B  lda (DOSVEC),Y
         beq STRT4B
 
 STRT4C  cmp #'E'
-        bne STRT4D
+        bne STRT4E
         sta XFLAG
         beq STRT4B
+
+STRT4E  cmp #'A'
+        bne STRT4D
+        lda BNKOFF
+        beq STRT4B
+        tya
+        pha
+        jsr SWAXLON
+        jsr RAMTEST
+        pla
+        tay
+        jmp STRT4B
 
 STRT4D  eor #'0'
         beq STRTHLP
@@ -537,7 +561,7 @@ PRNUM   dta C'0000'
         lda BNKOFF
         bne PPORTB
         jsr _print
-        dta c'Axlon'
+        dta c'AXLON'
         dta B(155,0)
         jmp (DOSVEC)
 PPORTB  jsr _print
@@ -559,7 +583,8 @@ VZBOOT  dta C'S'
         jmp $3080
         dta A(0,0,0)
         dta B(0,2,0,32,0,4,0)
-        dta C'RAMDISK '
+        dta C'RAMDISK'
+KNAME   dta C'B'
         dta B(0,128,$22)
 
 VZDIR   dta B(23,0,0)
@@ -793,15 +818,15 @@ ENINT   jsr SAPORTB
         lda #$40
         sta NMIEN
         cli
+        dec CRITIC
         rts
 
-* WAITVBL lda RTCLOK+2
-*        cmp RTCLOK+2
-*        beq *-2
-*        rts
-
-* DISINT  jsr WAITVBL
-DISINT  lda #0
+DISINT  inc CRITIC
+* wait for vertical blank interrupt
+        lda RTCLOK+2
+WAITLP  cmp RTCLOK+2
+        beq WAITLP
+        lda #0
 *        sta DMACTL
         sta NMIEN
         sei
@@ -851,8 +876,8 @@ SWAXLON lda <AXLON
         sta PORTB3+2
         sta PORTB4+2
 * set all read operation
-* Axlon register is read only
-* => always retunr 0, banking off
+* Axlon register is write only
+* => always return 0, banking off
         ldx #$02
 NXTAXLR lda RDBNKR,X
         sta PORTB0,X
@@ -865,8 +890,10 @@ NXTAXLN txa
         sta SWTAB,X
         dex
         bpl NXTAXLN
-* set flag
+* set flags
         inc BNKOFF
+        lda #'A'
+        sta KNAME
         rts
 
 BNKOFF  dta b($FF)

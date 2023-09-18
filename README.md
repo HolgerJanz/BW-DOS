@@ -9,7 +9,7 @@ BW-DOS 1.4 is extended:
 1. it works on all 8-bit ATARI with at least 16kB RAM (not yet for all commands)
 2. contemporary command naming
 3. help system with manual pages for all commands
-4. extended tools (additional tools by FJC, ICD, and FTe are marked as such)
+4. extended tools (additional tools by Hias, FJC, ICD, and FTe are marked as such)
 
 The version 1.4 is the version that will be maintained in the future.
 
