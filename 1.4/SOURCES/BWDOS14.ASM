@@ -73,7 +73,7 @@ jini jmp (INIAD)  ;3
 _rts rts ;1
 
 cbgn equ *
-     ins 'XBW14.COM'
+     ins 'XBW14.DOS'
 cend equ *
 
      blk dos RUNAD
