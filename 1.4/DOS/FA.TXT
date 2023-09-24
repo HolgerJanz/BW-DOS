@@ -1,16 +1,13 @@
 }
   FA [/LSEY] src[.ext] [obj[.ext]]
   
-Fast Assembler 1.8 02-06-2023.
+Fast Assembler 1.8 24-09-2023.
 Assembler for SpartaDOS X and BW-DOS.
-
  src - ATASCII source file
  obj - target binary object file
-
 The default extensions (ext) are .ASM
 and .OBJ. The default obj name is the
 src name.
-
  /L list combined source
  /S print summary, e.g. block and
     label count, memory
@@ -20,3 +17,5 @@ src name.
     errors starting from 224($E0)
  /Y Writes symbol table to file
     obj.SYM
+
+https://github.com/HolgerJanz/FastAssembler
