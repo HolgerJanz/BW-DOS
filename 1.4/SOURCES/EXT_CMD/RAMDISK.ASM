@@ -18,9 +18,10 @@ MSAVE   equ $8C
 MIX     equ $8D
 MKONEC  equ $8E
 TEMP1   equ $90
+Z3000   equ $91
 
+SWTAB   equ $BF ;$480
 BUFF    equ $500
-SWTAB   equ $480
 
 BIT_abs equ $2C
 
@@ -30,7 +31,7 @@ BIT_abs equ $2C
 
         jsr _print
         dta B(155)
-        dta C'BW-DOS 1.4 RAMDISK 15-09-2023'
+        dta C'BW-DOS 1.4 RAMDISK 22-11-2023'
         dta B(155,0)
 
         jsr _chkbwdos14
@@ -266,9 +267,10 @@ STRT6A  lda JSIO+1+RESO,Y
         sta JSIO+1,Y
         dey
         bpl STRT6A
+
         pla
         jsr ENINT
-        bne START7
+        jmp START7
 
 * Install resident part
 STRT6B  lda MEMLO
@@ -734,38 +736,45 @@ SRCHR2  lda (SRCHADR),Y
         rts
 
 * Check Extended Memory
-RAMTEST jsr DISINT
-        pha
-
-DACAPO  lda #$00
+RAMTEST lda #$00
         sta $3000 ; would collide with $7000
-
 * clear banking tab
         ldx #63
         lda BNKOFF
 RT0A    sta RBTAB,X
         dex
         bpl RT0A
-
+* switch off irq and init PORTB
+        jsr DISINT
+        pha
 * save
         ldx #64
-RT0     jsr RSWITCH
+RT0     lda SWTAB,X
+SPORTB1 sta PORTB
         lda $7000
         sta BUFF,X
         dex
         bpl RT0
-
+* wait VB
+        pla
+        pha
+        jsr WAITVB
 * set
         ldx #64
-RT1     jsr RSWITCH
+RT1     lda SWTAB,X
+SPORTB2 sta PORTB
         stx $7000
         dex
         bpl RT1
-
-* check extended
+* wait VB
+        pla
+        pha
+        jsr WAITVB
+* check
         ldy #0
         ldx #64
-RT2     jsr RSWITCH
+RT2     lda SWTAB,X
+SPORTB3 sta PORTB
         cpx $7000
         bne RT3
         lda SWTAB,X
@@ -773,15 +782,33 @@ RT2     jsr RSWITCH
         iny
 RT3     dex
         bne RT2
-
-* check main banking => sub 4 banks
+* save bank count and main banking flag
         lda $3000
+        sta Z3000
+        sty NBANKS
+* wait VB
+        pla
+        pha
+        jsr WAITVB
+* restore
+        ldx #64
+RT4     lda SWTAB,X
+SPORTB4 sta PORTB
+        lda BUFF,X
+        sta $7000
+        dex
+        bpl RT4
+* reset irq and PORTB
+        pla
+        jsr ENINT
+* check main banking => sub 4 banks
+        lda Z3000
         beq RT31
-        tya
+        lda NBANKS
         beq RT31
         sec
         sbc #$03
-        pha
+        sta NBANKS
 * skip 3 highest banks,
 * one is already skipped
         tax
@@ -791,29 +818,16 @@ RT32    lda RBTAB+3,Y
         iny
         dex
         bne RT32
-        pla
-        tay
-* save bank count
-RT31    sty NBANKS
-
-* restore
-        ldx #64
-RT4     jsr RSWITCH
-        lda BUFF,X
-        sta $7000
-        dex
-        bpl RT4
-
 * if no PORTB banks, try Axlon
-        lda NBANKS
+RT31    lda NBANKS
         bne RTEND
         lda BNKOFF
         beq RTEND
         jsr SWAXLON
-        jmp DACAPO
+        jmp RAMTEST
+RTEND   rts
 
-* finished
-RTEND   pla
+* reset PORTB and irq
 ENINT   jsr SAPORTB
         lda #$40
         sta NMIEN
@@ -827,17 +841,18 @@ DISINT  inc CRITIC
 WAITLP  cmp RTCLOK+2
         beq WAITLP
         lda #0
-*        sta DMACTL
         sta NMIEN
         sei
 PORTB0  lda PORTB
         rts
 
-RSWITCH lda SWTAB,X
-        jsr SAPORTB
+SAPORTB sta PORTB
         rts
 
-SAPORTB sta PORTB
+WAITVB  jsr SAPORTB
+        lda VCOUNT
+        cmp #$82
+        bcc *-5
         rts
 
 * create PORTB table
@@ -861,6 +876,10 @@ ST5C    stx SWTAB
 * set all write operations
 SWAXLON lda <AXLON
         sta SAPORTB+1
+        sta SPORTB1+1
+        sta SPORTB2+1
+        sta SPORTB3+1
+        sta SPORTB4+1
         sta PORTB1+1
         sta SIOST+1
         sta EXTST+1
@@ -869,6 +888,10 @@ SWAXLON lda <AXLON
         sta PORTB4+1
         lda >AXLON
         sta SAPORTB+2
+        sta SPORTB1+2
+        sta SPORTB2+2
+        sta SPORTB3+2
+        sta SPORTB4+2
         sta PORTB1+2
         sta SIOST+2
         sta EXTST+2

@@ -378,9 +378,11 @@ cio1        ldx #$10
             sta $342,X
             jmp CIOV
 
-TEMP1       equ $90
+TEMP1       dta b(0)
+SPORTB      dta b(0)
 BUFF        equ $500
-SWTAB       equ $480
+SWTAB       equ $BF ;$480
+ZBUFF       equ $7E
 
 * create PORTB table
 SWPORTB     ldx #63
@@ -412,16 +414,18 @@ RT0A        sta RBTAB,X
             bpl RT0A
 * store PORTB
             lda PORTB
-            pha
+            sta SPORTB
             jsr IRQ_OFF
 * save
             ldx #64
 RT0         lda SWTAB,X
             sta PORTB
             lda $7000
-            sta BUFF,X
+            sta ZBUFF,X
             dex
             bpl RT0
+* wait VB
+            jsr WAITVB
 * set
             ldx #64
 RT1         lda SWTAB,X
@@ -429,6 +433,8 @@ RT1         lda SWTAB,X
             stx $7000
             dex
             bpl RT1
+* wait VB
+            jsr WAITVB
 * check extended
             ldy #0
             ldx #64
@@ -463,16 +469,18 @@ RT32        lda RBTAB+3,Y
             tay
 * save bank count
 RT31        sty BNKCNT
+* wait VB
+            jsr WAITVB
 * restore
             ldx #64
 RT4         lda SWTAB,X
             sta PORTB
-            lda BUFF,X
+            lda ZBUFF,X
             sta $7000
             dex
             bpl RT4
 * restore PIA PORT B
-            pla
+            lda SPORTB
             sta PORTB
             jsr IRQ_ON
             rts
@@ -540,6 +548,13 @@ WAITLP      cmp RTCLOK+2
             lda #$00
             sta NMIEN
             sei
+            rts
+
+WAITVB      lda SPORTB
+            sta PORTB
+            lda VCOUNT
+            cmp #$82
+            bcc *-5
             rts
 
 RBTAB       equ *

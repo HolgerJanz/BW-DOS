@@ -96,6 +96,7 @@ PORTB       equ $D301
 
 DMACTL      equ $D400 
 WSYNC       equ $D40A
+VCOUNT      equ $D40B
 NMIEN       equ $D40E
 
 CIOV        equ $E456
