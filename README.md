@@ -26,9 +26,9 @@ For list of all commands:
 
     MAN COMMANDS
 
-For help of specific command:
+For help of specific command e.g., DIR:
 
-    MAN command e.g., MAN DIR
+    MAN DIR
 
 For list of short text for error codes:
 
