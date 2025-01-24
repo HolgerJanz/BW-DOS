@@ -1,0 +1,16 @@
+}
+  IF/ELSE/ENDIF
+
+These commands may be used in a batch
+file only. The user will be asked about
+which block of commands should be
+executed.
+
+The syntax is:
+
+IF
+question
+commands
+ELSE
+commands
+ENDIF

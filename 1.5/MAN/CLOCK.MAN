@@ -1,0 +1,20 @@
+}
+  CLOCK.SYS [ON|OFF]
+
+This resident command is a software
+clock for BW-DOS. If you've entered
+the correct date/time (with DATE and
+TIME commands), then every file and
+directory will get the real time when
+it is created.
+
+This clock is based on the VBI
+interrupt, so it is possible that some
+programs may stop it. The clock does
+not run during I/O so it may go wrong
+after a while. It works on both
+PAL and NTSC.
+
+The parameter ON installs the clock and
+OFF removes IT, if it was the last
+driver loaded.

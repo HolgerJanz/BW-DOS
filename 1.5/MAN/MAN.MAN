@@ -1,0 +1,17 @@
+}
+  MAN command
+
+This command provides an environment
+to display manual pages (small
+documentation) for every command or
+program.
+
+The next page can be displayed with
+any key. <ESC> or <BREAK> abort the
+display of the current manual page.
+
+Special manual pages:
+  HELP - short description
+  COMMANDS - list of commands
+  ERRORS - list of error codes
+

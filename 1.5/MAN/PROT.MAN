@@ -1,0 +1,12 @@
+}
+  PROT file ..
+
+Low Memory, Internal
+
+This command is protecting files from
+being deleted or changed. Using
+wildcards you can protect a set of
+files. This command can also protect
+directories. Use the commad UNPROT to
+remove protection from a file or
+directory.

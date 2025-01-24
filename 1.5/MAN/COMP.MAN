@@ -1,0 +1,15 @@
+}
+  COMP file1 file2 [maxdiff]
+
+This is the command compares two
+files. The maximum differences to be
+displayed can be specified with
+maxdiff.
+
+If the files are different then the
+program terminates with error 255 so
+a batch execution is terminated.
+
+If the files have a different length
+then the part with the same length
+is compared.

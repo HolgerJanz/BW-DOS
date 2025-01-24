@@ -1,0 +1,46 @@
+}
+  ED [file]
+
+This command is an editor for text
+files. If no file is specified a new
+file is created and the name can be
+specified at save or on exit.
+
+The editor is line oriented. The
+maximum length of a line is 128. If a
+file should be loaded with lines
+longer than 128 then the error 137
+(Truncated lines) is returned and the
+file is not loaded. If the file is
+larger than the text buffer then error
+137 is also returned but the file is
+loaded up to the size of the text
+buffer.
+
+All edit commands known from the
+standard Atari editor are available.
+<ESC> can be use to escape a
+command key combination.
+
+<CTRL><X>  Exit editor
+<CTRL><L>  Load file
+<CRTL><S>  Save file
+<CTRL><SHIFT><E> Erase text buffer
+
+<CTRL><A>  Cursor to begin of line
+<CTRL><Z>  Cursor to end of line
+<CTRL><B>  Cursor to begin of text
+<CTRL><E>  Cursor to end of a text
+<CTRL><SHIFT><Up> or
+<CTRL><[>  Page up
+<CTRL><SHIFT><Down> or
+<CTRL><]>  Page down
+
+<CTRL><T>  Tag current line
+<CTRL><G>  Goto tagged line
+<CTRL><C>  Copy current line before
+           tagged line
+
+<CTRL><V>  Toggle visibility of EOL
+<CTRL><U>  Move low margin up
+<CTRL><D>  Move low margin down

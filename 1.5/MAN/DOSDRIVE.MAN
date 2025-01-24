@@ -1,0 +1,11 @@
+}
+  DOSDRIVE [n|OFF]
+
+Low Memory
+
+Sets the DOS drive for command search.
+The default drive is 1 (D1:). If this
+command is called with OFF or drive
+number 0 then DOS drive is switched
+off and commands are only searched on
+current drive.

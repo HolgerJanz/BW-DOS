@@ -1,0 +1,10 @@
+}
+  UNPROT file
+
+Low Memory, Internal
+
+This command removes protection from
+files or directories. Using wildcards
+you can unprotect a set of files and
+directories. To protect files or
+directories use the command PROT.

@@ -1,0 +1,13 @@
+}
+  BASIC ON|OFF
+
+Low Memory, Internal
+
+Switches the internal Basic (XL/XE
+only) on or off. It works only with
+no other cartridge installed. Memory
+e.g., Basic program, is erased. See
+command CAR to start Basic.
+
+The external version preserves the
+color register.

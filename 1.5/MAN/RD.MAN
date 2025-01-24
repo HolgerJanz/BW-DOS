@@ -1,0 +1,14 @@
+}
+  RD [Dn:][path>]name ..
+
+Low Memory, Internal
+
+This is the command for deleting
+directories. You can only delete an
+empty directory - if there are any
+files or directories in it you need
+to remove them first.
+
+The internal version does not support
+a list of parameters - only the first
+parameter is evaluated.

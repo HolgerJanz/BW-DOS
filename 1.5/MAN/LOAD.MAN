@@ -1,0 +1,16 @@
+}
+  LOAD file ..
+
+Low Memory, Internal
+
+This command will simply load a DOS
+loadable file (program). Any init and
+run address will be ignored.
+
+The low memory version resides in the
+memory area from $580-$6FF, so it is
+not possible to load programs to this
+area with the low memory version.
+
+A list of parameters is not supported
+by the internal version.

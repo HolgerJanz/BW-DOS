@@ -1,0 +1,31 @@
+}
+  COPY [/R]
+       [dev1:][path1>][pattern1]
+       [dev2:][path2>][pattern2[/A]]
+
+This command copies data from
+device dev1 to device dev2. If a
+device is not specified then the
+current disk drive is used.
+
+The option /R copies recursive
+all subdirectories. This
+option is only allowed if dev1
+and dev2 are disk drives.
+
+It copies file(s) specified by the
+first parameter to file(s) specified
+by the second one. Option /A appends
+to an already existing file.
+You can use any device instead of Dn:.
+
+  COPY K: P:
+Copies the input from keyboard to
+printer.
+
+  COPY E: file
+Creates a new text file.
+Press <CONTROL>+<3> to finish.
+
+  COPY file P:
+Sends file(s) to printer.

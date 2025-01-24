@@ -1,0 +1,45 @@
+}
+  FORMAT [Dn:]
+
+This command formats a disk and
+installs BW-DOS. Formatting must be
+the first thing done for a new disk.
+
+The drive number specified as a
+parameter is used for where to search
+for the DOS files, not for which drive
+the format should be performed on!
+
+The program will ask you for necessary
+input, and then format the disk. This
+program cannot be controlled from a
+batch file. Ramdisks cannot be
+formatted in this way.
+
+Besides the four standard formats
+single, medium, double, and
+double-side there are three more
+options.
+
+Reset File System: Clears disk. The
+disk must already be formatted and
+initialized with SpartaDOS file
+system. This option is the fastest way
+to clear a already used disk.
+
+Create File System: Initializes
+SpartaDOS file system. Prerequisite is
+that the disk is already physically
+formatted and the drive must support
+the configuration block (Percom). This
+option is used to initialize hard
+disks.
+
+Custom Configuration: Formats and
+initializes the disk with SpartaDOS
+file system using freely selectable
+parameters. The drive must support the
+configuration block. This option is
+used for special formats supported by
+drives like ATR8000, HDI, XF551 with
+3,5“ modification, or 1050 Mini.

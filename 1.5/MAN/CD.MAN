@@ -1,0 +1,21 @@
+}
+  CD [Dn:]path ..
+
+Low Memory, Internal
+
+Sets the current working directory to
+drive Dn: and path.
+
+Multiple parameters are not supported
+by the internal version.
+
+Examples:
+
+CD D4:>TOOLS>SOURCES
+Changes the path starting at the main
+directory on D4:
+
+CD TEXT
+Changes the path to the directory TEXT
+on the current drive starting at the
+current directory.

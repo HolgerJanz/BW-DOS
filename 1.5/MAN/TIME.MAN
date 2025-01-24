@@ -1,0 +1,7 @@
+}
+  TIME
+
+This commands will display the current
+time from BW-DOS's clock and optionally
+allows to enter a new value. Press
+<RETURN> to leave it unchanged.

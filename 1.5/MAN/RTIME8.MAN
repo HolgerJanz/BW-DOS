@@ -1,0 +1,13 @@
+}
+  RTIME8.SYS [/R]
+
+This command installs a drivers for a
+hardware real time clock. It works with
+the R-Time-8 cartridge by ICD
+(or other compatible one).
+
+Option R installs a reduced version.
+It allows only reading from the clock,
+setting a new date/time is not
+possible in this mode. This option
+saves memory.

@@ -1,0 +1,9 @@
+}
+  CHVOL [Dn:]name
+
+Low Memory
+
+This command changes the volume
+name of disk in Dn:. If no drive is 
+specified the name of the disk in the
+current drive will be changed.

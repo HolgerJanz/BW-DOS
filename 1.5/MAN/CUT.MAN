@@ -1,0 +1,11 @@
+}
+  CUT file1 file2 position [length]
+
+This external command saves a specified
+part of file1 as file2. If no length is
+specified, it'll save the maximum
+length - that is between position and
+the end of file.
+
+Position and length must be hexadecimal
+numbers.

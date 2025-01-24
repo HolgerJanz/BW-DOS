@@ -1,0 +1,8 @@
+}
+  MEMCLEAR [xx]
+
+Low Memory
+
+Clears the memory between MEMLO and
+MEMTOP with the optional hexdecimal
+value xx. The default value is 00.

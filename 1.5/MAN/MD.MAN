@@ -1,0 +1,19 @@
+}
+  MD [Dn:][path>]name
+
+Low Memory, Internal
+
+This command will make a new directory.
+You cannot create a directory which
+has the same name like a file within
+the same parent directory.
+
+No-Go-Example:
+
+D1:DIR
+Volume: BWDOS15
+Dir:    MAIN
+
+HELLO         17383 01-04-24 00:01
+
+D1:MD HELLO

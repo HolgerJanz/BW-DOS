@@ -1,0 +1,13 @@
+}
+  APETIME
+
+Low Memory
+
+This command reads time and date via
+the SIO from certain external devices
+and then sets the BW-DOS clock.
+Known devices supporting the APETIME
+SIO command are APE, SIO2PC and
+FujiNet. Together with CLOCK.SYS it can
+be used to provide current file time
+and date stamps.

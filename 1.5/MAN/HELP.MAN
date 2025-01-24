@@ -1,0 +1,14 @@
+
+SpartaDOS 3 compatible DOS
+for 8-bit Ataris with at least 16kB
+(MENU requires at least 32k)
+https://github.com/HolgerJanz/BW-DOS
+
+For list of commands:
+  MAN COMMANDS
+For help of specific command:
+  MAN command e.g., MAN DIR
+For list of error codes:
+  MAN ERRORS
+To configure ramdisk and clock
+  -CONFIG

@@ -1,0 +1,13 @@
+}
+  VERIFY ON|OFF
+
+Low Memory
+
+This external command switches the
+write with verify option ON or OFF. The
+default is OFF. With option ON every
+sector is read after being written
+internally in the drive and data is
+compared. This results in a very slow
+writing. It can be useful while using
+bad quality disks. 

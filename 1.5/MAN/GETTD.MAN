@@ -1,0 +1,5 @@
+}
+  GETTD
+
+This commands displays the current
+date and time from BW-DOS's clock.

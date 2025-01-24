@@ -1,0 +1,24 @@
+}
+  DEL [/R] files|path ..
+
+Internal
+
+Erases files from disk. Directories
+can only be erased with option /R
+(see also command RD). Special
+characters * (no or many characters)
+and ? (one character) can be used as
+wildcards.
+
+Protected files (see PROT and UNPROT)
+are ignored. If only one file should
+be deleted and it is protected then
+error 170 (File not found) is
+returned.
+
+The option /R recursively deletes
+files including subdirectories.
+Protected subdirectories are ignored.
+
+A list of parameters and option /R are
+not supported by the internal version.

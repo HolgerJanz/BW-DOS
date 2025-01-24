@@ -1,0 +1,12 @@
+}
+  BLOAD file address [length]
+
+Low Memory
+
+This is the external command for
+loading data files (non DOS loadable)
+into memory. When no length is
+specified, the whole file will be
+loaded.
+
+This command uses low memory.

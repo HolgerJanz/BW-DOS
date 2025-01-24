@@ -1,0 +1,21 @@
+}
+  XBW15.DOS
+
+The command processor of this version
+of BW-DOS includes a set of basic
+commands. The advantage is that they
+do not have to be loaded from disk.
+
+Integrated commands are:
+
+BASIC, CAR, CD, DEL, DIR, DIRS, LOAD,
+MD, PRINT, PROT, RD, REN, RUN, TYPE,
+and UNPROT
+
+External versions of this commands can
+be called by absolute path e.g.,
+D1:>DOS>DEL
+
+The disadvantage is that MEMLO ($1EF0)
+is higher then that of XBW15CP
+and that less user memory is available. 

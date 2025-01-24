@@ -1,0 +1,17 @@
+}
+  SECOPY Dn:[file1] Dm:[file2]
+
+Copies sectors from disk or file to
+disk or file. Works only with 128 Bytes
+sector disks. Disks are not analyzed
+or formatted. Sectors are copied until
+either read or write error occurs.
+
+  SECOPY D1: D8:
+Copies sector from D1: to D8:
+
+  SECOPY D8: D4:>BACKUP>RAMDISK.DSK
+Copies sectors from D8: to file
+
+  SECOPY D4:>BACKUP>RAMDISK.DSK D8:
+Copies file to sectors of D8:

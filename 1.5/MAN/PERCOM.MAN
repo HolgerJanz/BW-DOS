@@ -1,0 +1,8 @@
+}
+  PERCOM [D:x] ..
+
+Reads the Percom block from supporting
+drives. If no drive is specified the
+current drive is read. If the drive
+does not support Percom blocks, error
+139 (Device NAK) is returned.

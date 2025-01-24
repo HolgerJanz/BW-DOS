@@ -1,0 +1,11 @@
+}
+  IDEP2TD.SYS [/R]
+
+This command installs a driver for a
+hardware real time clock. It works with
+the PBI device IDE PLUS 2 designed by
+JZ & KMK (see
+http://drac030.krap.pl/en-kmkjz-pliki.php).
+
+Option R installs a read-only version
+which needs less memory.

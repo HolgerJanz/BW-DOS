@@ -1,0 +1,17 @@
+}
+  DIRC [Dn:][path>][filename] ..
+
+Low Memory
+
+This commands produces a compact
+directory listing. Only names and a
+indicator character are shown.
+
+The indicators have the following
+meaning:
+  * protected file
+  : subdirrectory
+  # protected subdirectory
+
+This command supports a list of
+patterns of file names.

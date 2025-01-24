@@ -1,0 +1,44 @@
+}
+  RUN [A:|[A:]address [ParameterList]]
+
+Low Memory, Internal
+
+This command starts a program at
+the given address. Without parameter
+it restarts the last loaded program,
+or the last program started with this
+command. The address is always in
+hexadecimal. If a start address is
+specified then an optional parameter
+list can be specified, too.
+
+  RUN E471
+or
+  RUN A:E471
+
+This command calls the self test
+vector of the OS (XL/XE only).
+
+The qualifier A: (address) can be used
+to restart a program with a different
+parameter list. Without a specified
+address the last start address is used.
+
+  FA PROG1.ASM PROG1.COM
+  RUN A: PROG2.ASM PROG2.COM
+
+The command sequence above starts the
+assembly of PROG1.ASM using assembler
+FA (see https://github.com/HolgerJanz/FastAssembler/)
+and restarts the assembler FA with
+PROG2.ASM. This sequence is the same
+like the sequence below but the
+assembler FA is only loaded once. 
+
+  FA PROG1.ASM PROG1.COM
+  FA PROG2.ASM PROG2.COM
+
+The external version resides in the
+memory area from $580 to $6FF so every
+specified address below $700 is
+ignored by the external version of RUN. 

@@ -1,0 +1,22 @@
+}
+  MENU [Dn:][/S(ENSD0)][/B(YN)][/Q(YN)]
+
+Requires 32k
+
+This external command is a comfortable
+tool for operations with many selected
+files, for copying between two disks
+with only one disk drive, and for
+converting files from Atari DOS 2
+format to BW-DOS and back.
+
+Dn: specifies drive number the menu
+will start with, and the rest is
+similar to the "Setup" function:
+/S sorting of directories
+/B warning bell
+/Q ask before overwriting a file
+
+You may select a menu entry by using
+the left and right arrow key or by
+pushing the according hotkey.

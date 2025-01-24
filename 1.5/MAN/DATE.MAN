@@ -1,0 +1,9 @@
+}
+  DATE
+
+This command will display the current
+date from BW-DOS and it allows
+you to enter a new value. Press
+<RETURN> to leave it unchanged.
+
+The date format is DD-MM-YY.
