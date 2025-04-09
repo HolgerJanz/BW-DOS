@@ -1,6 +1,5 @@
 ; BW-DOS 1.5 Command SORTDIR [/R] path ..
 
-; System equates
          icl '_SYSEQU.ICL'
 
 ZBUF_SIZ equ $80
@@ -18,6 +17,7 @@ ZTEMP    equ $8D
 
          lda #0 
          sta SRT_REC
+         sta SRT_QT
          sta SRT_PROK
 
          sec
@@ -31,25 +31,24 @@ ZTEMP    equ $8D
          lda #$9b
          jsr _putc
 
-; parameter loop
-nxt_par  jsr get_par  ; next parameter
+nxt_par  jsr get_par
 
-         jsr chk_opt  ; check option
+         jsr chk_opt
          bcs nxt_par
 
          lda #1
          sta SRT_PROK
 
-         jsr ini_var  ; initialize variables
+         jsr ini_var
 
-nxt_del  jsr prn_pmsg ; print message
+nxt_del  jsr prn_pmsg
 
-         jsr srt_fil  ; sort files
+         jsr srt_fil
 
-         lda SRT_REC  ; check for recursive
+         lda SRT_REC
          beq nxt_par
 
-nxt_sub  jsr get_sub  ; get subdir
+nxt_sub  jsr get_sub
          bcs prv_del
 
          jsr psh_sub
@@ -59,53 +58,61 @@ prv_del  jsr pop_sub
          bcc nxt_sub
          bcs nxt_par
 
-; ********** subroutines *************
          icl '_PRINT.ICL'
 
-; get next parameter, if not exit
 get_par  ldx BW_BUFOFF
          lda BW_LBUF,X
          cmp #$9b
          bne get_pok
          lda SRT_PROK
          bne get_pex
-; no parameter -> print info end exit
          jsr _print
          dta c'SORTDIR for BW-DOS 1.5'
          dta b($9B)
-         dta c'Use: SORTDIR [/R] path ..'
+         dta c'Use: SORTDIR [/RQ] path ..'
          dta b($9B,$00)
 get_pex  jmp (DOSVEC)
 get_pok  jsr BW_CRNAME
          rts
 
-; check for option /R
-; if found, c=1
+; if no option param, c=1
 chk_opt  lda BW_COMFNAM+3
          cmp #'/'
          bne chk_oend
-         lda BW_COMFNAM+4
+
+         ldx #$03
+chk_nxt  inx
+         lda BW_COMFNAM,X
+
          cmp #'R'
-         bne chk_oerr
-         lda BW_COMFNAM+5
-         cmp #$9B
-         bne chk_oerr
+         bne chk_qt
          lda #$01
          sta SRT_REC
+         bne chk_nxt
+
+chk_qt   cmp #'Q'
+         bne chk_eol
+         lda #$01
+         sta SRT_QT
+         bne chk_nxt
+
+chk_eol  cmp #$9B
+         bne chk_oerr
+
          sec
          rts
+
 chk_oend clc
          rts
+
 chk_oerr lda #$9C ; parameter error
          jmp (BW_FAIL)
 
-; initialize variables
 ini_var  lda #$00
          ldx <_DTA_END-_DTA_STR
 ini_vl1  sta _DTA_STR-1,X
          dex
          bne ini_vl1
-; first dir seek set to 23
          lda #23 ; ignore first dir entry
          sta SRT_STKL
 ; check for :, end ignore
@@ -127,8 +134,9 @@ ini_vl2  inx
          stx SRT_PTHI
          rts
 
-; print path message
-prn_pmsg ldx #$00
+prn_pmsg lda SRT_QT
+         bne srt_fno
+         ldx #$00
          lda <SRT_MSG
          sta IOCB0+ICBAL,X
          lda >SRT_MSG
@@ -137,7 +145,7 @@ prn_pmsg ldx #$00
          sta IOCB0+ICBLL,X
          lda #$00
          sta IOCB0+ICBLH,X
-         lda #$09 ; put record
+         lda #$09
          sta IOCB0+ICCOM,X
          jsr CIOV
          bpl srt_fno
@@ -145,7 +153,6 @@ prn_pmsg ldx #$00
          jmp (BW_FAIL)
 srt_fno  rts
 
-; sort directory in buffer
 srt_do   lda #0
          sta ZSWP_FLG
 
@@ -461,7 +468,6 @@ srt_swp  ldy #0
 
          jmp srt_nxt
 
-; sort files
 srt_fil  ldy #$04+32 ; read raw mode and path
          jsr opn_dir
 ; read directory data
@@ -520,7 +526,7 @@ srt_srsc clc
          lda ZDIR_CI2+1
          sbc #0
          sta ZDIR_CI1+1
-; sort
+
          jsr srt_do
 ; write directory data
          ldy #$08+32 ; write raw mode and path
@@ -544,8 +550,6 @@ srt_end  rts
 
 get_serr tya
          jmp (BW_FAIL)
-
-; subroutines open and close directory
 
 opn_dir  ldx #$10
          lda #$03 ; open dir
@@ -589,7 +593,6 @@ cls_dir  ldx #$10 ; close dir
          bmi get_serr
          rts
 
-; get subdir
 get_sub  ldy #$04+32 ; raw mode and path
          jsr opn_dir
 
@@ -650,7 +653,6 @@ get_send jsr cls_dir ; not found
          sec
          rts
 
-; push subdirectory
 psh_sub  inc SRT_STKP
          ldx SRT_STKP
          cpy #$10
@@ -697,7 +699,6 @@ add_eol  lda #$9b
 
          rts
 
-; pop subdirectory
 pop_sub  ldx SRT_STKP
          php
          lda #0
@@ -726,11 +727,10 @@ pop_apat jsr add_eol
          clc
          rts
 
-; ********** data block *************
-
 SRT_REC  dta b(0)
+SRT_QT   dta b(0)
 SRT_PROK dta b(0)
-SRT_MSG  dta c'Sorting: ' ; message
+SRT_MSG  dta c'Sorting ' ; message
 _DTA_STR equ *
 SRT_PTH  equ _DTA_STR      ; current path
 SRT_STKP equ SRT_PTH+128   ; current stack pointer

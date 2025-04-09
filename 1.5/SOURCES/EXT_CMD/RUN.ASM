@@ -1,11 +1,10 @@
-* BW-DOS Command RUN adr
+* BW-DOS Command RUN addr
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $580
 init     equ *
-         icl '_TSTBW14.ICL'
+         icl '_TSTBW15.ICL'
 * save last run address
          lda BW_RUNLOC
          sta SRUNLOC

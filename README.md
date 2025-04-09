@@ -12,7 +12,7 @@ Highlights:
 - comes with manual pages for every command
 - two command processors, one without internal commands but low MEMLO
 - configurable drive to search for external commands
-- recursive COPY/DEL/SORTDIR commands
+- recursive COPY/MOVE/DEL/SORTDIR/COMP commands
 - powerful MOVE command to reorganize disks
 - command FORMAT supports all known drives, including XF551 with 3.5 inch mod, 1050 Mini, ATR8000 etc.
 - comes with MENU command for easy menu driven use

@@ -18,13 +18,14 @@ loaded up to the size of the text
 buffer.
 
 All edit commands known from the
-standard Atari editor are available.
+standard Atari editor are available,
+including keys F1-F4.
 <ESC> can be use to escape a
 command key combination.
 
 <CTRL><X>  Exit editor
 <CTRL><L>  Load file
-<CRTL><S>  Save file
+<CTRL><S>  Save file
 <CTRL><SHIFT><E> Erase text buffer
 
 <CTRL><A>  Cursor to begin of line

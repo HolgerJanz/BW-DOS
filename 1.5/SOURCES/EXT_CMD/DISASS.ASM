@@ -540,44 +540,44 @@ nmtxt dta c'ADCANDASLBCCBCSBEQBITBMI'
  dta c'STXSTYTAXTAYTSXTXATXSTYA'
  dta c'???'
 
-adtxt   dta b(0,0,0,0)
+adtxt  dta b(0,0,0,0)
 
-        dta b(0)
-        dta c',X'
-        dta b(0)
+       dta b(0)
+       dta c',X'
+       dta b(0)
 
-        dta b(0)
-        dta c',Y'
-        dta b(0)
+       dta b(0)
+       dta c',Y'
+       dta b(0)
 
-        dta c'#'
-        dta b(0,0,0)
+       dta c'#'
+       dta b(0,0,0)
 
-        dta c'(,X)'
+       dta c'(,X)'
 
-        dta c'(),Y'
+       dta c'(),Y'
 
-        dta b(0,0,0,0)
+       dta b(0,0,0,0)
 
-        dta b(0)
-        dta c',X'
-        dta b(0)
+       dta b(0)
+       dta c',X'
+       dta b(0)
 
-        dta c'*'
-        dta b(0,0,0)
+       dta c'*'
+       dta b(0,0,0)
 
-        dta b(0,0,0,0)
+       dta b(0,0,0,0)
 
-        dta c'()'
-        dta b(0,0)
+       dta c'()'
+       dta b(0,0)
 
-        dta b(0)
-        dta c',Y'
-        dta b(0)
+       dta b(0)
+       dta c',Y'
+       dta b(0)
 
-lentab  dta b(3,3,3,2,2,2,2,2)
-        dta b(2,1,3,2)
+lentab dta b(3,3,3,2,2,2,2,2)
+       dta b(2,1,3,2)
 
-name    equ *
+name   equ *
 
-        end
+       end

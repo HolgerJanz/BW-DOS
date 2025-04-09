@@ -1,9 +1,7 @@
 * PERCOM for SpartaDOS 16k
 
-* System equates
             icl '_SYSEQU.ICL'
 
-* PERCOM buffer layout
 PC_SIDES    equ PERCOM_BUF+4 ; Sides-1
 PC_TRACKS   equ PERCOM_BUF+0 ; Tracks/side
 PC_SECTORS  equ PERCOM_BUF+2 ; Sectors/track
@@ -14,15 +12,12 @@ PC_FLAGS    equ PERCOM_BUF+5 ; Flags byte
 PC_CONTROL  equ PERCOM_BUF+8 ; Control byte
 PC_MISC     equ PERCOM_BUF+9 ; Misc bytes
 
-* Code equates
 ZP_CNT      equ $0080
 
-* Start of code
             blk dos $3000
-            icl '_TSTBW14.ICL'
-* get parameter
+            icl '_TSTBW15.ICL'
+
 paramloop   jsr BW_CRNAME
-* call PERCOM read
             lda #$31
             sta DDEVIC
             lda BW_COMFNAM+1
@@ -49,7 +44,6 @@ paramloop   jsr BW_CRNAME
             tya
             jmp (BW_FAIL)
 
-* print PERCOM buffer
 percom_ok   jsr _print
             dta b($9b)
             dta c'        Drive: '
@@ -136,7 +130,6 @@ nxt_byte    lda PC_MISC,X
 
             jmp (DOSVEC)
 
-* print decimals
 prn_deca    ldx #$00
 prn_decax   ldy #$00 
             sta BW_DECIN,Y
@@ -160,7 +153,6 @@ is_space    inc ZP_CNT
             rts
 CONVDC      jmp (BW_CONVDC)
 
-* print haxedecimals
 prn_hexa    pha
             lsr @
             lsr @
@@ -184,7 +176,6 @@ prn_hexa    pha
 
             icl '_PRINT.ICL'
 
-* buffer for PERCOM (12 Bytes)
 PERCOM_BUF  equ *
 
             end

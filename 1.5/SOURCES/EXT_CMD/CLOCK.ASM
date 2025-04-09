@@ -46,7 +46,7 @@ PRT1    TAY
 GETNAME JMP PRTEX
 
 START   EQU *
-        ICL '_TSTBW14.ICL'
+        ICL '_TSTBW15.ICL'
 
         LDA 10
         CLC

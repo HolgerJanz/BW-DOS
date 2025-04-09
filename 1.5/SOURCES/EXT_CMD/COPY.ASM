@@ -1,15 +1,13 @@
 * COPY 1.3 for BW-DOS
 
-* System equates
             icl '_SYSEQU.ICL'
 
-* Code equates
 * offset of file name in path
 SRCIX    equ $80
 DSTIX    equ $81
 * temporar variables
 ZTEMP    equ $82
-
+QFLAG    equ $83
 DSTAUX1  equ $84
 ENDFLG   equ $85 ; flag end of file at copy
 NOFLAG   equ $86 ; no match flag
@@ -27,10 +25,8 @@ DSTMSK   equ $690
 SRCPAT   equ $6A0
 RSTACK   equ $6C0 ; recursive stack, 20*3 bytes -> $6FC
 
-* Opcodes 6502
 opc_BIT  equ $2c
 
-* Start of code
 starta   equ $3000
          blk dos starta
          icl '_TSTBW15.ICL'
@@ -44,7 +40,7 @@ starta   equ $3000
          dta b($9B)
          dta c'COPY for BW-DOS 1.5'
          dta b($9B)
-         dta c'Use: COPY [/R] source [destination[/A]]'
+         dta c'Use: COPY [/RQ] src [dst[/A]]'
          dta b($9B,$00)
          rts
 
@@ -60,20 +56,31 @@ start3   jsr close123
          dex
          bpl *-3
 
-* check option /R
+* check options
          jsr BW_CRNAME
          lda BW_COMFNAM+3
          cmp #'/'
          bne start4
-         lda BW_COMFNAM+4
+
+         ldx #$03
+nxtOpt   inx
+         lda BW_COMFNAM,X
+
          cmp #'R'
-         bne parmerr
-         lda BW_COMFNAM+5
-         cmp #$9B
-         bne parmerr
-         sec
+         bne optQuite
          ror RFLAG
-         ldx BW_BUFOFF
+         bmi nxtOpt
+
+optQuite cmp #'Q'
+         bne optEOL
+         ror QFLAG
+         bmi nxtOpt
+
+optEOL   cmp #$9B
+         bne parmerr
+
+
+nxtParm  ldx BW_BUFOFF
          lda BW_LBUF,X
          cmp #$9b
          beq parmerr
@@ -99,7 +106,6 @@ start4   ldx #$00
          bne parmerr
 
 * search source for wildcards
-* -> use DIRS
 start41  ldx SRCIX
 nxt_fn1c lda SRCPTH,X
          inx
@@ -231,22 +237,7 @@ cop3     lda NOFLAG
          lda #$9b
          jsr _putc
 
-cop31    jsr _print
-         dta c'Copying '
-         dta b($00)
-
-         ldx #$00
-         lda <SRCPTH
-         sta IOCB0+ICBAL,X
-         lda >SRCPTH
-         sta IOCB0+ICBAH,X
-         lda #$40
-         sta IOCB0+ICBLL,X
-         lda #$00
-         sta IOCB0+ICBLH,X
-         lda #$09 ; put record
-         sta IOCB0+ICCOM,X
-         jsr CIOV
+cop31    jsr prnFname
 
 * copy
          sec
@@ -278,6 +269,28 @@ copy3x   lda NOFLAG
 dc2xer   ldy #$AA ; File not found
          jmp error
 
+prnFname lda QFLAG
+         bmi prnFnEnd
+         jsr _print
+         dta c'Copying '
+         dta b($00)
+         bpl *+5
+jmpErr   jmp error
+
+         ldx #$00
+         lda <SRCPTH
+         sta IOCB0+ICBAL,X
+         lda >SRCPTH
+         sta IOCB0+ICBAH,X
+         lda #$40
+         sta IOCB0+ICBLL,X
+         lda #$00
+         sta IOCB0+ICBLH,X
+         lda #$09 ; put record
+         sta IOCB0+ICCOM,X
+         jsr CIOV
+         bmi jmpErr
+prnFnEnd rts
 
 * set date/time
 settd    ldx #$05

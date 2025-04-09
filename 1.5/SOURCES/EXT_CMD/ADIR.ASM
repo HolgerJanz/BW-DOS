@@ -19,7 +19,7 @@ DIR128  equ $7F
 DIR256  equ $FF
 
         blk dos $3000
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
 * clear DECIN
         ldx #$02
         lda #$00
@@ -310,6 +310,8 @@ prnfil  ldx diriter
         bne *+4
         lda #' '
         jsr _putc
+        bpl *+5
+        jmp _siofl
 * check dir
         pla
         and #$10
@@ -318,6 +320,8 @@ prnfil  ldx diriter
         bne *+4
         lda #' '
         jsr _putc
+        bpl *+5
+        jmp _siofl
 * get sector count
         ldx diriter
         inx
@@ -335,6 +339,8 @@ prnfil  ldx diriter
 * print name
 nxtchar lda buffer,X
         jsr _putc
+        bpl *+5
+        jmp _siofl
         inc diriter
         ldx diriter
         txa
@@ -353,6 +359,8 @@ nxtchar lda buffer,X
         bne *+4
         lda #' '
         jsr _putc
+        bpl *+5
+        jmp _siofl
         rts
 
 * set DCB and call SIO

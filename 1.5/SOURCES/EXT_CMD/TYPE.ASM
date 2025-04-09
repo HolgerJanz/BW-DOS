@@ -1,10 +1,9 @@
 * BW-DOS Command TYPE file
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $580
-         icl '_TSTBW14.ICL'
+         icl '_TSTBW15.ICL'
          jsr BW_CRNAME
          bne *+5
          jmp par_err

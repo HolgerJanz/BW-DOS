@@ -1,41 +1,36 @@
 * Sector Copy
 
-* Equates
+CIOV   equ $E456
 
-* CIO
-CIOV       equ $E456
-* CIOCB addresses
-ICHID      equ $0340
-ICDNO      equ $0341
-ICCOM      equ $0342
-ICSTA      equ $0343
-ICBAL      equ $0344
-ICBAH      equ $0345
-ICPTL      equ $0346
-ICPTH      equ $0347
-ICBLL      equ $0348
-ICBLH      equ $0349
-ICAX1      equ $034a
-ICAX2      equ $034b
+ICHID  equ $0340
+ICDNO  equ $0341
+ICCOM  equ $0342
+ICSTA  equ $0343
+ICBAL  equ $0344
+ICBAH  equ $0345
+ICPTL  equ $0346
+ICPTH  equ $0347
+ICBLL  equ $0348
+ICBLH  equ $0349
+ICAX1  equ $034a
+ICAX2  equ $034b
 
-* SIO
-SIOV       equ $E459
-* SIOCB addresses
-DDEVIC     equ $0300
-DUNIT      equ $0301
-DCOMND     equ $0302
-DSTATS     equ $0303
-DBUFLO     equ $0304
-DBUFHI     equ $0305
-DTIMLO     equ $0306
-DTIMHI     equ $0307
-DBYTLO     equ $0308
-DBYTHI     equ $0309
-DAUX1      equ $030a
-DAUX2      equ $030b
+SIOV   equ $E459
 
-* cursor
-CRSINH     equ $02F0
+DDEVIC equ $0300
+DUNIT  equ $0301
+DCOMND equ $0302
+DSTATS equ $0303
+DBUFLO equ $0304
+DBUFHI equ $0305
+DTIMLO equ $0306
+DTIMHI equ $0307
+DBYTLO equ $0308
+DBYTHI equ $0309
+DAUX1  equ $030a
+DAUX2  equ $030b
+
+CRSINH equ $02F0
 
 * SpartaDOS
 DOSVEC     equ $000A

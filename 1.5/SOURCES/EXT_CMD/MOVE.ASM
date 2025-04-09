@@ -17,10 +17,46 @@ movflg  equ 147
 namiter equ 148
 
         blk dos $3000
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
+
+        lda #0
+        sta quite
 
         jsr close
-        jsr getpar
+
+        ldx BW_BUFOFF
+        lda BW_LBUF,X
+        cmp #155
+        bne strt
+
+        jsr _print
+        dta b($9B)
+        dta c'MOVE for BW-DOS 1.5'
+        dta b($9B)
+        dta c'Use: MOVE [/Q] src [dst]'
+        dta b($9B,$00)
+        rts
+
+strt    jsr BW_CRNAME
+        lda BW_COMFNAM+3
+        cmp #'/'
+        bne strt1
+        lda BW_COMFNAM+4
+        cmp #'Q'
+        bne parerr
+        lda BW_COMFNAM+5
+        cmp #155
+        bne parerr
+
+        jsr BW_CRNAME
+        lda #1
+        sta quite
+        bne strt1
+
+parerr  lda #156 ; Parameter error
+        jmp (BW_FAIL)
+
+strt1   jsr getpar
 
         jsr BW_CRNAME
         lda BW_COMFNAM
@@ -452,9 +488,13 @@ strt6bc lda sect1st
 
 * done!
 
-strt6c  jsr _print
+strt6c  lda quite
+        bne nxtmov
+        jsr _print
         dta b(155)
         dta c'Moving ',b(0)
+        bpl *+5
+        jmp cioerr
 
 nxtnchr ldx namiter
         lda dst,X
@@ -541,9 +581,7 @@ erjp2   jmp (BW_FAIL)
 baddev  lda #168 ; Command not implemented
         jmp (BW_FAIL)
 
-getpar  jsr BW_CRNAME
-
-        ldx #0
+getpar  ldx #0
 
         lda BW_COMFNAM+1
         and #15
@@ -823,7 +861,8 @@ rwsdriv dta b(0,'R')
 seclen  dta a(128)
 secnum  dta a(1)
 
-src     equ *
+quite   equ *
+src     equ quite+1
 msk     equ src+40
 dst     equ msk+20
 dirbuf  equ dst+50

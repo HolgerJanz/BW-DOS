@@ -1,0 +1,19 @@
+}
+  DIRL [Dn:][path>][filename] ..
+
+Low Memory
+
+Lists specified files in drive Dn:,
+path and specified pattern of file
+names. If no file name pattern is
+specified then all files will be
+listed.
+
+In difference to the command DIR the
+header with volume/directory name and
+the free sector count at the end are
+not displayed. Furthermore protected
+files and directories are marked with
+the character * in front of the name
+and the change time is diplayed
+including seconds.

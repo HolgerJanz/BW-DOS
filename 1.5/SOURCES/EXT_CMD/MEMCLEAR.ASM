@@ -1,24 +1,24 @@
 * Clears Memory from MEMLO to MEMTOP
 
-MEMTOP      equ $02E5
-MEMLO       equ $02E7
-CH          equ $02FC
+MEMTOP equ $02E5
+MEMLO  equ $02E7
+CH     equ $02FC
 
 * CIO
 CIOV        equ $E456
 * CIOCB addresses
-ICHID       equ $0340
-ICDNO       equ $0341
-ICCOM       equ $0342
-ICSTA       equ $0343
-ICBAL       equ $0344
-ICBAH       equ $0345
-ICPTL       equ $0346
-ICPTH       equ $0347
-ICBLL       equ $0348
-ICBLH       equ $0349
-ICAX1       equ $034a
-ICAX2       equ $034b
+ICHID  equ $0340
+ICDNO  equ $0341
+ICCOM  equ $0342
+ICSTA  equ $0343
+ICBAL  equ $0344
+ICBAH  equ $0345
+ICPTL  equ $0346
+ICPTH  equ $0347
+ICBLL  equ $0348
+ICBLH  equ $0349
+ICAX1  equ $034a
+ICAX2  equ $034b
 
 * SpartaDOS 
 DOSVEC      equ $000A

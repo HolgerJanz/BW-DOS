@@ -50,7 +50,7 @@ GETNAME JMP PRTEX
 DTAB    DTA A(0,0)
 
 START   EQU *
-        ICL '_TSTBW14.ICL'
+        ICL '_TSTBW15.ICL'
 
         LDA 10
         CLC

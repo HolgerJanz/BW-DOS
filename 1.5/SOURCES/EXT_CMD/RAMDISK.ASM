@@ -29,7 +29,7 @@ BIT_abs equ $2C
         dta C'BW-DOS 1.5 RAMDISK 20-05-2024'
         dta B(155,0)
 
-        jsr _chkbwdos14
+        icl '_TSTBW15.ICL'
 
         lda <BW_LSIO
         sta SIOADR
@@ -920,10 +920,8 @@ BNKOFF  dta b($FF)
 RDBNKR  lda #$00
         nop
 
-        icl '_CHKBW14.ICL'
         icl '_PRINT.ICL'
 
-* ====================================
 * resident handler in low memory
 RESID   jsr $FFFF
 R01     lda #$22
@@ -942,7 +940,6 @@ PORTB1  sty PORTB   ;Disable ROM
 
 RESLEN  equ *-RESID
 
-* ====================================
 * high memory part
 RES2    equ *
 

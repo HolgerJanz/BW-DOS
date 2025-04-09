@@ -1,14 +1,13 @@
 ; BW-DOS 1.5 Command DEL path
 
-; System equates
          icl '_SYSEQU.ICL'
 
          blk dos $3000
-; check BW-DOS 1.5
          icl '_TSTBW15.ICL'
 
          lda #0 
          sta DEL_REC
+         sta DEL_QT
          sta DEL_PROK
 
          lda #$9b
@@ -47,54 +46,63 @@ prv_del  jsr pop_sub
 
          jmp nxt_par
 
-; ********** subroutines *************
          icl '_PRINT.ICL'
 
-; get next parameter, if not exit
 get_par  ldx BW_BUFOFF
          lda BW_LBUF,X
          cmp #$9b
          bne get_pok
          lda DEL_PROK
          bne get_pex
-; no parameter -> print info end exit
          jsr _print
          dta c'DEL for BW-DOS 1.5'
          dta b($9B)
-         dta c'Use: DEL [/R] files ..'
+         dta c'Use: DEL [/RQ] files ..'
          dta b($9B,$00)
 get_pex  jmp (DOSVEC)
 get_pok  jsr BW_CRNAME
          rts
 
-; check for option /R
-; if found, c=1
+; if no option param, c=1
 chk_opt  lda BW_COMFNAM+3
          cmp #'/'
          bne chk_oend
-         lda BW_COMFNAM+4
+
+         ldx #$03
+chk_nxt  inx
+         lda BW_COMFNAM,X
+
          cmp #'R'
-         bne chk_oerr
-         lda BW_COMFNAM+5
-         cmp #$9B
-         bne chk_oerr
+         bne chk_qt
          lda #$01
          sta DEL_REC
+         bne chk_nxt
+
+chk_qt   cmp #'Q'
+         bne chk_eol
+         lda #$01
+         sta DEL_QT
+         bne chk_nxt
+
+chk_eol  cmp #$9B
+         bne chk_oerr
+
          sec
          rts
+
 chk_oend clc
          rts
+
 chk_oerr lda #$9C ; parameter error
          jmp (BW_FAIL)
 
-; initialize variables
 ini_var  lda #$00
          ldx <_DTA_END-_DTA_STR
 ini_vl1  sta _DTA_STR-1,X
          dex
          bne ini_vl1
 ; first dir seek set to 23
-         lda #23 ; ignore first dir entry
+         lda #23
          sta DEL_STKL
 ; get path and set seperator offset
          lda #$02
@@ -115,7 +123,7 @@ ini_vc2  cmp #$9b
 ; add *.* if necessary
          cpx DEL_PTHS
          bne ini_cdir
-; add *.*
+
 ini_stdp inx
          ldy #$00
 ini_vl3  lda BW_STDPAT,Y
@@ -161,8 +169,9 @@ ini_patl lda DEL_PTH,X
          bne ini_patl
          rts
 
-; print path message
-prn_pmsg ldx #$00
+prn_pmsg lda DEL_QT
+         bne del_fno
+         ldx #$00
          lda <DEL_MSG
          sta IOCB0+ICBAL,X
          lda >DEL_MSG
@@ -178,7 +187,6 @@ prn_pmsg ldx #$00
          tya
          jmp (BW_FAIL)
 
-; delete files
 del_fil  ldx #$10
          lda #$21 ; delete files
          sta IOCB0+ICCOM,X
@@ -199,8 +207,6 @@ del_fil  ldx #$10
 del_fok  lda #$01
          sta DEL_OK
 del_fno  rts
-
-; subroutines open and close directory
 
 opn_dir  ldx #$10
          lda #$03 ; open dir
@@ -223,7 +229,6 @@ cls_dir  ldx #$10 ; close dir
          bmi get_serr
          rts
 
-; get subdir
 get_sub  ldy #$04+16 ; raw mode and ignore fname
          jsr opn_dir
          bpl get_ssk
@@ -287,7 +292,6 @@ get_send jsr cls_dir ; not found
          sec
          rts
 
-; delete subdir
 del_sub  ldx DEL_PTHS
          lda DEL_PTH,X
          pha
@@ -313,7 +317,6 @@ del_sbok pla
          sta DEL_PTH,X
          rts
 
-; push subdirectory
 psh_sub  inc DEL_STKP
          ldx DEL_STKP
          cpy #$10
@@ -362,7 +365,6 @@ psh_plop lda DEL_PATT,Y
 
          rts
 
-; pop subdirectory
 pop_sub  ldx DEL_STKP
          php
          lda #0
@@ -373,7 +375,7 @@ pop_sub  ldx DEL_STKP
          sec
          rts
 
-pop_sdir jsr del_sub  ; delete subdir
+pop_sdir jsr del_sub
          dec DEL_STKP
 
          ldx DEL_PTHS
@@ -393,23 +395,22 @@ pop_apat stx DEL_PTHS
          clc
          rts
 
-; ********** data block *************
-
 DEL_REC  dta b(0)
+DEL_QT   dta b(0)
 DEL_PROK dta b(0)
-DEL_MSG  dta c'Deleting: ' ; message
+DEL_MSG  dta c'Deleting ' ; message
 _DTA_STR equ *
-DEL_PTH  equ _DTA_STR      ; current path
-DEL_STKP equ DEL_PTH+128   ; current stack pointer
-DEL_STKL equ DEL_STKP+1    ; directory position low
-DEL_STKH equ DEL_STKL+16   ; directory position high
-DEL_OK   equ DEL_STKH+16   ; flag, something was deleted
-DEL_TMP  equ DEL_OK+1      ; temporary variable
-DEL_ROOT equ DEL_TMP+1     ; flag, delete root directory
-DEL_PTHS equ DEL_ROOT+1    ; path offset of last separator
-RDDIRBUF equ DEL_PTHS+1    ; dir entry buffer
-RDDIRBNM equ RDDIRBUF+6    ; name in dir buff
-DEL_PATT equ RDDIRBUF+23   ; pattern buffer
+DEL_PTH  equ _DTA_STR    ; current path
+DEL_STKP equ DEL_PTH+128 ; current stack pointer
+DEL_STKL equ DEL_STKP+1  ; directory position low
+DEL_STKH equ DEL_STKL+16 ; directory position high
+DEL_OK   equ DEL_STKH+16 ; flag, something was deleted
+DEL_TMP  equ DEL_OK+1    ; temporary variable
+DEL_ROOT equ DEL_TMP+1   ; flag, delete root directory
+DEL_PTHS equ DEL_ROOT+1  ; path offset of last separator
+RDDIRBUF equ DEL_PTHS+1  ; dir entry buffer
+RDDIRBNM equ RDDIRBUF+6  ; name in dir buff
+DEL_PATT equ RDDIRBUF+23 ; pattern buffer
 _DTA_END equ DEL_PATT+24
 
          end

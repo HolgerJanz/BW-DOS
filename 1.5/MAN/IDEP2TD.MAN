@@ -3,9 +3,18 @@
 
 This command installs a driver for a
 hardware real time clock. It works with
-the PBI device IDE PLUS 2 designed by
-JZ & KMK (see
-http://drac030.krap.pl/en-kmkjz-pliki.php).
+the PBI device IDE plus 2.
 
-Option R installs a read-only version
+Option /R installs a read-only version
 which needs less memory.
+
+If this driver is the first resident
+program then a short driver is
+installed, to save memory.
+
+The last character in the status line
+indicates the installed driver:
+S - short read and write driver
+M - read and write driver
+s - short read driver
+m - read driver

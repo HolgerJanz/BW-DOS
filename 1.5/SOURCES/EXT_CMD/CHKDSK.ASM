@@ -21,7 +21,7 @@ CHAR_CNT    equ $0084
 
 * Start of code
             blk dos $3000
-            icl '_TSTBW14.ICL'
+            icl '_TSTBW15.ICL'
 * set CRNAME
             lda DOSVEC
             clc

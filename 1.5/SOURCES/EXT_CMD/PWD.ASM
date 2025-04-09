@@ -1,6 +1,5 @@
 * BW-DOS Command PWD dx:
 
-* System equates
          icl '_SYSEQU.ICL'
 
 PIDX     equ $80
@@ -31,7 +30,6 @@ next     jsr BW_CRNAME
          lda <PBUFL-1
          sta PIDX
 
-* dir open
 d_open   lda #$03
          sta $352
          lda <BW_COMFNAM
@@ -52,7 +50,6 @@ d_open   lda #$03
          lda #$00
          sta FRSTDIR
 
-* dir input
          lda #$07 ;$05
          sta $352
          lda <LBUF
@@ -97,7 +94,6 @@ nxt2char cpx <LBUFL-13-1
          bcs lchar
          sty PIDX
 
-* close dir
          jsr close1
 
          ldx CIDX
@@ -114,7 +110,6 @@ par_err  ldy #$9C
 error    tya
          jmp (BW_FAIL)
 
-* screen output
 scrnout  jsr close1
          lda FRSTDIR
          bne error

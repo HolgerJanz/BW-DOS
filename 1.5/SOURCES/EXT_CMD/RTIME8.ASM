@@ -56,7 +56,7 @@ prt1    tay
 getname jmp prtex
 
 start   equ *
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
 
         lda 10
         clc
@@ -642,31 +642,31 @@ s10     jsr rdreg
 
 wrrg4   rts
 
-reslen1 equ     std4t-resid
-reslen2 equ     *-resid
+reslen1 equ std4t-resid
+reslen2 equ *-resid
 
-reslent dta     l(reslen2,reslen1)
+reslent dta l(reslen2,reslen1)
 
-newadr  dta     a(0,0,0)
+newadr  dta a(0,0,0)
 
-relokt  dta     a(s1,rdr4)
-        dta     a(s2,rdr4)
-        dta     a(rdr4,wait)
-        dta     a(s3,get15)
-        dta     a(s4,get15)
-        dta     a(gtd2,rdreg)
-        dta     a(s5,gtdtb)
-        dta     a(s6,get15)
-        dta     a(std2,gtdtb)
-        dta     a(s7,wrreg)
-        dta     a(s8,std4t-1)
-        dta     a(s9,wait)
-        dta     a(s10,rdreg)
+relokt  dta a(s1,rdr4)
+        dta a(s2,rdr4)
+        dta a(rdr4,wait)
+        dta a(s3,get15)
+        dta a(s4,get15)
+        dta a(gtd2,rdreg)
+        dta a(s5,gtdtb)
+        dta a(s6,get15)
+        dta a(std2,gtdtb)
+        dta a(s7,wrreg)
+        dta a(s8,std4t-1)
+        dta a(s9,wait)
+        dta a(s10,rdreg)
 
-        dta     a(newadr-1,gettd)
-        dta     a(newadr+1,settd)
-        dta     a(newadr+3,rdret)
+        dta a(newadr-1,gettd)
+        dta a(newadr+1,settd)
+        dta a(newadr+3,rdret)
 
-        dta     a(0,0)
+        dta a(0,0)
 
         end

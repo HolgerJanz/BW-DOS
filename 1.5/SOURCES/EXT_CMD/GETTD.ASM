@@ -2,10 +2,9 @@
         icl '_SYSEQU.ICL'
 
         blk dos $580
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
         jsr GETTD
-* print current date time
-* convert date time to atascii
+
 nxtout  ldx itdtr
         lda BW_DATER,X
         sta BW_DECIN
@@ -25,14 +24,13 @@ nxtout  ldx itdtr
         inc itdtr
         cpx #$12
         bcc nxtout
-* print date time
         jsr _print
         dta b($9b)
 td_out  dta c'dd-mm-yy hh:mm:ss',b($9b,$00)
         rts
 
-itdtr   dta b($00)      ; iter for DATER
-itprn   dta b($00)      ; iter for print
+itdtr   dta b($00)
+itprn   dta b($00)
 
 GETTD   jmp (BW_GETTD)
 CONVDC  jmp (BW_CONVDC)

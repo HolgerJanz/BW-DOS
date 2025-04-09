@@ -1,0 +1,9 @@
+}
+  VERS
+
+Displays the current DOS version. It
+supports BW-DOS, SpartaDOS 3 and
+higher, and RealDOS.
+
+In case of BW-DOS the current set
+SpartaDOS version is also displayed.

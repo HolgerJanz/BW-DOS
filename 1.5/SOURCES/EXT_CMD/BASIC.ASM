@@ -1,10 +1,9 @@
 * BW-DOS Command BASIC ON|OFF
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $580
-         icl '_TSTBW14.ICL'
+         icl '_TSTBW15.ICL'
          jsr BW_CRNAME
          bne do_basic
 par_err  lda #$9C ; parameter error

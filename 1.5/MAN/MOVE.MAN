@@ -1,6 +1,6 @@
 }
-  MOVE [Dn:][path1>]pattern
-       [Dn:][path2]
+  MOVE [/Q] [Dn:][path1>]pattern
+            [Dn:][path2]
 
 This command allows you to move a
 files or subdirectories into another
@@ -12,6 +12,9 @@ is much faster than copying the whole
 file. It also does not need any extra
 free sectors on the disk because no
 additional data are created.
+
+Option /Q (quite) suppresses messages
+for every file or directory.
 
 It is only possible to move files and
 directories within the same disk

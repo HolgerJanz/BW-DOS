@@ -26,8 +26,9 @@ IDESTD  equ $D84F
 
         blk dos $3000
         jsr _print
-        dta b($9b),c'IDE+2 TD 1.4 ',b($00)
-        jsr _chkbwdos14
+        dta b($9b),c'IDE+2 TD 1.5 ',b($00)
+        icl '_TSTBW15.ICL'
+
 * init variables
         lda #$00
         ldx #$03
@@ -244,7 +245,12 @@ nxtout  ldx ITDTR
         cpx #$12
         bcc nxtout
 * print date time
-        jsr _print
+        lda RFLAG
+        beq prn_td
+        lda sta_dyn
+        ora #$20
+        sta sta_dyn
+prn_td  jsr _print
         dta c'PBI#'
 pbi_nr  dta c'0 '
 td_out  dta c'dd-mm-yy hh:mm:ss '
@@ -300,6 +306,5 @@ setpbi2 lda #$00
 reawrde equ *
 
         icl '_PRINT.ICL'
-        icl '_CHKBW14.ICL'
 
         end

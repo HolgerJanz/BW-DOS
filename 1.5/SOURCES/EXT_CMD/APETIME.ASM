@@ -2,7 +2,7 @@
         icl '_SYSEQU.ICL'
 
         blk dos $580
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
 * clear DECIN
         lda #$00
         ldx #$03

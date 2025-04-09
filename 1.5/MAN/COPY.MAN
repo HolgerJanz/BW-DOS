@@ -1,5 +1,5 @@
 }
-  COPY [/R]
+  COPY [/RQ]
        [dev1:][path1>][pattern1]
        [dev2:][path2>][pattern2[/A]]
 
@@ -12,6 +12,9 @@ The option /R copies recursive
 all subdirectories. This
 option is only allowed if dev1
 and dev2 are disk drives.
+
+Option /Q (quite) suppresses messages
+for every file copied.
 
 It copies file(s) specified by the
 first parameter to file(s) specified

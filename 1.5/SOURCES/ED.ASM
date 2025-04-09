@@ -50,36 +50,35 @@ BW_CURDRV  equ $7A6 ; current drive in Dx:<EOL>
 SCRNBUFO equ 24*40-1 ; screen buffer offset below MEMTOP
 
          blk dos $2800
-; test BW-DOS 1.5
+* test BW-DOS 1.5, inline include
          lda BW_SPARTA
          cmp #'S'
-         bne _bw15_e
+         bne _tstbw_e
          lda BW_DOS
          cmp #'B'
-         bne _bw15_e
+         bne _tstbw_e
          lda BW_DOS+1
          cmp #'W'
-         bne _bw15_e
+         bne _tstbw_e
          lda BW_VERS
          cmp #$15
-         bcs _bw15_f
-_bw15_e  lda #$0B
+         bcs _tstbw_f
+_tstbw_e lda #$0B
          sta $342
-         lda <_bw15_t
+         lda <_tstbw_t
          sta $344
-         lda >_bw15_t
+         lda >_tstbw_t
          sta $345
-         lda <_bw15_f-_bw15_t
+         lda <_tstbw_f-_tstbw_t
          sta $348
          ldx #$00
          stx $349
          jsr CIOV
          jmp ($000A)
-_bw15_t  dta b($9B,$FD)
+_tstbw_t dta b($9B,$FD)
          dta c'Error: no BW-DOS 1.5'
          dta b($9B)
-_bw15_f  equ *
-
+_tstbw_f equ *
 ; set key def OS A/B or XL
          lda KEYDEF
          sta ZKEYDEF
@@ -200,15 +199,27 @@ L406E    lda L4059,Y
          bpl L406E
          rts
 
+; map [<SHIFT>] F1-F4 to cursor move
+KEYMAPI  dta b($03,$04,$13,$14,$43,$44,$53,$54)
+KEYMAPO  dta b($8E,$8F,$86,$87,$95,$AA,$BF,$97)
 
 L407B    jsr UPD_SCRN
 ; read pressed key
 CHK_KEY  lda #$FF  ; check for key
-         tax
          cmp CH
          beq CHK_KEY
 
-         ldy NOCLIK
+; check and map 1200XL F-keys
+         ldy #8
+CHK_MAPL dey
+         bmi CHK_CLIK
+         lda KEYMAPI,Y
+         cmp CH
+         bne CHK_MAPL
+         lda KEYMAPO,Y
+         sta CH
+
+CHK_CLIK ldy NOCLIK
          bne DO_KEY
 ; sound key click
          ldy #2*63 ;2 times trip count
@@ -222,9 +233,10 @@ SKC2     cmp VCOUNT
          dey
          dey
          bpl SKC1
-         txa
 
-DO_KEY   bit CH
+DO_KEY   lda #$FF
+         tax
+         bit CH
          bpl L408F  ; no ctrl key
          bvc L408F  ; no shift key
          lda #$3F
@@ -1306,59 +1318,61 @@ L47C2    jsr L41C9
          rts
 
 ; Operations: key and jump table
-L4829    dta b($18,$1B,$1C,$1D,$1E,$1F,$7E,$FE)
-         dta b($01,$1A,$15,$04,$02,$05,$14,$07)
-         dta b($9C,$03,$0C,$13,$16,$00,$60,$FF)
-         dta b($9D)
+L4829    equ *
+ dta b($18,$1B,$1C,$1D,$1E,$1F,$7E,$FE)
+ dta b($01,$1A,$15,$04,$02,$05,$14,$07)
+ dta b($9C,$03,$0C,$13,$16,$00,$60,$FF)
+ dta b($9D)
 
-L483E    dta a(X_EXITED) ; <CTRL><X>
-         dta a(X_ESCNCH) ; <ESC>
-         dta a(X_CURSUP) ; Up
-         dta a(X_CURDWN) ; Down
-         dta a(X_CURLFT) ; Left
-         dta a(X_CURRGT) ; Right
-         dta a(X_DELNXT) ; <Delete
-         dta a(X_DELUND) ; <CTRL><Delete>
+L483E    equ *
+ dta a(X_EXITED) ; <CTRL><X>
+ dta a(X_ESCNCH) ; <ESC>
+ dta a(X_CURSUP) ; Up
+ dta a(X_CURDWN) ; Down
+ dta a(X_CURLFT) ; Left
+ dta a(X_CURRGT) ; Right
+ dta a(X_DELNXT) ; <Delete
+ dta a(X_DELUND) ; <CTRL><Delete>
 
-         dta a(X_GTBGNL) ; <CTRL><A>
-         dta a(X_GTENDL) ; <CTRL><Z>
-         dta a(X_WINSUP) ; <CTRL><U>
-         dta a(X_WINDWN) ; <CTRL><D>
-         dta a(X_GTBGNT) ; <CTRL><B>
-         dta a(X_GTENDT) ; <CTRL><E>
-         dta a(X_GOTOTG) ; <CTRL><G>
-         dta a(X_TAGLIN) ; <CTRL><T>
+ dta a(X_GTBGNL) ; <CTRL><A>
+ dta a(X_GTENDL) ; <CTRL><Z>
+ dta a(X_WINSUP) ; <CTRL><U>
+ dta a(X_WINDWN) ; <CTRL><D>
+ dta a(X_GTBGNT) ; <CTRL><B>
+ dta a(X_GTENDT) ; <CTRL><E>
+ dta a(X_GOTOTG) ; <CTRL><G>
+ dta a(X_TAGLIN) ; <CTRL><T>
 
-         dta a(X_DELLIN) ; <SHIFT><Delete>
-         dta a(X_TAGCPY) ; <CTRL><C>
-         dta a(X_LOADTX) ; <CTRL><L>
-         dta a(X_SAVETX) ; <CTRL><S>
-         dta a(X_SHWEOL) ; <CTRL><V>
-         dta a(X_PAGEUP) ; <CTRL><[>
-         dta a(X_PAGEDW) ; <CTRL><]>
-         dta a(X_INSERT) ; <INS>
+ dta a(X_DELLIN) ; <SHIFT><Delete>
+ dta a(X_TAGCPY) ; <CTRL><C>
+ dta a(X_LOADTX) ; <CTRL><L>
+ dta a(X_SAVETX) ; <CTRL><S>
+ dta a(X_SHWEOL) ; <CTRL><V>
+ dta a(X_PAGEUP) ; <CTRL><[>
+ dta a(X_PAGEDW) ; <CTRL><]>
+ dta a(X_INSERT) ; <INS>
 
-         dta a(X_INSLIN) ; <SHIFT><INS>
+ dta a(X_INSLIN) ; <SHIFT><INS>
 
 ; Data for first and last line
 ; first line with state
-L4868    dta b($11),c'BW-ED'
-L486E    dta c'1.5',b($12)
-L4872    dta b($12)
-L4873    dta c'D1:' ; file name
-         dta b($12,$12,$12,$12,$12,$12,$12,$12)
-         dta b($12,$12,$12,$12,$12,$12,$12,$12)
-         dta b($12,$12,$12,$12,$12,$12,$12,$12)
-         dta b($12,$05)
+L4868 dta b($11),c'BW-ED'
+L486E dta c'1.5',b($12)
+L4872 dta b($12)
+L4873 dta c'D1:' ; file name
+      dta b($12,$12,$12,$12,$12,$12,$12,$12)
+      dta b($12,$12,$12,$12,$12,$12,$12,$12)
+      dta b($12,$12,$12,$12,$12,$12,$12,$12)
+      dta b($12,$05)
 ; last line with info
-         dta b($1A)
-L4891    dta b($12,$12)
-         dta c'Free:'
-         dta b($12,$12,$12,$12,$12,$12)
-         dta c'Line:'
-         dta b($12,$12,$12,$12,$12,$12)
-         dta c'Col:'
-         dta b($12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$03)
+      dta b($1A)
+L4891 dta b($12,$12)
+      dta c'Free:'
+      dta b($12,$12,$12,$12,$12,$12)
+      dta c'Line:'
+      dta b($12,$12,$12,$12,$12,$12)
+      dta c'Col:'
+      dta b($12,$12,$12,$12,$12,$12,$12,$12,$12,$12,$03)
 
 ; Vectors and Variables
 WNDLINES dta b($16) ; number of text line

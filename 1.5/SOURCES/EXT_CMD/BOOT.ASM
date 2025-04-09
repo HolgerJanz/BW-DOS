@@ -296,6 +296,6 @@ _daux1      dta b($01)
 _daux2      dta b($00)
 
 * local SIO call
-lsio        jmp ($FFFF)
+lsio        jmp ($FFFE)
 
             end

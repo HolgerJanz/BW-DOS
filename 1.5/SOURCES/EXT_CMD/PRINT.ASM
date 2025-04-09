@@ -1,6 +1,5 @@
 * BW-DOS Command PRINT [file]
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $580

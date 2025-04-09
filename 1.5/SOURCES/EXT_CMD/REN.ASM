@@ -1,10 +1,9 @@
 * BW-DOS Command REN file new_name
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $400
-         icl '_TSTBW14.ICL'
+         icl '_TSTBW15.ICL'
          lda #$00
          sta ren_bufx
 * get file

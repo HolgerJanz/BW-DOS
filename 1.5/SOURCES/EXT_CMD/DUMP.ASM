@@ -35,9 +35,6 @@ print4  lda print3+2
 
 prtex   rts
 
-vrat82  lda save82
-        sta 82
-
 prteol  lda #$9b
 
 prt1    tay
@@ -51,7 +48,10 @@ prt1    tay
         sta $342,x
 
         tya
-        jmp $e456
+        jsr $e456
+        bpl prt1ex
+        jmp desc
+prt1ex  rts
 
 getname jmp prtex
 
@@ -107,10 +107,10 @@ gethx4  asl hex
 
         jmp gethx2
 
-ghxerr  jsr vrat82
-        jsr print
-        dta c'Bad parameter !'
-        dta b(0)
+ghxerr  jsr print
+        dta b(155)
+        dta c'Bad parameter'
+        dta b(155,0)
 
 err2x   ldy #8
         lda (10),y
@@ -121,9 +121,11 @@ err2x   ldy #8
         ldy #1
 err5y   jsr $e474
 
-err2    jsr vrat82
+err2    jsr close
 
-        jsr close
+        lda save82
+        sta 82
+
         jmp (10)
 
 close   ldx #$10
@@ -144,7 +146,7 @@ start   lda $700
 
         jsr print
         dta b(155,253)
-        dta c'Incorrect DOS !'
+        dta c'Incorrect DOS'
         dta b(155,0)
 
         jmp (10)
@@ -236,10 +238,10 @@ st8     jsr close
 
         jsr cioname
         bpl st9
-        jsr vrat82
         jsr print
-        dta c'Can''t open file !'
-        dta b(0)
+        dta b(155)
+        dta c'Cannot open file'
+        dta b(155,0)
         jmp err2x
 
 * POINT
@@ -261,10 +263,10 @@ st9     lda pos
 
         jsr cioname
         bpl st10
-        jsr vrat82
         jsr print
-        dta c'Can''t set file-position !'
-        dta b(0)
+        dta b(155)
+        dta c'Cannot set file position'
+        dta b(155,0)
         jmp err2x
 
 * DUMP IT !
@@ -377,7 +379,7 @@ dump4a  and #127
 
 dump4b  cmp #32
         bcs dump4d
-        ora #64
+        lda #'.'
 
 dump4d  jsr dprt1
 
@@ -385,6 +387,9 @@ dump4d  jsr dprt1
         lda lix
         cmp llen
         bcc dump4
+
+* EOL
+        jsr prteol
 
 * NEXT?
 dumpx   lda status
@@ -394,28 +399,26 @@ dumpx   lda status
         cmp #$1c
         beq desc
 
-* EOL
-        jsr prteol
-
         jmp dump1
 
 dumpx2  cmp #136
-        beq dumpx3
+        bne *+5
+        jmp err2
 
-        jsr vrat82
         jsr print
-        dta c'Error while reading !'
-        dta b(0)
+        dta b(155)
+        dta c'Error while reading'
+        dta b(155,0)
 
-dumpx3  jmp err2x
+        jmp err2x
 
 desc    lda #$ff
         sta 764
 
-        jsr vrat82
         jsr print
+        dta b(155)
         dta c'<Aborted>'
-        dta b(0)
+        dta b(155,0)
         jmp err2
 
 dprthx  pha

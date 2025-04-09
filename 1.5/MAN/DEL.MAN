@@ -1,5 +1,5 @@
 }
-  DEL [/R] files|path ..
+  DEL [/RQ] files|path ..
 
 Internal
 
@@ -16,9 +16,12 @@ be deleted and it is protected then
 error 170 (File not found) is
 returned.
 
-The option /R recursively deletes
+Option /R recursively deletes
 files including subdirectories.
 Protected subdirectories are ignored.
 
-A list of parameters and option /R are
+Option /Q (quite) suppresses messages
+for every directory deleted.
+
+A list of parameters and options are
 not supported by the internal version.

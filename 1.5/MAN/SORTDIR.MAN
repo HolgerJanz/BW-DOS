@@ -1,15 +1,19 @@
 }
-  SORTDIR [/R] :|path ..
+  SORTDIR [/RQ] :|path ..
 
 This command sorts the directory
 entries first by subdirectory or file
 and second alphabetically by name and
 extension. The colon (:) can be used
 to specify the current directory of
-the current drive. With option /R
-subdirectories are also sorted.
-Protected subdirectories are
+the current drive.
+
+With option /R subdirectories are also
+sorted. Protected subdirectories are
 excluded from sorting.
+
+Option /Q (quite) suppresses messages
+for every directory.
 
   SORTDIR D1:>TMP
 Sorts directory TMP in main directory

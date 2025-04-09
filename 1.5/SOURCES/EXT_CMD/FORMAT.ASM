@@ -1697,19 +1697,6 @@ form2b  jsr print
 
         jmp abort
 
-* some drive does not return valid config blocks,
-* config can be set but not read,
-* form23k ldx dens
-* adapt custom configuration
-* some drives change it at format
-*        cpx #4
-*        bne form23j
-*        jsr getsion
-*        jsr getcnf4
-*        lda #$9b
-*        jsr prt1
-*        jsr prnconf
-
 form23j jmp form3
 
 wrtboo  sta wrtb2+1

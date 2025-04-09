@@ -7,7 +7,7 @@
 * memory $3000 to check for alias of main memory
 * see RAMBO 256k
 RB256TEST   equ *-1
-            jsr _chkbwdos14
+            icl '_TSTBW15.ICL'
 * print RAM data
             jsr IRQ_OFF
             lda PORTB
@@ -244,7 +244,6 @@ convh2a     sed
 
 * _print subroutine
             icl '_PRINT.ICL'
-            icl '_CHKBW14.ICL'
 
 * extended memory check
 * calculated max bank count and size in kB

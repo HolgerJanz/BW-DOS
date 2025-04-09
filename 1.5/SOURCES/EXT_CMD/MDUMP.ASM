@@ -1,6 +1,6 @@
 * BW-DOS command MDUMP address [length] [/A]
 
-        blk dos $4d0
+        blk dos $480
         jmp start
 
 print   pla
@@ -38,7 +38,10 @@ prt1    tay
         sta $342,x
 
         tya
-        jmp $e456
+        jsr $e456
+        bpl prt1ex
+        jmp desc
+prt1ex  rts
 
 getname jmp prtex
 
@@ -298,7 +301,7 @@ dump4a  and #127
 
 dump4b  cmp #32
         bcs dump4d
-        ora #64
+        lda #'.'
 
 dump4d  jsr dprt1
 

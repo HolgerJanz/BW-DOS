@@ -3,7 +3,7 @@
         icl '_SYSEQU.ICL'
 
         blk dos $580
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
         jsr BW_CRNAME
         beq prntver
 

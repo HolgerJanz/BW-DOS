@@ -1,6 +1,5 @@
 * BW-DOS Command DIRS path
 
-* System equates
          icl '_SYSEQU.ICL'
 
          blk dos $580
@@ -13,6 +12,8 @@ next     lda BW_COMFNAM-1,X
          and #$F9
          cmp #$38
          bne d_open
+         cpx #24
+         bcs d_open
          ldy #$00
 lstd_pat lda BW_STDPAT,Y
          sta BW_COMFNAM,X

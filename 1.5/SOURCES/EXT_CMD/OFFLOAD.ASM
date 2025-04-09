@@ -5,7 +5,7 @@
 * init block to check for BW-DOS 1.4 (at least)
         blk dos $400
 iniadd  equ *
-        icl '_TSTBW14.ICL'
+        icl '_TSTBW15.ICL'
         rts
         blk dos INITAD
         dta a(iniadd)
@@ -249,8 +249,10 @@ load1a  jsr get1
 
 * position
         jsr _print
-        dta c' Off.'
+        dta c' offset '
         dta b(0)
+        bpl *+5
+        jmp error
 
         ldx #$10
         lda #38
