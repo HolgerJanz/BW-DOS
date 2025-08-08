@@ -1,4 +1,4 @@
-; Use Fast Assembler to compile
+; Use FastAssembler to compile
 ; https://github.com/HolgerJanz/FastAssembler
 FA     /EQ XBW15
 RUN A: /EQ XBW15CP

@@ -68,21 +68,21 @@ start   equ *
         jsr getname
 
         ldy #36
-        lda (10),y
+        lda BW_COMTAB,y
         cmp #'O'
         bne st2on
 * OFF?
         iny
-        lda (10),y
+        lda BW_COMTAB,y
         cmp #'F'
         bne syntax
 
         iny
-        cmp (10),y
+        cmp BW_COMTAB,y
         bne syntax
 
         iny
-        lda (10),y
+        lda BW_COMTAB,y
         cmp #$9b
         bne syntax
         jmp disable
@@ -95,12 +95,12 @@ st2on   ldx #0
         inx
 
         iny
-        lda (10),y
+        lda BW_COMTAB,y
         cmp #'R'
         bne syntax
 
         iny
-        lda (10),y
+        lda BW_COMTAB,y
 
 st2o2   cmp #$9b
         beq start3
@@ -112,7 +112,7 @@ syntax  jsr print
         dta c'        RTIME8 OFF'
         dta b(155,0)
 
-        JMP (10)
+        JMP BW_COMTAB
 
 * alread installed ?
 
@@ -125,7 +125,7 @@ start3  stx redflg
         dta b(155)
         dta c'RTIME8 driver already installed !'
         dta b(155,0)
-        jmp (10)
+        jmp BW_COMTAB
 
 * install
 
@@ -137,7 +137,7 @@ start4  jsr rt8test
         dta b(155)
         dta c'RTIME8 cartridge not installed !'
         dta b(155,0)
-        jmp (10)
+        jmp BW_COMTAB
 
 start4a ldx redflg
 
@@ -224,7 +224,7 @@ inst2xb sty xtra1+1
 
         ldx #3
 
-inst2b  lda $706,x
+inst2b  lda BW_GETTD,x
         sta oldadr,x
         dex
         bpl inst2b
@@ -257,9 +257,9 @@ instl3  lda 11,y
         ldy #5
 
 instl4  lda newadr,x
-        sta $706,x
+        sta BW_GETTD,x
         lda newadr,y
-        sta $708,x
+        sta BW_SETTD,x
         dey
         dex
         bpl instl4
@@ -278,7 +278,7 @@ instl4  lda newadr,x
 
 instl5  jsr print
         dta c'.',b(155,0)
-        jmp (10)
+        jmp BW_COMTAB
 
 disable jsr srchrut
         sta redflg
@@ -302,7 +302,7 @@ diserr2 jsr print
         dta c'Can''t remove.'
         dta b(155,0)
 
-        jmp (10)
+        jmp BW_COMTAB
 
 disab2  lda 743
         sec
@@ -333,7 +333,7 @@ disbl2  lda (srchadr),y
         ldx #0
 
 disabl3 lda (srchadr),y
-        sta $706,x
+        sta BW_GETTD,x
 
         iny
         inx
@@ -345,7 +345,7 @@ disabl3 lda (srchadr),y
         dta c'RTIME8 driver removed.'
         dta b(155,0)
 
-        jmp (10)
+        jmp BW_COMTAB
 
 srchrut lda 743
         sec
@@ -531,7 +531,7 @@ gettd   ldx #5
 
 gtd2    jsr rdreg
 s5      ldy gtdtb,x
-        sta (10),y
+        sta BW_COMTAB,y
 
         dex
         bpl gtd2
@@ -561,7 +561,7 @@ std4t   dta b(0,3,3,6,1,4)
 settd   ldx #5
 
 std2    ldy gtdtb,x
-        lda (10),y
+        lda BW_COMTAB,y
 s7      jsr wrreg
 
         dex

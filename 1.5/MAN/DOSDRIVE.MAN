@@ -1,11 +1,24 @@
 }
-  DOSDRIVE [n|OFF]
+  DOSDRIVE [n|OFF] [dosdir]
 
 Low Memory
 
-Sets the DOS drive for command search.
-The default drive is 1 (D1:). If this
+Sets the DOS drive and directory for
+command search.
+
+The default drive is 1 (D1:) and
+default directory is DOS. If this
 command is called with OFF or drive
 number 0 then DOS drive is switched
-off and commands are only searched on
-current drive.
+off and commands are only searched
+on the current drive.
+
+The DOS directory can be set with
+dosdir. Excatly one directory
+including extension can be set as
+DOS directory. The default directory
+is DOS.
+
+If called without parameters the
+current settings of DOS drive and
+directory are displayed.

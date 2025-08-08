@@ -5,8 +5,8 @@
         dta b($00)     ;$702 subversion e.g. SDX 4.49 => $09
         dta c'BW'      ;$703 "BW", if BW-DOS is installed
         dta b($15)     ;$705 BW-DOS version 1.5 
-GETTDV  dta a(GETTD)   ;$706 Adress of the "GETTD" routine
-SETTDV  dta a(SETTD)   ;$708 Adress of the "SETTD" routine
+GETTDV  dta a(RET)     ;$706 Adress of the "GETTD" routine
+SETTDV  dta a(RET)     ;$708 Adress of the "SETTD" routine
         dta a(CONVDC)  ;$70A Adress CONVDC
 BW_SIO  jmp SSIOV      ;$70C jmp LSIO
 BW_FAIL dta a(CPER2)   ;$70F print error A and DOSVEC
@@ -16,7 +16,7 @@ DWARM   dta b($FF)     ; -21
         dta b($80)     ; -20 ???
 DECOUT  dta b($20,$20,$20,$20) ; -19
         dta b($20,$20,$20,$20)
-SSIOV   dta b(op_JMP_abs) ; -13 jmp SIO
+SSIOV   dta b(op_JMP_abs) ; -11 jmp SIO
 LSIO    dta a(SIOV)    ; -10
 ECHOFLG dta b($FF)     ; -8
 BATFLG  dta b($FF)     ; -7
@@ -69,9 +69,9 @@ EXT_COM dta c'.COM'
 STD_PAT dta c'*.*'
         dta b($9B)
 
-* default TD
-INTDATE dta b(INI_DAY,INI_MONTH,INI_YEAR)
-        dta b(INI_HOUR,INI_MINUTE,INI_SECOND)
+DIO2T1  dta b($10,$08)
+DIO2T2  dta b($40,$50)
+DIO2T3  dta b($90,$94)
 
 ETAB    dta a(0,0)
 EGETV   dta a(0)
@@ -86,11 +86,11 @@ DTABLE  dta a(DOPEN_V)
         dta a(DSTAT_V)
         dta a(DSPEC_V)
 RINIT   jmp (DOSINI)
-        dta b(0)
 * HATAB entry for disk drive device
 RESITAB dta c'D',a(DTABLE)
 
-        dta b(0,0) ; spare bytes
+;        dta b(0,0,0) ; spare byte
+OPNGETTD    jmp (GETTDV)
 
 * $7E0 DINT initialize BW-DOS
         jmp RESET
@@ -160,7 +160,17 @@ T3      inx
         jmp LBUF
 KRESET  dta a(RESET)
 TNADP   dta b($9B)
-        dta c'BW-DOS 1.5 by JB/HJX 06-11-2024 ',b(BW_DK1,BW_DK2)
+VDATD10 equ INI_DAY/10
+VDATD1  equ INI_DAY-[VDATD10*10]
+VDATM10 equ INI_MONTH/10
+VDATM1  equ INI_MONTH-[VDATM10*10]
+VDATY10 equ INI_YEAR/10
+VDATY1  equ INI_YEAR-[VDATY10*10]
+        dta c'BW-DOS 1.5 by JB/HJX '
+        dta l($30+VDATD10),l($30+VDATD1),c'-'
+        dta l($30+VDATM10),l($30+VDATM1),c'-20'
+        dta l($30+VDATY10),l($30+VDATY1),c' '
+        dta b(BW_DK1,BW_DK2)
         dta b($9B)
 T6BUF   equ *
 

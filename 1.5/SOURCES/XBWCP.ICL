@@ -139,21 +139,13 @@ RESI6   cpx #'D'
         dey
         bpl RESI5
         tay
-        bmi RET2
+        bmi RET
 RESI7   ldx #$FD
 RESI8   lda RESITAB-$FD,X
         sta HATABS,Y
         iny
         inx
         bne RESI8
-RET2    rts
-
-* set time date
-SETTD   jsr MOV_CAL
-  dta h(MC_movE+DATER),l(DATER),h(MC_6+INTDATE),l(INTDATE)
-* get time data
-GETTD   jsr MOV_CAL
-  dta h(MC_movE+INTDATE),l(INTDATE),h(MC_6+DATER),l(DATER)
 RET     rts
 
 ADC_L   lda LDSA7C+1

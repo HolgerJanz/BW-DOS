@@ -63,7 +63,7 @@ EXE2    jsr EXE2B
 ERRTX   dta b($9B)
 ENAME   dta c'Error',b($9B)
         dta b($9B)
-DIO2T3  dta b($90)
+        dta b($90) ; DIO2T3
         dta b($94)
         dta c'M',b($C4)        ; 42
         dta c'R',b($C4)        ; 43
@@ -255,8 +255,8 @@ CPBAS2  sta BASICF
 * close editor screen
         jsr CPC192
         dta b($0C)
-DIO2T1  dta b($10,$08)
-DIO2T2  dta b($40,$50)
+        dta b($10,$08) ; DIO2T1
+        dta b($40,$50) ; DIO2T2
 * prevent garbage screen
         ldx RTCLOK3
         cpx RTCLOK3

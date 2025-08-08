@@ -7,18 +7,17 @@ Commands (* internal with XBW15.DOS)
   CHVOL    CLS      COLD     COMP
   COPY     CUT      DATE    *DEL
  *DIR      DIRC    *DIRS     DIRL
-  DISASS   DOSDRIVE DUMP     ED
-  FORMAT   GETTD    HEXEDIT  IF
- *LOAD     MAN     *MD       MDUMP
-  MEM      MEMCLEAR MEMEDIT  MENU
-  MOVE     OFFLOAD  PAUSE    PERCOM
-  POKE    *PRINT   *PROT     PWD
- *RD      *REN     *RUN      SAVE
-  SECOPY   SORTDIR  TIME    *TYPE
- *UNPROT   VERIFY   VERS
+  DISASS   DOSDRIVE DOSCONF  DUMP
+  ED       FORMAT   GETTD    HEXEDIT
+  IF      *LOAD     MAN     *MD
+  MDUMP    MEM      MEMCLEAR MEMEDIT
+  MENU     MOVE     OFFLOAD  PAUSE
+  PERCOM   POKE    *PRINT   *PROT
+  PWD     *RD      *REN     *RUN
+  SAVE     SECOPY   SORTDIR  TIME
+ *TYPE    *UNPROT   VERIFY   VERS
 Resident Commands (.SYS)
   CLOCK    IDEP2TD  RAMDISK  RTIME8
   XFSIO
 Command Processors (.DOS)
   XBW15CP  XBW15
-  

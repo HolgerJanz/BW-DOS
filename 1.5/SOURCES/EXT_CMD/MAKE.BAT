@@ -1,4 +1,4 @@
-; Use Fast Assembler to compile
+; Use FastAssembler to compile
 ; https://github.com/HolgerJanz/FastAssembler
 FA     /EQ ADIR     ADIR.COM
 RUN A: /EQ APETIME  APETIME.COM
@@ -22,6 +22,7 @@ RUN A: /EQ DIRC     DIRC.COM
 RUN A: /EQ DIRL     DIRL.COM
 RUN A: /EQ DIRS     DIRS.COM
 RUN A: /EQ DISASS   DISASS.COM
+RUN A: /EQ DOSCONF  DOSCONF.COM
 RUN A: /EQ DOSDRIVE DOSDRIVE.COM
 RUN A: /EQ DUMP     DUMP.COM
 RUN A: /EQ ELSE     ELSE.COM

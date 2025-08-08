@@ -145,7 +145,8 @@ CLOS1       and #$08
   dta b(MC_cpy+2,FCBDIR1-DAT_BUF,FCB1ST-DAT_BUF)
   dta h(MC_jsr+OPNDRD),l(OPNDRD)
   dta h(MC_jsr+LDDIR),l(LDDIR)
-  dta b(MC_cpyE+3,RENNAM-DAT_BUF,DIRBUF+3-DAT_BUF)
+  dta b(MC_cpy+3,RENNAM-DAT_BUF,DIRBUF+3-DAT_BUF)
+  dta h(MC_jsrE+SDATER),l(SDATER)
 
 SADIR       lda #$FF
             dta b(op_BIT_abs)
@@ -353,32 +354,32 @@ OPNINT      sta FCBAUX1
 
             pla
             cmp #$10
-            bcc OPNINT2
+            bcc OPNINTE
 
             jsr MOV_CAL
   dta b(MC_cpy+1,K0017-DAT_BUF,FCBLEN-DAT_BUF)
   dta h(MC_jsr+LDDIRN),l(LDDIRN)
   dta b(MC_cpyE+3,DIRBUF+3-DAT_BUF,FCBLEN-DAT_BUF)
 
-OPNINT2      rts
+OPNINTE    rts
 
-OPENT       jsr MOV_CAL
-  dta b(MC_cpy+11,SRCHNAM-DAT_BUF,DIRBUF+6-DAT_BUF)
-  dta b(MC_cpy+3,NULY-DAT_BUF,DIRBUF+3-DAT_BUF)
-  dta h(MC_movE+DATER),l(DATER),h(MC_6+DIRBUF+17),l(DIRBUF+17)
-
-            bit TDOVER
-            bpl OPNT2
-
-            jsr MOV_CAL
-  dta h(MC_movE+ODATER),l(ODATER),h(MC_6+DIRBUF+17),l(DIRBUF+17)
-
-OPNT2       lda MYA1
+OPENT       lda MYA1
             sta FCBAUX1
             and #$20
             ora #$08
             sta DIRBUF
-            rts
+
+SDATER      jsr MOV_CAL
+  dta h(MC_jsr+OPNGETTD),l(OPNGETTD)
+  dta h(MC_movE+DATER),l(DATER),h(MC_6+DIRBUF+17),l(DIRBUF+17)
+
+            lda TDOVER
+            bpl SDATERE
+
+            jsr MOV_CAL
+  dta h(MC_movE+ODATER),l(ODATER),h(MC_6+DIRBUF+17),l(DIRBUF+17)
+
+SDATERE     rts
 
 OPNDL       bit DLOPF
             bmi DLTOO
@@ -456,7 +457,7 @@ NEWI2       lda SRCHNAM,X
             beq NEWI3
             dex
             bpl NEWI2
-            jmp (GETTDV)
+            rts
 
 PTH         lda #$00
             bpl ERR_170
@@ -508,6 +509,8 @@ OPN4B       bit FCBDIRP+1
             jsr MOV_CAL
   dta h(MC_jsr+NEWILD),l(NEWILD)
   dta h(MC_jsr+OPENT),l(OPENT)
+  dta b(MC_cpy+11,SRCHNAM-DAT_BUF,DIRBUF+6-DAT_BUF)
+  dta b(MC_cpy+3,NULY-DAT_BUF,DIRBUF+3-DAT_BUF)
   dta h(MC_jsr+PRIDEL),l(PRIDEL)
   dta b(MC_cpy+2,VTOCSEC-DAT_BUF,DIRBUF+1-DAT_BUF)
   dta b(MC_cpy+1,K1C-DAT_BUF,FCBAUX1-DAT_BUF)
@@ -530,7 +533,6 @@ OPNPT0J     beq OPNPT0
   dta b(MC_cpy+2,FCB1ST-DAT_BUF,SRCHTMP-DAT_BUF)
   dta b(MC_cpy+2,DIRBUF+1-DAT_BUF,FCB1ST-DAT_BUF)
   dta h(MC_jsr+OPNINT1),l(OPNINT1)
-  dta h(MC_jsr+OPENT),l(OPENT)
   dta b(MC_cpy+1,K0017-DAT_BUF,DIRBUF+3-DAT_BUF)
   dta b(MC_cpy+2,SRCHTMP-DAT_BUF,DIRBUF+1-DAT_BUF)
   dta h(MC_jsr+SADIRN),l(SADIRN)
@@ -557,10 +559,11 @@ OPNJ1       lda MYA1
             and #$08
             beq OPNJ2
             lda DIRBUF
-            and #$21
-            lsr @
-            bne OPNJ2
-            bcs OPNJP
+            and #$01
+            bne OPNJP
+
+            jsr ZMENEN1
+
             lda MYA1
             cmp #$08
             bne OPNJ2

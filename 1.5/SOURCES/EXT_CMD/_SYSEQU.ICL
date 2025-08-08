@@ -90,6 +90,7 @@ BW_DOSDRV  equ $7AA ;drive number for command search
 BW_EXTBAT  equ $7AB ;batch extension .BAT<EOL>
 BW_EXTCOM  equ $7B0 ;executable extension .COM<EOL>
 BW_STDPAT  equ $7B5 ;standard file pattern *.*<EOL>
+BW_DOSDIR  equ $844 ; DOS directory (internal format, default DOS)
 
 * dynamic SpartaDOS variables (relative to DOSVEC)
 * substract

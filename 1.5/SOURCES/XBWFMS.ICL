@@ -256,7 +256,7 @@ PRID3E  lda VTOCSEC-$FE,X
         ldy #$A2
 SIOERRJ jmp RETERRY
 
-L1BE5   lda #$00
+ZAJIST1 lda #$00
         ldx #$01
 ZAJIST  sec
 ZAJIST0 stx ZSL+1
@@ -351,7 +351,6 @@ ERA1    jsr MOV_CAL
 * set last alloc to last deleted (VTOCSEC)
   dta b(MC_cpyE+2,VTOCSEC-DAT_BUF,DCBDAT-DAT_BUF)
 
-* increment disk seq number
         jsr ADC_1
         dta a(DCBFREE)
 

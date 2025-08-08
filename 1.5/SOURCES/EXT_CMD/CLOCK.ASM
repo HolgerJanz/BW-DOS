@@ -58,29 +58,29 @@ START   EQU *
         JSR GETNAME
 
         LDY #36
-        LDA (DOSVEC),Y
+        LDA BW_COMTAB,Y
         CMP #'O'
         BNE SYNTAX
 
         INY
-        LDA (DOSVEC),Y
+        LDA BW_COMTAB,Y
         CMP #'N'
         BEQ ST2ON
         CMP #'F'
         BNE SYNTAX
 * OFF?
         INY
-        CMP (DOSVEC),Y
+        CMP BW_COMTAB,Y
         BNE SYNTAX
 
         INY
-        LDA (DOSVEC),Y
+        LDA BW_COMTAB,Y
         CMP #$9B
         BNE SYNTAX
         JMP DISABLE
 * ON?
 ST2ON   INY
-        LDA (DOSVEC),Y
+        LDA BW_COMTAB,Y
         CMP #$9B
         BEQ START3
 
@@ -89,7 +89,7 @@ SYNTAX  JSR PRINT
         DTA C'Syntax: CLOCK ON|OFF'
         DTA B(155,0)
 
-        JMP (DOSVEC)
+        JMP BW_COMTAB
 
 * already installed?
 START3  JSR SRCHRUT
@@ -99,7 +99,7 @@ START3  JSR SRCHRUT
         DTA B(155)
         DTA C'Clock already installed!'
         DTA B(155,0)
-        JMP (DOSVEC)
+        JMP BW_COMTAB
 
 * install
 START4  LDA MEMLO
@@ -225,7 +225,7 @@ INSTL4  LDA NEWADR,X
         DTA C'Clock installed.'
         DTA B(155,0)
 
-        JMP (DOSVEC)
+        JMP BW_COMTAB
 
 DISABLE JSR SRCHRUT
         BCS DISABL2
@@ -246,7 +246,7 @@ DISERR2 JSR PRINT
         DTA C'Can''t be removed.'
         DTA B(155,0)
 
-        JMP (DOSVEC)
+        JMP BW_COMTAB
 
 DISABL2 LDA MEMLO
         SEC
@@ -285,7 +285,7 @@ DISABL3 LDA (SRCHADR),Y
         DTA C'Clock removed.'
         DTA B(155,0)
 
-        JMP (DOSVEC)
+        JMP BW_COMTAB
 
 SRCHRUT LDA MEMLO
         SEC
@@ -375,7 +375,7 @@ OLDADR  DTA A(0,0)
 SETTD   LDY #18
 
 STD5    LDX TDPOR-13,Y
-        LDA (DOSVEC),Y
+        LDA BW_COMTAB,Y
 S5      STA TDOLDT,X
 
 TST2    DEY
@@ -455,7 +455,7 @@ S20     DEC TDPLIX+1
 
 GTD5    LDX TDPOR-13,Y
 S22     LDA TDOLDT,X
-        STA (DOSVEC),Y
+        STA BW_COMTAB,Y
 
         INY
         CPY #19

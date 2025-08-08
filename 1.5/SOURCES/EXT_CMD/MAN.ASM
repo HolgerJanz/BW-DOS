@@ -19,6 +19,13 @@ MAXLIN   equ $86 ;max screen line count
          jsr BW_CRNAME
          bne *+5
          jmp par_err
+* check for error number
+         lda BW_COMFNAM+3
+         cmp #'0'
+         bcc next
+         cmp #'9'+1
+         bcs next
+         jmp manerrn
 * get name
 next     lda #$00
          sta EOLCNT
@@ -44,24 +51,7 @@ nxtext   lda manext,Y
          cpy #$05
          bcc nxtext
 * open
-         lda #$03
-         sta $352
-         lda <fname
-         sta $354
-         lda >fname
-         sta $355
-         lda #28
-         sta $358
-         lda #0
-         sta $359
-         lda #$04
-         sta $35A
-         lda #$00
-         sta $35B
-         ldx #$10
-         jsr CIOV
-         bpl *+5
-         jmp error
+         jsr open
 * screen output
          lda #$0B
          sta $342
@@ -179,6 +169,76 @@ close    lda #$0C
 par_err  ldy #$9C ; parameter error
 error    tya
          jmp (BW_FAIL)
+* open
+open     lda #$03
+         sta $352
+         lda <fname
+         sta $354
+         lda >fname
+         sta $355
+         lda #28
+         sta $358
+         lda #0
+         sta $359
+         lda #$04
+         sta $35A
+         lda #$00
+         sta $35B
+         ldx #$10
+         jsr CIOV
+         bmi error
+         rts
+
+* man error number
+manerrn  jsr open
+* input
+         lda #$05
+         sta $352
+         lda <LBUF
+         sta $354
+         lda >LBUF
+         sta $355
+* line buffer loop
+mnlloop  lda #40
+         sta $358
+         lda #0
+         sta $359
+         ldx #$10
+         jsr CIOV
+         bmi error
+* check for number
+         ldx #$ff
+mnlll    inx
+         lda BW_COMFNAM+3,X
+         cmp #$9b
+         beq mnllspc
+         cmp LBUF,X
+         bne mnlloop
+         beq mnlll
+mnllspc  lda LBUF,X
+         cmp #' '
+         bne mnlloop
+* output
+         lda #$09
+         sta $342
+         lda #0
+         sta $348
+         sta $349
+         ldx #$00
+         lda #$9b
+         jsr CIOV
+         lda #$09
+         sta $342
+         lda <LBUF
+         sta $344
+         lda >LBUF
+         sta $345
+         lda #40
+         sta $348
+         lda #0
+         sta $349
+         ldx #$00
+         jmp CIOV
 
 ; sound key click
 SKC      pha
@@ -201,8 +261,8 @@ SKC2     cmp VCOUNT
          rts
 
 manext   dta c'.MAN',b($9b)
-fname    dta c'Dx:>MAN>'
+fname    dta c'Dx:>MAN>ERRORS.MAN',b($9b)
 
-LBUF     equ *+28+4+1 ; plus COMFNAM len, ext len, and EOL 
+LBUF     equ *+28+4+1  ; plus COMFNAM len, ext len, and EOL 
 
          end

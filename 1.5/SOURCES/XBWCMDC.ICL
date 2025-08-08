@@ -80,7 +80,3 @@ UNISCH  sta UNIA+1
 ERRTX   dta b($9B)
 ENAME   dta c'Error'
 
-DIO2T1  dta b($10,$08)
-DIO2T2  dta b($40,$50)
-DIO2T3  dta b($90,$94)
-

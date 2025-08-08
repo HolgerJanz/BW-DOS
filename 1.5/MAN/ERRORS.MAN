@@ -1,40 +1,40 @@
 }
   Error Codes
 
-128 Break
-129 IOCB already open
-130 Non existing device
-131 IOCB write only
-132 IOCB invalid command
-133 IOCB closed
-134 IOCB invalid number
-135 IOCB read only
-136 End of file
-137 Truncated record
+128 Aborted by break key
+129 IOCB is already open
+130 Invalid IOCB device
+131 IOCB is write only
+132 Invalid IOCB command
+133 IOCB is closed
+134 Invalid IOCB number
+135 IOCB is read only
+136 End of file reached
+137 Record is Truncated
 138 Device does not respond
 139 Device NAK
 140 SIO framing error
-141 Out of screen
-142 SIO overrun
+141 Position is out of screen
+142 SIO overrun error
 143 SIO checksum error
 144 Device done error
-145 Verify error or illegal screen mode
-146 Illegal handler function
-147 Insufficient RAM
+145 Verify error or invalid screen mode
+146 Function is not implemented
+147 Out of memory
 148 Invalid disk format
-150 Directory not found
+150 Directory is not found
 151 File or directory already exists
-152 Not a binary file
+152 File is not a binary or DOS file
 156 Parameter or cartridge error
-160 Drive number error
+160 Invalid drive number
 161 Too many open files
-162 Disk full
-163 Invalid wild card in file name
-164 File is protected
-165 Illegal file name
-166 Illegal file position
+162 Disk is full
+163 Invalid wild cards in file name
+164 File or directory is protected
+165 Invalid file name
+166 Invalid file position
 167 Directory is not empty
-168 Command not implemented
-169 Directory full
-170 File not found
-182 Path too long
+168 Command is not implemented
+169 Directory is full
+170 File is not found
+182 Path is too long

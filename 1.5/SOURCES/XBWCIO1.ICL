@@ -149,7 +149,7 @@ XIO7B   lda DCBDRIV-$E6,X
         bit XIO4+1
         bpl XIO8A
 * open
-        jsr L1BE5
+        jsr ZAJIST1
         ldy #$07
         lda (L0043),Y
         cmp #$80
@@ -237,7 +237,7 @@ ODKLID  ldx FCBDRIV
         lda FCBDIRP+1,X
         bpl ENDCLO2
         lsr FCBDIRP+1,X
-        jsr L1BE5
+        jsr ZAJIST1
         jsr ZMENEN
         inc DCBSEQ
         lda #$B9

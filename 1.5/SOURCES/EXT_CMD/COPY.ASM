@@ -80,7 +80,7 @@ optEOL   cmp #$9B
          bne parmerr
 
 
-nxtParm  ldx BW_BUFOFF
+         ldx BW_BUFOFF
          lda BW_LBUF,X
          cmp #$9b
          beq parmerr
@@ -142,8 +142,6 @@ nxt_dmsk lda DSTMSK,X
          jsr dc2dget
          bcs starter
 
-         lda #$00
-         sta BW_TDOVER
          jsr copy23
          jmp exitdos
 
@@ -166,7 +164,8 @@ nxt_sstr lda BW_STDPAT-1,Y
 nosstar  rts
 
 * disk copy
-dcop1    jsr srcstar
+dcop1    jsr chk1dir
+         jsr srcstar
 dcop1b   jsr dststar
 
 * store source pattern
@@ -181,17 +180,7 @@ ssrcpat  lda SRCPTH,X
          bne ssrcpat
 
 * masks and aux
-setmask  ldx SRCIX
-         jsr getmsk
-
-         ldx #$0F
-cpymask  lda DSTMSK,X
-         sta SRCMSK,X
-         dex
-         bpl cpymask
-
-         ldx DSTIX
-         jsr getmsk
+setmask  jsr gtsdmsk
 
 * dir open
          lsr NOFLAG
@@ -269,6 +258,7 @@ copy3x   lda NOFLAG
 dc2xer   ldy #$AA ; File not found
          jmp error
 
+
 prnFname lda QFLAG
          bmi prnFnEnd
          jsr _print
@@ -291,6 +281,58 @@ jmpErr   jmp error
          jsr CIOV
          bmi jmpErr
 prnFnEnd rts
+
+gtsdmsk  ldx SRCIX
+         jsr getmsk
+
+         ldx #$0F
+cpymask  lda DSTMSK,X
+         sta SRCMSK,X
+         dex
+         bpl cpymask
+
+         ldx DSTIX
+         jsr getmsk
+         rts
+
+; check if only one directory should be copied
+; check for no wildcards was already done
+chk1dir  lda RFLAG
+         bpl chk1dire ; check recursive
+         lda #$9b
+         ldx SRCIX
+         cmp SRCPTH,X ; check non empty src
+         beq chk1dire
+
+         jsr dststar
+         jsr gtsdmsk
+; search directory entry
+         jsr diropen
+chk1dirn jsr dirget
+         bmi chk1dirc
+         lda #%00100000 ; directory
+         bit DIRBUF
+         beq chk1dirn
+         jsr checkit
+         bcs chk1dirn
+; directory entry found
+         jsr close1
+         jsr renamit
+         jsr chkdstmd
+; update src path
+         ldx SRCIX
+chk1dirs lda SRCPTH,X
+         inx
+         cmp #$9b
+         bne chk1dirs
+         lda #'>'
+         sta SRCPTH-1,X
+         lda #$9b
+         sta SRCPTH,X
+         stx SRCIX
+chk1dirc jsr close1
+chk1dire rts
+
 
 * set date/time
 settd    ldx #$05
@@ -612,7 +654,14 @@ dirpsh3  lda SRCPAT,Y
          iny
          bpl dirpsh3
 * destination add new dir
-dirpsh4  ldx DSTIX
+dirpsh4  jsr chkdstmd
+* open new dir and go on
+         jsr diropen
+         jmp getdirp
+
+; add new dir to dst path and
+; created if needed
+chkdstmd ldx DSTIX
          jsr dc2dget
          cpx #255-14
          bcs dirpshe
@@ -635,9 +684,7 @@ dirpsh5  ldx DSTIX
          lda #$9b
          sta SRCPTH,X
          stx DSTIX
-* open new dir and go on
-         jsr diropen
-         jmp getdirp
+         rts
 
 * prot dir
 dstprot  lda #$23
@@ -824,7 +871,7 @@ resetcls jsr close123
          rts
 
 exitdos  jsr resetcls
-         jmp (DOSVEC)
+         jmp BW_COMTAB
 
          icl '_PRINT.ICL'
 * buffer 2 

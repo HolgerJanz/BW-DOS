@@ -116,9 +116,9 @@ MC_6    equ $C000
 MC_7    equ $E000
 
 * date and time initial value
-INI_DAY    equ 06
-INI_MONTH  equ 11
-INI_YEAR   equ 24
+INI_DAY    equ 31
+INI_MONTH  equ 05
+INI_YEAR   equ 25
 INI_HOUR   equ 08
 INI_MINUTE equ 05
 INI_SECOND equ 45
