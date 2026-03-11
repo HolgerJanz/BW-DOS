@@ -2,19 +2,20 @@
   IDEP2TD.SYS [/R]
 
 This command installs a driver for a
-hardware real time clock. It works with
-the PBI device IDE plus 2.
+hardware real-time clock. It works
+with the PBI device IDE Plus 2.
 
-Option /R installs a read-only version
-which needs less memory.
+Using the /R option installs a
+read-only version that requires less
+memory.
 
 If this driver is the first resident
-program then a short driver is
-installed, to save memory.
+program, a smaller version can be
+installed to save memory.
 
 The last character in the status line
-indicates the installed driver:
-S - short read and write driver
-M - read and write driver
-s - short read driver
-m - read driver
+shows which driver is active:
+W - read and write driver
+w - smaller read and write driver
+R - read-only driver
+r - smaller read-only driver

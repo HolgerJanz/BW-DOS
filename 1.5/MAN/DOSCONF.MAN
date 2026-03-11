@@ -1,28 +1,27 @@
 }
   DOSCONF [/Q] df [d] [r] [s] [c]
 
-The DOS files (XBW15.DOS and
-XBW15CP.DOS) can be configured with
-this command. If only the DOS file
-(df) is specified then the
-configuration of this DOS file is
-displayed.
+This command configures the DOS files
+XBW15.DOS and XBW15CP.DOS. When only
+the DOS file (df) is specified, the
+current configuration of that file is
+shown.
 
-The following options can be changed:
-d - DOS drive (0-4, or 8, default 1)
-r - DOS directory (default DOS)
-s - startup batch file (default
-    D1:STARTUP.BAT)
-c - current drive after startup (1-4,
-    or 8, default 1)
+The following options may be modified:
+d sets the DOS drive (0-4 or 8
+  default 1)
+r sets the DOS directory name (default
+  DOS)
+s sets the startup batch file (default
+  D1:STARTUP.BAT
+c sets the drive that becomes active
+  after startup (1-4 or 8, default 1)
 
-If options are changed then the
-command ask whether this changes
-should be written to the specified
-DOS file.
-
-With option /Q the display of the
-configuration and the question for
-writing the changes is omitted.
-This is useful if the command is used
-in batch processing.
+When any option is changed, the
+command asks whether the new settings
+should be written to the selected DOS
+file. Using option /Q suppresses both
+the configuration display and the
+confirmation prompt. This is helpful
+when the command is used inside batch
+processing tasks.

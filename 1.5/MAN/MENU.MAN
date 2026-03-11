@@ -3,20 +3,29 @@
 
 Requires 32k
 
-This external command is a comfortable
-tool for operations with many selected
+This external command is a convenient
+tool for working with many selected
 files, for copying between two disks
-with only one disk drive, and for
-converting files from Atari DOS 2
-format to BW-DOS and back.
+using only one disk drive, and for
+converting files between Atari DOS 2
+format and BW-DOS in both directions.
 
-Dn: specifies drive number the menu
-will start with, and the rest is
-similar to the "Setup" function:
-/S sorting of directories
-/B warning bell
-/Q ask before overwriting a file
+Dn: selects the drive number the menu
+starts with. The remaining options are
+similar to those in the Setup menu:
+/S  sorting of directories
+    E by extension
+    N by name and extension
+    S by size
+    D by date and time
+    0 no sort
+/B  warning bell
+    Y yes
+    N no
+/Q  ask before overwriting a file
+    Y yes
+    N no
 
-You may select a menu entry by using
-the left and right arrow key or by
-pushing the according hotkey.
+You may choose a menu entry with the
+left or right arrow keys, or by
+pressing the corresponding hotkey.

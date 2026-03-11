@@ -4,21 +4,21 @@
 Low Memory
 
 Sets the DOS drive and directory for
-command search.
+searching commands.
 
-The default drive is 1 (D1:) and
+The default drive is 1 (D1:) and the
 default directory is DOS. If this
-command is called with OFF or drive
-number 0 then DOS drive is switched
-off and commands are only searched
-on the current drive.
+command is used with OFF or with
+drive number 0, the DOS drive is
+disabled and commands are searched
+only on the current drive.
 
-The DOS directory can be set with
-dosdir. Excatly one directory
-including extension can be set as
-DOS directory. The default directory
-is DOS.
+The DOS directory can be changed
+using dosdir. Exactly one directory,
+including its extension, can be set
+as the DOS directory. The default
+directory is DOS.
 
-If called without parameters the
-current settings of DOS drive and
-directory are displayed.
+If the command is entered without
+parameters, the current DOS drive
+and directory settings are shown.

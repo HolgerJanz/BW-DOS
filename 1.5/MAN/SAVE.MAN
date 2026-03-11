@@ -3,9 +3,12 @@
 
 Low Memory
 
-This will save the memory area
-specified by start and end addresses
+This command saves the memory area
+defined by the start and end addresses
 as a DOS loadable file. With the /A
-parameter it will append to an existing
-file as another segment.
+option it appends the data to an
+existing file as an additional
+segment.
 
+Both start and end address must be
+specified as hexadecimal numbers.

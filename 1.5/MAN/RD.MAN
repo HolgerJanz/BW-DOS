@@ -3,12 +3,15 @@
 
 Low Memory, Internal
 
-This is the command for deleting
-directories. You can only delete an
-empty directory - if there are any
-files or directories in it you need
-to remove them first.
+This command deletes directories. Only
+empty directories can be removed; if a
+directory contains files or other
+subdirectories, they must be deleted
+first.
+
+See the DEL command for recursive
+deletion of directories and files.
 
 The internal version does not support
-a list of parameters - only the first
-parameter is evaluated.
+multiple parameters, only the first
+one is processed.

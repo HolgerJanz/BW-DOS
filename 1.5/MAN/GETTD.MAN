@@ -1,5 +1,8 @@
 }
   GETTD
 
-This commands displays the current
-date and time from BW-DOS's clock.
+This command shows the current date
+and time taken from the BW-DOS clock.
+The weekday is calculated correctly
+for all dates between Sat 01-Jan-2000
+and Wed 31-Dec-2099.

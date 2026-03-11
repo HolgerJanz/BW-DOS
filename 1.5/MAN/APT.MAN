@@ -1,0 +1,69 @@
+}
+  APT
+    LIST  [pbiId] [prtId]
+    INFO  pbiId
+    MOUNT pbiId prtId drvId
+
+This command lists Atari Partition
+Table (APT) devices, shows their
+details, and lets you mount or
+unmount partitions on an Atari disk
+drive.
+
+LIST [pbiId] [prtId]
+
+When run without parameters, the
+command lists all PBI devices that
+were initialized during system
+startup, showing each device's PBI ID,
+media code, and device name.
+
+If you provide only a PBI ID (pbiId),
+the command lists all partitions on
+that PBI device. Each partition entry
+includes its partition ID, current
+drive number, and partition name. The
+partition type is indicated by one of
+these characters:
+
+D - DOS partition
+X - external (FAT) partition
+C - firmware configuration partition
+F - floppy drawer partition
+
+If both a PBI ID (pbiId) and a
+partition ID (prtId) are supplied, the
+command lists only that specific
+partition.
+
+INFO pbiId
+
+This command displays information
+about the device and its medium,
+including the device name, media code,
+sector size, total capacity,
+and the portion of space reserved for
+Atari partitions.
+
+MOUNT pbiId prtId drvId
+
+If a PBI ID (pbiId), a partition ID
+(prtId), and a drive ID (drvId) are
+provided, the specified partition is
+mounted to that drive ID (drvId). If
+another partition is already mounted
+on that drive, it is automatically
+unmountedfirst.
+
+Valid ranges are:
+
+PBI IDs 0-7
+Partition IDs 1-16
+Drive IDs 1-9 and A-O (D1: to D15:)
+
+Drive IDs above 9 must be given as
+letters J through O.
+
+If drive ID 0 is specified, the
+currently assigned partition is
+unmounted.

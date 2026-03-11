@@ -1,18 +1,20 @@
 }
   MEM [file]
 
-Returns information about RAM and
+Shows information about RAM and the
 OS ROM.
-RAM area $6A, $02E4-$02E8:
+
+RAM area $6A and $02E4-$02E8 contain
 RAMTOP, RAMSIZ, MEMTOP, and MEMLO.
-Extended memory info contains kind
-(PORTB or AXLON), size in kilobytes,
-and bank count plus main banking.
+The extended memory section shows the
+type (PORTB or AXLON), the size in
+kilobytes, and the number of banks,
+including the main banking mode.
 
-The usable PORTB values are written
-to a file if file was specified.
+If a file name is given, the usable
+PORTB values are written to that file.
 
-OS ROM area contains:
+OS ROM section contains:
   $FFEE   DAT  Revision date day
   $FFEF   DAT  Revision date month
   $FFF0   DAT  Revision date year

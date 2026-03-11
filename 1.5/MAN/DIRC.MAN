@@ -3,15 +3,15 @@
 
 Low Memory
 
-This commands produces a compact
-directory listing. Only names and a
-indicator character are shown.
+This command creates a compact view of
+a directory. Only file names and an
+indicator symbol are displayed.
 
-The indicators have the following
-meaning:
-  * protected file
-  : subdirrectory
-  # protected subdirectory
+The symbols have these meanings:
+* marks a protected file
+: marks a folder
+# marks a protected folder
 
-This command supports a list of
-patterns of file names.
+This command also accepts multiple
+file name patterns when listing
+entries.

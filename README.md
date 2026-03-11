@@ -18,8 +18,10 @@ Highlights:
 - comes with MENU command for easy menu driven use
 - comes with a handy text editor ED to edit batch files etc.
 - powerful ramdisk RAMDISK.SYS supporting PORTB and Axlon extensions
+- drivers for all common real-time clocks
+- tool for listing, mounting, and unmountig partitions of APT compatible PBI devices
 
-The ZIP archive contains all four ATRs and the documentation. The archive name
+The ZIP archive contains all ATRs and the documentation. The archive name
 contains the last revision date.
 
 For list of all commands:

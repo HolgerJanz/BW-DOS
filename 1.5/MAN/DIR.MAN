@@ -3,11 +3,11 @@
 
 Low Memory, Internal
 
-Lists specified files in drive Dn:,
-path and specified pattern of file
-names. If no file name pattern is
-specified then all files will be
-listed.
+Displays files on drive Dn: using the
+given path and file name pattern. If
+no pattern is provided, all files in
+the location will be shown.
 
-A list of parameters is not supported
-by the internal version.
+The list of parameters is not
+supported by the internal version of
+this command.

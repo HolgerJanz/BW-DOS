@@ -3,7 +3,7 @@
 
 Low Memory
 
-This command changes the volume
-name of disk in Dn:. If no drive is 
-specified the name of the disk in the
-current drive will be changed.
+This command changes the volume name
+of the disk in drive Dn:. If no drive
+is specified, the name of the disk of
+the current drive is changed.

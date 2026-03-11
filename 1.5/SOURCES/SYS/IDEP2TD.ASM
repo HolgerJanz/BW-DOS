@@ -12,9 +12,8 @@ OMEML   equ $84 ;old MENLO
 NMEML   equ $86 ;new MEMLO
 AGETT   equ $88 ;address GETTD
 ASETT   equ $8A ;address SETTD
-LDRVP   equ $8C ; length of driver part (without init part)
+LDRVP   equ $8C ;length of driver part (without init part)
 
-PDCKSM  equ $D800 ;PBI ROM check sum
 PIDERTC equ $D840 ;IDE+2 = 'RTC'
 
 * init IDE clock
@@ -35,7 +34,7 @@ IDESTD  equ $D84F
         sta RFLAG,X
         dex
         bpl *-3
-        lda #'M'
+        lda #'W'
         sta sta_dyn
 * check parameter
         jsr BW_CRNAME
@@ -48,6 +47,8 @@ parchk  lda BW_COMFNAM+3,X
         bpl parchk
         lda #$ff
         sta RFLAG
+        lda #'R'
+        sta sta_dyn
         jsr BW_CRNAME
         beq paramok
 paramer lda #$9c ; Parameter error
@@ -110,9 +111,9 @@ initrtc sta setpbi1+1 ; set PBID
         bne insdrv
         lda #$ff
         sta SFLAG
-        lda #'S'
+        lda sta_dyn
+        ora #$20
         sta sta_dyn
-
 * install driver
 * set old OMEML and init NMEML
 insdrv  lda MEMLO
@@ -139,8 +140,12 @@ noini   lda NMEML
         sta AGETT+1
         sta ASETT+1
         clc
-        lda ASETT
-        adc <SETTD-GETTD
+        lda RFLAG
+        bne *+6
+        lda <SETTD-reawrdb
+        bne *+4
+        lda <SETTDRO-rearodb
+        adc ASETT
         sta ASETT
         lda ASETT+1
         adc #$00
@@ -216,13 +221,10 @@ setmeml lda NMEML
         sta BW_GETTD
         lda AGETT+1
         sta BW_GETTD+1
-        lda RFLAG
-        bne nxtout
         lda ASETT
         sta BW_SETTD
         lda ASETT+1
         sta BW_SETTD+1
-
 * print current date time
 * convert date time to atascii
 nxtout  ldx ITDTR
@@ -244,13 +246,7 @@ nxtout  ldx ITDTR
         inc ITDTR
         cpx #$12
         bcc nxtout
-* print date time
-        lda RFLAG
-        beq prn_td
-        lda sta_dyn
-        ora #$20
-        sta sta_dyn
-prn_td  jsr _print
+        jsr _print
         dta c'PBI#'
 pbi_nr  dta c'0 '
 td_out  dta c'dd-mm-yy hh:mm:ss '
@@ -283,6 +279,7 @@ setpbi1 equ *
         jsr IDEGTD
         lda SHPDVS
         sta PDVS
+SETTDRO equ *
         rts
 rearode equ *
 

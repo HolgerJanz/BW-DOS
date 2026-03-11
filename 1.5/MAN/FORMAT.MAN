@@ -3,43 +3,41 @@
 
 This command formats a disk and
 installs BW-DOS. Formatting must be
-the first thing done for a new disk.
+done first when preparing a new disk.
 
-The drive number specified as a
-parameter is used for where to search
-for the DOS files, not for which drive
-the format should be performed on!
+The drive number you specify is used
+only to locate the DOS files, not to
+choose which drive will be formatted.
 
-The program will ask you for necessary
-input, and then format the disk. This
-program cannot be controlled from a
-batch file. Ramdisks cannot be
-formatted in this way.
+The program will request the needed
+information and then format the disk.
+It cannot be controlled from a batch
+file. Ramdisks cannot be formatted
+with this command.
 
-Besides the four standard formats
-single, medium, double, and
-double-side there are three more
-options.
+In addition to the four standard
+formats - single, medium, double, and
+double sided - three more options are
+available.
 
-Reset File System: Clears disk. The
-disk must already be formatted and
-initialized with SpartaDOS file
-system. This option is the fastest way
-to clear a already used disk.
+Reset File System: Clears the disk.
+The disk must already be formatted
+and initialized with the SpartaDOS
+file system. This is the fastest way
+to clear a previously used disk.
 
-Create File System: Initializes
-SpartaDOS file system. Prerequisite is
-that the disk is already physically
-formatted and the drive must support
-the configuration block (Percom). This
-option is used to initialize hard
-disks.
+Create File System: Initializes the
+SpartaDOS file system. The disk must
+already be physically formatted, and
+the drive must support the Percom
+configuration block. This option is
+used for initializing hard disks.
 
 Custom Configuration: Formats and
-initializes the disk with SpartaDOS
-file system using freely selectable
-parameters. The drive must support the
-configuration block. This option is
-used for special formats supported by
-drives like ATR8000, HDI, XF551 with
-3,5“ modification, or 1050 Mini.
+initializes the disk using freely
+selectable parameters. The drive must
+support the Percom configuration
+block. This is used for special
+formats supported by devices like
+ATR8000, HDI, XF551 with 3.5" upgrade,
+or the 1050 Mini.

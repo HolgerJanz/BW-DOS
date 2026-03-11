@@ -3,13 +3,13 @@
 
 Low Memory, Internal
 
-Lists specified files in drive Dn:,
-path, and specified pattern of file
-names. In contrast to DIR the commad
-DIRS uses the Atari DOS 2 style.
-If no file name pattern is specified
-then all files of the current
-directory will be listed.
+Lists files on drive Dn: using the
+path and the specified file pattern.
+Unlike the DIR command, the DIRS
+command uses the Atari DOS 2 style
+format. If no file name pattern is
+provided, all entries of the current
+directory are listed automatically.
 
-A list of parameters is not supported
-by the internal version.
+A parameter list is not supported by
+the internal version of this command.

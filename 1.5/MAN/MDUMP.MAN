@@ -3,10 +3,19 @@
 
 Low Memory
 
-This external command displays content
-of memory as hexadecimal and ATASCII
-listing. With the A option non
-printable characters are changed to
-printable ones - use this while
+This external command displays memory
+contents as hexadecimal and ATASCII
+listing. With the A option, non-
+printable characters are converted to
+printable ones - use this when
 printing the listing (see the PRINT
 command).
+
+With a length value, only that number
+of bytes is shown. Both address and
+length must be specified as
+hexadecimal numbers.
+
+Press <CONTROL>+<1> to pause or resume
+the listing, or press <ESC> to stop
+the command.

@@ -1,6 +1,6 @@
 }
   PRINT [device:|file]
 
-Starts hard copy to device or file. If
-no parameter was provided an active
-hard copy is stopped.
+Starts a hard copy to a device or
+file. If no parameter is given, an
+active hard copy is stopped.

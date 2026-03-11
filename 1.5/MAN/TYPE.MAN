@@ -3,9 +3,9 @@
 
 Low Memory, Internal
 
-This command shows the contents of a
-file, for example text or batch files.
+This command displays the contents of a
+file, such as text or batch files.
 
 The internal version does not support
-a list of parameters only the first
-parameter is evaluated.
+multiple parameters, only the first
+parameter is processed.

@@ -2,20 +2,17 @@
   MOVE [/Q] [Dn:][path1>]pattern
             [Dn:][path2]
 
-This command allows you to move a
-files or subdirectories into another
-directory on the same disk. The
-difference between COPY and MOVE is
-that MOVE moves only the directory
-entries between the directories which
-is much faster than copying the whole
-file. It also does not need any extra
-free sectors on the disk because no
-additional data are created.
+This command allows you to move files
+or subdirectories into another
+directory on the same disk. Unlike
+COPY, MOVE only changes directory
+entries, which is much faster than
+copying the entire file. It also
+requires no extra free sectors, since
+no additional data is created.
 
-Option /Q (quite) suppresses messages
-for every file or directory.
+Option /Q (quiet) suppresses messages
+for each file or directory.
 
-It is only possible to move files and
-directories within the same disk
-drive.
+Files and directories can only be
+moved within the same disk drive.

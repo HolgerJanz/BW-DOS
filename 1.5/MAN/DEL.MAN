@@ -3,25 +3,24 @@
 
 Internal
 
-Erases files from disk. Directories
-can only be erased with option /R
-(see also command RD). Special
-characters * (no or many characters)
-and ? (one character) can be used as
-wildcards.
+Erases files from disk. Directories can
+only be removed when using option /R
+(see also the RD command). Special
+characters * (zero or many chars) and
+? (one char) may be used as wildcard
+patterns.
 
 Protected files (see PROT and UNPROT)
-are ignored. If only one file should
-be deleted and it is protected then
-error 170 (File not found) is
-returned.
+are skipped. If a single file is to be
+deleted and it is protected, error 170
+(File not found) is returned.
 
-Option /R recursively deletes
-files including subdirectories.
-Protected subdirectories are ignored.
+Option /R deletes files recursively,
+including all subdirectories. Protected
+subdirectories are ignored.
 
-Option /Q (quite) suppresses messages
-for every directory deleted.
+Option /Q (quiet) suppresses messages
+for each directory that is removed.
 
-A list of parameters and options are
-not supported by the internal version.
+A list of parameters and options is not
+supported by the internal version.

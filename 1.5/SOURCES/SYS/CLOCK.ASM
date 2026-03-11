@@ -1,4 +1,4 @@
-* BW-DOS command CLOCK.SYS ON|OFF
+; BW-DOS command CLOCK.SYS [ON|OFF]
 
         ICL '_SYSEQU.ICL'
 
@@ -59,6 +59,8 @@ START   EQU *
 
         LDY #36
         LDA BW_COMTAB,Y
+        CMP #$9B
+        BEQ START3 ; no parameter = ON
         CMP #'O'
         BNE SYNTAX
 
@@ -86,22 +88,23 @@ ST2ON   INY
 
 SYNTAX  JSR PRINT
         DTA B(155)
-        DTA C'Syntax: CLOCK ON|OFF'
+        DTA C'Syntax: CLOCK [ON|OFF]'
         DTA B(155,0)
 
-        JMP BW_COMTAB
+        LDA #$9C
+        JMP (BW_FAIL)
 
-* already installed?
+; already installed?
 START3  JSR SRCHRUT
         BCC START4
-* yes!
+; yes!
         JSR PRINT
         DTA B(155)
-        DTA C'Clock already installed!'
+        DTA C'Clock already installed'
         DTA B(155,0)
         JMP BW_COMTAB
 
-* install
+; install
 START4  LDA MEMLO
         STA SRCHADR
         CLC
@@ -115,14 +118,12 @@ START4  LDA MEMLO
         STA MEMLO+1
         STA R02+1
 
-* PAL or NTSC
-
-* PAL
+; PAL
         LDX #8
         LDA PAL
         AND #$0E
         BEQ PALNT2
-* NTSC
+; NTSC
         LDX #17
 
 PALNT2  LDY #8
@@ -135,16 +136,16 @@ PALNT3  LDA TDPMLTO,X
         BPL PALNT3
         BMI RLK0
 
-* PAL
+; PAL
 TDPMLTO DTA B(0,0,50)
         DTA B(0,11,$B8)
         DTA B(2,$BF,32)
-* NTSC
+; NTSC
         DTA B(0,0,60)
         DTA B(0,14,$10)
         DTA B(3,$4B,$C0)
 
-* reloc
+; reloc
 
 RLK0    LDX #0
 
@@ -222,7 +223,7 @@ INSTL4  LDA NEWADR,X
 
         JSR PRINT
         DTA B(155)
-        DTA C'Clock installed.'
+        DTA C'Clock installed'
         DTA B(155,0)
 
         JMP BW_COMTAB
@@ -232,18 +233,18 @@ DISABLE JSR SRCHRUT
 
         JSR PRINT
         DTA B(155)
-        DTA C'Clock not installed!'
+        DTA C'Clock not installed'
         DTA B(155,0)
 
         JMP DISERR2
 
 DISCANT JSR PRINT
         DTA B(155)
-        DTA C'Clock is not the last installed handler!'
+        DTA C'Clock is not the last installed handler'
         DTA B(0)
 
 DISERR2 JSR PRINT
-        DTA C'Can''t be removed.'
+        DTA C'Cannot be removed'
         DTA B(155,0)
 
         JMP BW_COMTAB
@@ -259,20 +260,18 @@ DISABL2 LDA MEMLO
         CPY <RESLEN
         BNE DISCANT
 
-* remove
+; remove
         LDY #2
 
 DISBL2  LDA (SRCHADR),Y
         STA DOSINI-1,Y
         LDA SRCHADR-1,Y
         STA MEMLO-1,Y
-
         DEY
         BNE DISBL2
-
+; set old handler
         LDY <OLDADR-RESID
         LDX #0
-
 DISABL3 LDA (SRCHADR),Y
         STA BW_GETTD,X
         INY
@@ -282,7 +281,7 @@ DISABL3 LDA (SRCHADR),Y
 
         JSR PRINT
         DTA B(155)
-        DTA C'Clock removed.'
+        DTA C'Clock removed'
         DTA B(155,0)
 
         JMP BW_COMTAB
@@ -342,8 +341,9 @@ SNXT2   DEC SRCHADR
 
 SNXT3   RTS
 
-RESID   JSR $FFFF
+; resident part
 
+RESID   JSR $FFFF
 R01     LDA #$22
         STA MEMLO
 R02     LDA #$22
@@ -352,19 +352,14 @@ TST1    STA MEMLO+1
 TDINI   LDA VCOUNT
         CMP #$60
         BCS TDINI
-
         SEC
         LDX #2
-
 TDIN2   LDA RTCLOK,X
         PHA
-
 S1      SBC TDOLDS,X
 S2      STA TDDIF,X
-
         PLA
 S3      STA TDOLDS,X
-
         DEX
         BPL TDIN2
 
@@ -373,27 +368,21 @@ S3      STA TDOLDS,X
 OLDADR  DTA A(0,0)
 
 SETTD   LDY #18
-
 STD5    LDX TDPOR-13,Y
         LDA BW_COMTAB,Y
 S5      STA TDOLDT,X
-
 TST2    DEY
         CPY #13
         BCS STD5
         BCC TDINI
 
 TDPLMI  STA TDPLMC
-
 TDPLIX  LDY #0
 S7      LDX TDPMIT,Y
-
         LDY #2
-
 TDPLM2  LDA TDDIF,Y
 TDPLMC  SBC TDPMLT,X
 S10     STA TDDIF,Y
-
         DEX
         DEY
         BPL TDPLM2
@@ -402,8 +391,7 @@ S10     STA TDDIF,Y
 
 TDPMIT  DTA B(2,5,8)
 
-TDPOR   DTA B(3,4,5,2,1)
-
+TDPOR   DTA B(3,4,5,2,1) ; 0 next line
 TDPMLT  DTA B(0,0,50)
         DTA B(0,11,$B8)
         DTA B(2,$BF,32)
@@ -411,9 +399,10 @@ TDPMLT  DTA B(0,0,50)
 TDMAX   DTA B(60,60,24,32,13,100)
 
 TDDIF   DTA B(0,0,0)
+
 TDOLDS  DTA B(0,0,0)
 
-* DEFAULT TD
+; default time and data
 TDOLDT  DTA B(15,12,42)
         DTA B(15,2,24)
 
@@ -421,8 +410,7 @@ GETTD   JSR TDINI
 
         LDA #2
 S12     STA TDPLIX+1
-
-GTD1    LDA #$FD
+GTD1    LDA #$FD ; SBC
         SEC
 S13     JSR TDPLMI
         BCC GTD4
@@ -430,7 +418,6 @@ S13     JSR TDPLMI
 S14     LDY TDPLIX+1
 GTD2    LDA TDOLDT,Y
         ADC #0
-
         CPY #6
         BCS GTD1
 
@@ -438,39 +425,33 @@ S16     CMP TDMAX,Y
         BCC GTD3
 
 S17     LDA TDMIN,Y
-
 GTD3    STA TDOLDT,Y
 TST3    INY
-
         BCS GTD2
         BCC GTD1
 
-GTD4    LDA #$7D
+GTD4    LDA #$7D ; ADC
 S19     JSR TDPLMI
 
 S20     DEC TDPLIX+1
         BPL GTD1
 
         LDY #13
-
 GTD5    LDX TDPOR-13,Y
 S22     LDA TDOLDT,X
         STA BW_COMTAB,Y
-
         INY
         CPY #19
         BCC GTD5
 
         LDY #2
-
 GTD6    LDA TDOLDS,Y
 S24     SBC TDDIF,Y
 S25     STA TDOLDS,Y
-
         DEY
         BPL GTD6
 
-RET     RTS
+        RTS
 
 TDMIN   DTA B(0,0,0,1,1,0)
 

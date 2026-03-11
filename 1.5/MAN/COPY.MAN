@@ -3,32 +3,34 @@
        [dev1:][path1>][pattern1]
        [dev2:][path2>][pattern2[/A]]
 
-This command copies data from
-device dev1 to device dev2. If a
-device is not specified then the
-current disk drive is used.
+This command copies data from device
+dev1 to device dev2. If no device is
+specified, the current disk drive is
+used automatically.
 
-The option /R copies recursive
-all subdirectories. This
-option is only allowed if dev1
-and dev2 are disk drives.
+The /R option copies all files and
+subdirectories recursively. This is
+allowed only when both dev1 and dev2
+are disk drives.
 
-Option /Q (quite) suppresses messages
-for every file copied.
+The /Q (quiet) option suppresses all
+messages for each copied file.
 
-It copies file(s) specified by the
-first parameter to file(s) specified
-by the second one. Option /A appends
-to an already existing file.
-You can use any device instead of Dn:.
+The first parameter specifies the
+source file(s), and the second one
+specifies the destination. With /A,
+data is appended to an existing file.
 
-  COPY K: P:
-Copies the input from keyboard to
+Any device may be used instead of Dn:.
+
+COPY K: P:
+Copies keyboard input directly to the
 printer.
 
-  COPY E: file
-Creates a new text file.
-Press <CONTROL>+<3> to finish.
+COPY E: file
+Creates a new text file. Press
+<CONTROL>+<3> to finish input.
 
-  COPY file P:
-Sends file(s) to printer.
+COPY file P:
+Sends the specified file(s) to the
+printer.

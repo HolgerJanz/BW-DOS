@@ -3,14 +3,15 @@
 
 Low Memory, Internal
 
-This command will simply load a DOS
-loadable file (program). Any init and
-run address will be ignored.
+This command simply loads a DOS
+loadable file (program). Any init or
+run address contained in the file is
+ignored.
 
-The low memory version resides in the
-memory area from $580-$6FF, so it is
-not possible to load programs to this
-area with the low memory version.
+The external version occupies the
+memory area from $580 to $6FF, so
+programs cannot be loaded into this
+region when using that version.
 
-A list of parameters is not supported
-by the internal version.
+The internal version does not support
+a list of parameters.

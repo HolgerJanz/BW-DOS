@@ -1,0 +1,21 @@
+}
+  ULSD12TD.SYS [/R]
+
+This command installs a driver for a
+hardware real-time clock. It works with
+the Ultimate 1MB upgrade, the Incognito
+upgrade, and the SIDE 1/2 cartridge.
+
+Option /R installs a read-only driver
+that uses less memory.
+
+If this driver is the first resident
+program, a smaller version can be
+installed to save memory.
+
+The last character in the status line
+indicates the installed driver:
+W - read/write driver
+w - smaller read/write driver
+R - read-only driver
+r - smaller read-only driver

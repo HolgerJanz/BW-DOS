@@ -3,21 +3,20 @@
 
 Low Memory, Internal
 
-This command allows you to rename a
-file specified by the "file" parameter
-to new name "filename". You can use
-wildcards in both names to rename a
-set of files and to leave specified
-characters in the name unchanged.
+This command renames a file specified
+by the file parameter to the new name
+filename. Wildcards may be used in
+both names to rename multiple files and
+to keep certain characters unchanged.
 
-For example when you have files
-"TEST" and "BEST", after the command:
+For example, if you have files TEST
+and BEST, then after the command:
 
-  REN ?EST ????S
+REN ?EST ????S
 
-You'll get files "TESTS" and "BESTS".
+you will get the files TESTS and
+BESTS.
 
 The external version of REN can also
-rename directories. It is not
-possible to use wild cards for
-renaming directories.
+rename directories. Wildcards cannot be
+used when renaming directories.

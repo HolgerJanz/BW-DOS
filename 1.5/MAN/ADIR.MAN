@@ -1,12 +1,13 @@
 }
   ADIR [Dn:[sub_1:..:sub_n:]pattern]
 
-This program lists the directory of
-Atari DOS, MyDOS and compatible disks.
-The path must be specified in MyDOS
-notation. This means that the directory
-separator is : instead of >. 
+This program lists directories of
+Atari DOS, MyDOS, and compatible
+disks. Paths must be specifed in MyDOS
+notation, meaning : is used as the
+directory separator instead of >.
 
-There are the following mark chars:
+The following mark characters are
+used:
 :  marks directories
-*  marks protected files/directories
+*  marks protected files or dirs

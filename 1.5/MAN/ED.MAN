@@ -1,28 +1,27 @@
 }
   ED [file]
 
-This command is an editor for text
-files. If no file is specified a new
-file is created and the name can be
-specified at save or on exit.
+This command provides an editor for
+text files. If no file name is given,
+a new file is created and you can
+enter a name when saving or exiting.
 
-The editor is line oriented. The
-maximum length of a line is 128. If a
-file should be loaded with lines
-longer than 128 then the error 137
-(Truncated lines) is returned and the
-file is not loaded. If the file is
-larger than the text buffer then error
-137 is also returned but the file is
-loaded up to the size of the text
-buffer.
+The editor works line by line. Each
+line may be up to 128 characters. If
+a file contains lines longer than 128,
+error 137 (Truncated lines) is shown
+and the file is not loaded. If the
+file exceeds the text buffer, error
+137 also appears, but the file loads
+only up to the buffer limit.
 
-All edit commands known from the
-standard Atari editor are available,
-including keys F1-F4.
-<ESC> can be use to escape a
-command key combination.
+All editing commands from the standard
+Atari editor are supported, including
+the <F1>-<F4> keys. Pressing <ESC>
+allows you to escape a command
+sequence.
 
+Commands:
 <CTRL><X>  Exit editor
 <CTRL><L>  Load file
 <CTRL><S>  Save file

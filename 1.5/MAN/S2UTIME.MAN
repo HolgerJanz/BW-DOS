@@ -1,0 +1,12 @@
+}
+  S2UTIME
+
+Low Memory
+
+This command retrieves the current
+time and date from devices via SIO and
+then updates the BW-DOS system clock.
+The SIO2USB interface supports this
+call, and together with CLOCK.SYS it
+allows BW-DOS to assign accurate time
+and date stamps to files.

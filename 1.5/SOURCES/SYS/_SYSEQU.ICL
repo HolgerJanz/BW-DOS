@@ -24,8 +24,10 @@ LMARGN equ $52
 RMARGN equ $53
 RAMTOP equ $6a
 
-
+PDVMSK equ $247
 SHPDVS equ $248
+PDIMSK equ $249
+
 PCOLR0 equ $2C0
 NOCLIK equ $2DB
 RUNAD  equ $2E0
@@ -117,7 +119,9 @@ AXLON      equ $CFFF
 PAL        equ $D014
 
 CONSOL     equ $D01F
+
 PDVS       equ $D1FF
+PDVIRQ     equ $D1FF
 
 RANDOM     equ $D20A
 
@@ -127,6 +131,17 @@ DMACTL     equ $D400
 WSYNC      equ $D40A
 VCOUNT     equ $D40B
 NMIEN      equ $D40E
+
+PDCKSM     equ $D800
+PDREVN     equ $D802
+PDID1      equ $D803
+PDTYPE     equ $D804
+PDIOV      equ $D805
+PDIRQV     equ $D808
+PDID2      equ $D80B
+PDNAME     equ $D80C
+PDVV       equ $D80D
+PDINIT     equ $D819
 
 CIOV       equ $E456
 WARMSV     equ $E474

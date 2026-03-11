@@ -3,10 +3,10 @@
 
 Low Memory, Internal
 
-This command is protecting files from
-being deleted or changed. Using
-wildcards you can protect a set of
-files. This command can also protect
-directories. Use the commad UNPROT to
+This command protects files from being
+deleted or modified. Using wildcards,
+you can protect multiple files at
+once. Directories can also be
+protected. Use the UNPROT command to
 remove protection from a file or
 directory.

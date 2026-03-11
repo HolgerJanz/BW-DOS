@@ -38,3 +38,8 @@
 169 Directory is full
 170 File is not found
 182 Path is too long
+190 APT partition in MBR is not found
+191 APT signature is invalid
+192 APT leading signature is invalid
+193 APT partition number is not found
+194 MBR signature is invalid

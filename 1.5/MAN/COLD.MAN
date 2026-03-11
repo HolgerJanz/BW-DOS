@@ -1,7 +1,11 @@
 }
   COLD
 
-This command does a cold start. Before
-the cold start the hard copy and batch
-processing is stopped. It is the same
-like power on/off.
+This command performs a full
+cold start.
+
+Before the cold start, all hard copy
+output and batch processing are halted.
+It functions essentially the same as
+turning the system completely off and
+back on again.

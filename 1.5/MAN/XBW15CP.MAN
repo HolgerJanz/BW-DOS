@@ -1,16 +1,19 @@
 }
   XBW15CP.DOS
 
-CP means "command processor only".
+The command processor of this BW-DOS
+version does not include any built-in
+basic commands. CP stands for command
+processor only.
 
-The advantage of this command
-processor is the low MEMLO ($1D65).
+Its advantage is the low MEMLO ($1D50)
+which leaves more free memory for user
+programs.
 
-The disadvantage is that there are
-no integrated command.
-
-All required commands have to be
-provided on disk and it would be best
-if they were made available in the
-search path, usually the DOS directory
-of the DOS drive. See command DOSDRIVE.
+The disadvantage is that no commands
+are integrated. All required commands
+must be present on disk, ideally in a
+directory that is part of the search
+path, typically the DOS directory on
+the DOS drive. See the DOSDRIVE
+command.

@@ -1,11 +1,14 @@
 }
   DISASS file [position]
 
-This external command will list the
-content of the specified file as an
-assembler listing. With position
-specified it  starts from this
-position.
+This command displays the contents of
+the chosen file as an assembler
+listing. When a start position is
+given, the output begins from that
+location onward. The start position
+must be specified as hexadecimal
+number.
 
-Press <CONTROL>+<1> to stop the listing
-and continue or <ESC> to abort.
+Press <CONTROL>+<1>  to pause the
+listing and continue, or press <ESC>
+to stop the process entirely.

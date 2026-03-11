@@ -1,20 +1,40 @@
 }
-  RAMDISK.SYS (n[E][F][A] [file])|OFF[A]
+  RAMDISK.SYS 
+    n[E][F][A] [file] |
+    OFF[A]
 
 This resident command sets up an
 emulated disk drive using extended
 RAM, PORTB or Axlon up to 1MB.
 
-The "n" parameter is the number of the
-ramdisk drive (1-4,8)
-The "F" option will cause the ramdisk
+The n parameter is the number of the
+ramdisk drive (1-4,8).
+The F option will cause the ramdisk
 to be formatted.
-The "E" option will cause that it will
+The E option will cause that it will
 not use 130XE compatible banks.
 OFF[A] removes the driver, if it was
 the last driver loaded.
-The "A" option enforces Axlon mode.
+The A option enforces Axlon mode.
 
 The configuration file can be used to
 specify values for PORTB or Axlon to
 be used for the ramdisk.
+
+This resident command sets up an
+emulated disk drive using extended
+RAM, PORTB or Axlon memory up to
+1 MB in size.
+
+The n parameter selects the ramdisk
+drive number (1-4, 8). The F option
+formats the ramdisk. The E option
+forces operation without using 130XE
+compatible banks. OFF[A] removes the
+driver if it is the last one loaded.
+The A option enforces Axlon mode.
+
+A configuration file may be used to
+define the PORTB or Axlon values that
+the ramdisk should use (see MEM
+command).

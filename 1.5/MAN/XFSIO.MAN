@@ -2,15 +2,17 @@
   XFSIO.SYS n..|OFF
 
 This resident command provides fast
-SIO for the XF 551 disk drive. You
-must enter drive numbers n of the
-XF 551 drives.
+SIO support for the XF551 disk drive.
+You must specify the drive numbers
+(1-4,8) of the XF551 units to be
+accelerated.
 
-The communication is 2.5 times faster
-than the standard, but it may only
-save some time when the disk is
-formatted in the fast mode. See FORMAT
-command.
+Data transfer runs about 2.5 times
+faster than the standard SIO rate, but
+the speed gain is only noticeable if
+the disk was formatted in fast mode.
+See the FORMAT command.
 
-The keyboard is disabled during fast
-SIO operations to prevent problems.
+During fast SIO operations, the
+keyboard is disabled to avoid
+interference.

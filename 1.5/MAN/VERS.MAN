@@ -1,9 +1,10 @@
 }
   VERS
 
-Displays the current DOS version. It
-supports BW-DOS, SpartaDOS 3 and
-higher, and RealDOS.
+This command displays the current DOS
+version. It supports BW-DOS, SpartaDOS
+version 3 and later, as well as
+RealDOS.
 
-In case of BW-DOS the current set
-SpartaDOS version is also displayed.
+For BW-DOS, the currently selected
+SpartaDOS version is also shown.

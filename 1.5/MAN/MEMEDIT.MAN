@@ -3,15 +3,17 @@
 
 Low Memory
 
-This external command allows you to
-edit contents of memory. Use this only
-if you know exactly, what you are
-doing. It is possible to cause the
-system to be corrupt, or even to lock
-up with this command.
+This external command lets you edit
+contents of memory. Use it only if
+you know exactly what you are doing.
+It is possible to corrupt the system
+or even cause a complete lock-up.
 
-It'll display position, the old value,
-and you can enter new value
-(hexadecimal), or just press <RETURN>
-to leave it unchanged. Press <ESC> to
-quit this command. 
+It displays the position, the old
+value, and allows you to enter a new
+hex value, or press <RETURN> to leave
+it unchanged. Press <ESC> to exit the
+command.
+
+Address and all values must be entered
+as hexadecimal numbers.

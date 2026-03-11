@@ -4,7 +4,6 @@
 Low Memory
 
 This command clears the screen. It can
-be used in batch files. In the command
-shell you also can use the key
-combination <SHIFT>+<(Clear) to clear
-the screen.
+be used inside batch files. In the
+command shell you can also press
+<SHIFT>+< (Clear) to clear the screen.

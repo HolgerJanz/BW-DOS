@@ -1,10 +1,8 @@
 }
   PWD [Dn:] ..
 
-Print Working Directory
-
-List the current directory of a drive.
-If no drive is specified then the
-current drive is used. The current
-directory can be changed with the
-command CD.
+Lists the current directory of a drive
+(prints the working directory). If no
+drive is specified, the current drive
+is used. The current directory can be
+changed with the CD command.

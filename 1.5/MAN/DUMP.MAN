@@ -1,20 +1,19 @@
 }
-
   DUMP file [position [length]] [/A]
 
-This external command displays the 
-contents of the specified file as
-hexadecimal and ATASCII listing.
-With the /A parameter non printable
-characters are changed to printable
-ones - use this for printing the
-listing (see the "PRINT" command).
+This command displays the contents of
+the chosen file as both hexadecimal
+and ATASCII output. When the /A flag
+is used, non-printable characters are
+converted to printable ones, making
+the listing suitable for printing
+(see the PRINT command).
 
-If a position is specified, the listing
-will start from this position. With the
-length parameter, only the specified
-number of bytes will be displayed.
+If a starting position is given, the
+listing begins there. With a length
+value, only that number of bytes is
+shown.
 
-Press <CONTROL>+<1> to pause and
-continue the listing or <ESC> to abort
-this command.
+Press <CONTROL>+<1> to pause or resume
+the listing, or press <ESC> to stop
+the command.

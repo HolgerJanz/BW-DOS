@@ -1,41 +1,39 @@
 }
   COMP [/REQ] files1 files2
 
-This command compares files. If two
-files are different then the offset
-of the first byte that differs is
-printed. This offset can be used with
-the command DUMP for further analysis.
+This command compares two files. When
+a difference is found, the offset of
+the first differing byte is printed.
+This offset can then be used with the
+DUMP command for further analysis.
 
-If the two files have different
-lengths and the smaller file is
-equal to the beginning part of the
-larger file then the offset of the
-first byte after the beginning part
-is printed.
+If the files have different lengths
+but the shorter file matches the
+beginning of the longer one, the
+offset of the first byte after that
+matching section is displayed.
 
-Files are recursively compared if the
-option /R is set.
+Files are compared recursively when
+the /R option is specified.
 
-If option /E is set then the program
-terminates with error 255 at the first
-two different files. This option can
-be used to terminate batch execution
-if a difference occurs.
+With the /E option, the program stops
+at the first pair of differing files
+and returns error code 255. This can
+be used to stop batch processing when
+a mismatch occurs.
 
-With option /Q (quite) only messages
-about different files are shown.
+Using the /Q (quiet) option, only
+messages about differing files are
+shown.
 
 Examples:
 
-  COMP /R D1:> D2:>
+COMP /R D1:> D2:>
+Compares all files on disk 1 with the
+corresponding files on disk 2.
 
-Compares all files of disk 1 with
-files of disk 2.
-
-  COMP /E MAKE>*.OBJ BIN>*.COM
-
+COMP /E MAKE>*.OBJ BIN>*.COM
 Compares all OBJ files in directory
 MAKE with COM files in directory BIN.
-The command terminates at the first
-two different files.
+The command stops at the first pair
+of files that differ.

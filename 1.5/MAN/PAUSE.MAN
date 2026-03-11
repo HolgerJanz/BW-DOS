@@ -1,7 +1,7 @@
 }
   PAUSE
 
-This external command is used in batch
-files only. It will wait for the
-<RETURN> key. The <ESC> key will stop
-the batch file.
+This external command is used only in
+batch files. It waits for the <RETURN>
+key; pressing <ESC> will stop
+execution of the batch file.
