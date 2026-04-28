@@ -7,6 +7,15 @@ BW-DOS does not use extended RAM or the RAM under OS-ROM of XL/XE
 machines, so it is compatible with software which uses these memory
 spaces, such as the popular Turbo Basic, and others.
 
+Hardcover book is available:
+
+BW-DOS 1.5 - Manual and History, Holger Janz & Jiří Bernášek
+ISBN-10: 3565419989
+ISBN-13: 978-3565419982
+[Epubli](https://www.epubli.com/shop/bw-dos-1-5-9783565419982)
+[Amazon](https://amzn.eu/d/0c3VG5L2)
+
+
 Highlights:
 - can be started from cartridges supporting executables files
 - comes with manual pages for every command
