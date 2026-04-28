@@ -9,10 +9,11 @@ spaces, such as the popular Turbo Basic, and others.
 
 Hardcover book is available:
 
-BW-DOS 1.5 - Manual and History, Holger Janz & Jiří Bernášek
-ISBN-10: 3565419989
-ISBN-13: 978-3565419982
-[Epubli](https://www.epubli.com/shop/bw-dos-1-5-9783565419982)
+BW-DOS 1.5 - Manual and History\
+Holger Janz & Jiří Bernášek\
+ISBN-10: 3565419989\
+ISBN-13: 978-3565419982\
+[Epubli](https://www.epubli.com/shop/bw-dos-1-5-9783565419982)\
 [Amazon](https://amzn.eu/d/0c3VG5L2)
 
 
